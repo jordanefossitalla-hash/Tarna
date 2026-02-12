@@ -65,7 +65,7 @@ const TopBar = () => {
               return (
                 <Button
                   key={index}
-                  className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-white"} flex flex-row items-center`}
+                  className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-black"} ${index === 0 ? "" : "hover:bg-accent"} flex flex-row items-center`}
                 >
                   <item.icon className="size-4" />
                   {item.name}

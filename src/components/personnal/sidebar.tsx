@@ -9,6 +9,10 @@ type menuItemType = {
   name: string;
   icon: LucideIcon;
 };
+type groupeType = {
+  id: number;
+  title: string;
+};
 
 const menuItem: menuItemType[] = [
   {
@@ -32,16 +36,30 @@ const menuItem: menuItemType[] = [
     icon: Bell,
   },
 ];
+const GroupItem: groupeType[] = [
+  {
+    id: 0,
+    title: "Tech KIAMA",
+  },
+  {
+    id: 1,
+    title: "Design Team",
+  },
+  {
+    id: 2,
+    title: "General",
+  },
+];
 
 const Sidebar = () => {
   return (
     <Card className="w-[250px] pr-2 rounded h-full">
-      <Card className="flex flex-col shadow-none border-0 gap-4 p-0">
+      <Card className="flex flex-col shadow-none border-0 gap-1 p-0">
         {menuItem.map((item, index) => {
           return (
             <Button
               key={index}
-              className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-white"} flex flex-row items-center justify-start py-5`}
+              className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-black"} ${index === 0 ? "" : "hover:bg-accent"} flex flex-row items-center justify-start py-5`}
             >
               <item.icon className="size-4" />
               {item.name}
@@ -54,9 +72,13 @@ const Sidebar = () => {
         <CardDescription className="font-semibold">MY GROUPS</CardDescription>
       </Card>
       <Card className="gap-1 border-0 shadow-none p-0">
-        {Array.from({ length: 4 }).map((el, index) => {
+        {GroupItem.slice(0, 3).map((el, index) => {
           return (
-            <Button variant={"ghost"} key={index} className="justify-start">
+            <Button
+              variant={"ghost"}
+              key={index}
+              className="justify-start cursor-pointer hover:text-blue-500"
+            >
               <Avatar className="rounded-md">
                 <AvatarImage
                   src="https://github.com/shadcn.png"
@@ -65,7 +87,7 @@ const Sidebar = () => {
                 />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
-              <p>Group Name</p>
+              <p>{el.title}</p>
             </Button>
           );
         })}

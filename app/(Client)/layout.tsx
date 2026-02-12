@@ -14,7 +14,7 @@ export default function RootLayout({
     <div className="w-full h-svh">
       <div className="flex flex-col w-full h-full max-w-7xl mx-auto">
         <TopBar/>
-        <div className="flex flex-row justify-between h-full">
+        <div className="flex flex-row justify-between h-full w-full">
           <Sidebar/>
           {children}
           <RightBar/>
