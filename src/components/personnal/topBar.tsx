@@ -24,31 +24,31 @@ const menuItem: menuItemType[] = [
     id: 0,
     name: "Home",
     icon: House,
-    route: "/home"
+    route: "/home",
   },
   {
     id: 1,
     name: "Groups",
     icon: Users,
-    route: "/groups"
+    route: "/groups",
   },
   {
     id: 2,
     name: "Messages",
     icon: MessageCircle,
-    route: "/home"
+    route: "/home",
   },
   {
     id: 3,
     name: "Notifications",
     icon: Bell,
-    route: "/home"
+    route: "/home",
   },
 ];
 
 const TopBar = () => {
   return (
-    <Card className="flex flex-row justify-between px-4 rounded py-2">
+    <Card className="flex flex-row justify-between px-4 rounded py-2 fixed w-7xl h-17 z-40">
       {/* logo  */}
       <Card className="shadow-none border-0 p-0 flex flex-row gap-1 items-center">
         <GalleryVerticalEnd className="size-4" />

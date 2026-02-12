@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { Lock, Users } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -14,7 +14,20 @@ const GroupDisplay = () => {
   return (
     <div className="rounded-2xl">
       <div className="bg-gray-500 h-35 rounded-t-2xl relative overflow-hidden">
-        <Image src={"https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80"} alt="" fill className="object-cover"/>
+        <Image
+          src={
+            "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80"
+          }
+          alt="group image"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute w-full flex flex-row justify-end items-center pr-2 pt-2">
+          <div className="bg-gray-300 pt-0.5 pb-1 px-2 rounded-4xl flex flex-row items-center gap-2">
+            <Lock className="size-3" color="red" />
+            <p className="text-[12px] text-red-500 font-medium">private</p>
+          </div>
+        </div>
       </div>
       <Card className="border-0 shadow-xl px-0">
         <CardHeader className="flex flex-col gap-1 px-2 py-0">
@@ -26,7 +39,7 @@ const GroupDisplay = () => {
         </CardHeader>
         <CardContent className="flex flex-row items-center gap-2">
           <div className="flex flex-row items-center gap-1">
-            <Users className="size-4" color="gray"/>
+            <Users className="size-4" color="gray" />
             <p className="text-[14px] text-gray-500">156 members</p>
           </div>
           <div>
@@ -34,7 +47,9 @@ const GroupDisplay = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full cursor-pointer" variant={'outline'}>See group</Button>
+          <Button className="w-full cursor-pointer" variant={"outline"}>
+            See group
+          </Button>
         </CardFooter>
       </Card>
     </div>
