@@ -3,11 +3,13 @@ import { Button } from "../ui/button";
 import { Bell, House, LucideIcon, MessageCircle, Users } from "lucide-react";
 import { FieldSeparator } from "../ui/field";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Link from "next/link";
 
 type menuItemType = {
   id: number;
   name: string;
   icon: LucideIcon;
+  route: string;
 };
 type groupeType = {
   id: number;
@@ -17,23 +19,27 @@ type groupeType = {
 const menuItem: menuItemType[] = [
   {
     id: 0,
-    name: "Acceuil",
+    name: "Home",
     icon: House,
+    route: "/home",
   },
   {
     id: 1,
-    name: "Groupes",
+    name: "Groups",
     icon: Users,
+    route: "/groups",
   },
   {
     id: 2,
     name: "Messages",
     icon: MessageCircle,
+    route: "/home",
   },
   {
     id: 3,
     name: "Notifications",
     icon: Bell,
+    route: "/home",
   },
 ];
 const GroupItem: groupeType[] = [
@@ -53,16 +59,19 @@ const GroupItem: groupeType[] = [
 
 const Sidebar = () => {
   return (
-    <Card className="w-[250px] pr-2 rounded h-full">
+    <Card className="w-[250px] pr-2 rounded h-fit">
       <Card className="flex flex-col shadow-none border-0 gap-1 p-0">
         {menuItem.map((item, index) => {
           return (
             <Button
+              asChild
               key={index}
               className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-black"} ${index === 0 ? "" : "hover:bg-accent"} flex flex-row items-center justify-start py-5`}
             >
-              <item.icon className="size-4" />
-              {item.name}
+              <Link href={item.route}>
+                <item.icon className="size-4" />
+                {item.name}
+              </Link>
             </Button>
           );
         })}

@@ -16,28 +16,33 @@ type menuItemType = {
   id: number;
   name: string;
   icon: LucideIcon;
+  route: string;
 };
 
 const menuItem: menuItemType[] = [
   {
     id: 0,
-    name: "Acceuil",
+    name: "Home",
     icon: House,
+    route: "/home"
   },
   {
     id: 1,
-    name: "Groupes",
+    name: "Groups",
     icon: Users,
+    route: "/groups"
   },
   {
     id: 2,
     name: "Messages",
     icon: MessageCircle,
+    route: "/home"
   },
   {
     id: 3,
     name: "Notifications",
     icon: Bell,
+    route: "/home"
   },
 ];
 

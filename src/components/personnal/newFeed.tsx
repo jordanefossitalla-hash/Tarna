@@ -28,7 +28,11 @@ const NewFeed = () => {
         </div>
       </Card>
       {/* Feed listing  */}
-      <FeedItem/>
+      {
+        Array.from({length: 4}).map((_, index) => {
+            return <FeedItem key={index}/>
+        })
+      }
     </div>
   );
 };

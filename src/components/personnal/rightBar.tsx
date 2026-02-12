@@ -62,7 +62,7 @@ const RightBar = () => {
       <Card className="gap-0 p-1">
         <CardHeader className="p-2">
           <div className="flex flex-row items-center gap-2 justify-center">
-            <CardTitle className="text-[15px]">Groupes suggérés</CardTitle>
+            <CardTitle className="text-[15px]">Suggested groups</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0">
