@@ -18,7 +18,7 @@ export default function RootLayout({
         </div>
         <div className="flex flex-row justify-between h-full w-full pt-17">
           <Sidebar />
-          <div className="max-w-2xl overflow-scroll hide-scrollbar">
+          <div className="max-w-2xl">
             {children}
           </div>
           <RightBar />

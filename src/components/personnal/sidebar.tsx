@@ -33,13 +33,13 @@ const menuItem: menuItemType[] = [
     id: 2,
     name: "Messages",
     icon: MessageCircle,
-    route: "/home",
+    route: "/messages",
   },
   {
     id: 3,
     name: "Notifications",
     icon: Bell,
-    route: "/home",
+    route: "/notifications",
   },
 ];
 const GroupItem: groupeType[] = [

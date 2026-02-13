@@ -6,7 +6,7 @@ import { Plus, Search } from "lucide-react";
 
 const GroupsPage = () => {
   return (
-    <div className="w-2xl h-fit pb-20 flex flex-col gap-3">
+    <div className="w-2xl pb-20 flex flex-col gap-3 h-full overflow-scroll hide-scrollbar">
       <div className="flex flex-row w-full gap-2 justify-between pt-10">
         <div className="w-3/4">
           <p className="text-2xl font-bold">Groups</p>

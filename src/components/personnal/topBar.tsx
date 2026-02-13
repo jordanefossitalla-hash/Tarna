@@ -11,6 +11,7 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Link from "next/link";
 
 type menuItemType = {
   id: number;
@@ -36,13 +37,13 @@ const menuItem: menuItemType[] = [
     id: 2,
     name: "Messages",
     icon: MessageCircle,
-    route: "/home",
+    route: "/messages",
   },
   {
     id: 3,
     name: "Notifications",
     icon: Bell,
-    route: "/home",
+    route: "/notifications",
   },
 ];
 
@@ -69,11 +70,14 @@ const TopBar = () => {
             {menuItem.map((item, index) => {
               return (
                 <Button
+                  asChild
                   key={index}
                   className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-black"} ${index === 0 ? "" : "hover:bg-accent"} flex flex-row items-center`}
                 >
-                  <item.icon className="size-4" />
-                  {item.name}
+                  <Link href={item.route}>
+                    <item.icon className="size-4" />
+                    {item.name}
+                  </Link>
                 </Button>
               );
             })}

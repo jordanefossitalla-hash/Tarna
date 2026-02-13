@@ -9,6 +9,7 @@ import {
 } from "../../ui/card";
 import { Button } from "../../ui/button";
 import Image from "next/image";
+import { Badge } from "../../ui/badge";
 
 const GroupDisplay = () => {
   return (
@@ -23,10 +24,10 @@ const GroupDisplay = () => {
           className="object-cover"
         />
         <div className="absolute w-full flex flex-row justify-end items-center pr-2 pt-2">
-          <div className="bg-gray-300 pt-0.5 pb-1 px-2 rounded-4xl flex flex-row items-center gap-2">
+          <Badge variant="secondary" className="text-red-500">
             <Lock className="size-3" color="red" />
-            <p className="text-[12px] text-red-500 font-medium">private</p>
-          </div>
+            Private
+          </Badge>
         </div>
       </div>
       <Card className="border-0 shadow-xl px-0">
