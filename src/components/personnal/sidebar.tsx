@@ -1,9 +1,11 @@
+"use client";
 import { Card, CardDescription } from "../ui/card";
 import { Button } from "../ui/button";
 import { Bell, House, LucideIcon, MessageCircle, Users } from "lucide-react";
 import { FieldSeparator } from "../ui/field";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type menuItemType = {
   id: number;
@@ -58,6 +60,15 @@ const GroupItem: groupeType[] = [
 ];
 
 const Sidebar = () => {
+  const pathname = usePathname();
+
+  // Renvoie le premier prefix qui matche, ou undefined
+  const currentPrefix = menuItem.find(
+    (p) => pathname === p.route || pathname.startsWith(p.route + "/"),
+  );
+  const isActive = (prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix + "/");
+
   return (
     <Card className="w-[250px] pr-2 rounded h-fit">
       <Card className="flex flex-col shadow-none border-0 gap-1 p-0">
@@ -66,7 +77,7 @@ const Sidebar = () => {
             <Button
               asChild
               key={index}
-              className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-black"} ${index === 0 ? "" : "hover:bg-accent"} flex flex-row items-center justify-start py-5`}
+              className={`${isActive(item.route) ? "bg-primary" : "bg-transparent"} ${isActive(item.route) ? "text-white" : "text-black"} ${isActive(item.route) ? "hover:text-white" : "hover:text-black"} ${isActive(item.route) ? "" : "hover:bg-accent"} flex flex-row items-center justify-start py-5`}
             >
               <Link href={item.route}>
                 <item.icon className="size-4" />

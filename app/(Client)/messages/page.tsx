@@ -13,6 +13,7 @@ import {
   CardHeader,
 } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/src/components/ui/input-group";
 import {
   EllipsisVertical,
   Image,
@@ -28,14 +29,12 @@ const MessagesPage = () => {
   return (
     <div className="max-w-2xl w-2xl h-full pb-20 flex flex-row gap-0 justify-between">
       <Card className="w-2/5 rounded h-full border-0 shadow-none px-1">
-        <Card className="flex flex-row items-center gap-1 border py-1 px-2 w-full">
-          <Search className="size-4" />
-          <Input
-            placeholder="search for a conversation..."
-            className="border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
-            tabIndex={-1}
-          />
-        </Card>
+        <InputGroup className="w-full">
+          <InputGroupInput placeholder="Search for a conversation..." />
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+        </InputGroup>
         <div className="flex flex-col gap-2 pr-1 overflow-scroll hide-scrollbar">
           {Array.from({ length: 15 }).map((item, index) => {
             return <MessageItem key={index} />;
@@ -48,10 +47,7 @@ const MessagesPage = () => {
           <div className="flex flex-row items-center gap-1">
             <div>
               <Avatar>
-                <AvatarImage
-                  src="https://github.com/shadcn.png"
-                  alt="profil"
-                />
+                <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </div>

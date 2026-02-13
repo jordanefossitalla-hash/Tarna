@@ -12,6 +12,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
 
 type menuItemType = {
   id: number;
@@ -58,14 +59,12 @@ const TopBar = () => {
       {/* search bar and nav item  */}
       <Card className="border-0 shadow-none p-0 w-3/4">
         <CardContent className="flex flex-row justify-between items-center p-0 gap-2">
-          <Card className="flex flex-row items-center gap-1 border py-1 px-3 w-full">
-            <Search className="size-4" />
-            <Input
-              placeholder="Search anythings..."
-              className="border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
-              tabIndex={-1}
-            />
-          </Card>
+          <InputGroup className="w-full">
+            <InputGroupInput placeholder="Search anything..." />
+            <InputGroupAddon>
+              <Search />
+            </InputGroupAddon>
+          </InputGroup>
           <Card className="flex flex-row items-center gap-2 p-0 shadow-none border-0 w-fit">
             {menuItem.map((item, index) => {
               return (
@@ -87,10 +86,7 @@ const TopBar = () => {
       {/* avatar  */}
       <Card className="p-0 border-0 shadow-none flex flex-col items-end">
         <Avatar>
-          <AvatarImage
-            src="https://github.com/shadcn.png"
-            alt="profil"
-          />
+          <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </Card>

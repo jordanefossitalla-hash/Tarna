@@ -50,7 +50,7 @@ const GroupDisplay = () => {
         </CardContent>
         <CardFooter>
           <Button asChild className="w-full cursor-pointer" variant={"outline"}>
-            <Link href={"/groupdetail"}>See group</Link>
+            <Link href={"/groups/detail"}>See group</Link>
           </Button>
         </CardFooter>
       </Card>

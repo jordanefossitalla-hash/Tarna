@@ -1,5 +1,4 @@
-import MessageDisplay from "@/src/components/personnal/ui/messageDisplay";
-import MessageGroupDisplay from "@/src/components/personnal/ui/messageGroupDisplay";
+import ListGroupsItems from "@/src/components/personnal/clientComponent/listGroupsItems";
 import {
   Avatar,
   AvatarFallback,
@@ -64,11 +63,7 @@ const GroupDetailPage = () => {
           </Card>
         </div>
       </CardHeader>
-      <CardContent className="flex h-full flex-col gap-2 pr-1 overflow-scroll hide-scrollbar">
-        {Array.from({ length: 15 }).map((_, index) => {
-          return <MessageGroupDisplay key={index} id={index} />;
-        })}
-      </CardContent>
+      <ListGroupsItems items={[1,2,4,5,6,7,8,9,10,11,12,13,14,15,16]} />
       {/* read section  */}
       <CardFooter className="h-20 flex flex-row items-center gap-1">
         <div className="flex flex-row items-center gap-2">
