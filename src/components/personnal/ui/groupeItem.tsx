@@ -26,8 +26,7 @@ const GroupeItem = ({ item }: { item: groupeType }) => {
           <Avatar className="rounded-md">
             <AvatarImage
               src="https://github.com/shadcn.png"
-              alt="@shadcn"
-              className="grayscale"
+              alt="profil"
             />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>

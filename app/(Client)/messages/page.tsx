@@ -50,8 +50,7 @@ const MessagesPage = () => {
               <Avatar>
                 <AvatarImage
                   src="https://github.com/shadcn.png"
-                  alt="@shadcn"
-                  className="grayscale"
+                  alt="profil"
                 />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>

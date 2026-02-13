@@ -84,19 +84,21 @@ const Sidebar = () => {
         {GroupItem.slice(0, 3).map((el, index) => {
           return (
             <Button
+              asChild
               variant={"ghost"}
               key={index}
               className="justify-start cursor-pointer hover:text-blue-500"
             >
-              <Avatar className="rounded-md">
-                <AvatarImage
-                  src="https://github.com/shadcn.png"
-                  alt="@shadcn"
-                  className="grayscale"
-                />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <p>{el.title}</p>
+              <Link href={"/groupdetail"}>
+                <Avatar className="rounded-md">
+                  <AvatarImage
+                    src="https://github.com/shadcn.png"
+                    alt="profil"
+                  />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <p>{el.title}</p>
+              </Link>
             </Button>
           );
         })}

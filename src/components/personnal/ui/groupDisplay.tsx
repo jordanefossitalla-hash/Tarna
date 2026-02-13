@@ -10,6 +10,7 @@ import {
 import { Button } from "../../ui/button";
 import Image from "next/image";
 import { Badge } from "../../ui/badge";
+import Link from "next/link";
 
 const GroupDisplay = () => {
   return (
@@ -48,8 +49,8 @@ const GroupDisplay = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button className="w-full cursor-pointer" variant={"outline"}>
-            See group
+          <Button asChild className="w-full cursor-pointer" variant={"outline"}>
+            <Link href={"/groupdetail"}>See group</Link>
           </Button>
         </CardFooter>
       </Card>
