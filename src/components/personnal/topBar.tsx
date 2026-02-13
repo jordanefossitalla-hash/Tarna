@@ -1,3 +1,4 @@
+"use client"
 import { Card, CardContent } from "../ui/card";
 import {
   Bell,
@@ -13,6 +14,7 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
+import { usePathname } from "next/navigation";
 
 type menuItemType = {
   id: number;
@@ -49,6 +51,15 @@ const menuItem: menuItemType[] = [
 ];
 
 const TopBar = () => {
+  const pathname = usePathname();
+
+  // Renvoie le premier prefix qui matche, ou undefined
+  const currentPrefix = menuItem.find(
+    (p) => pathname === p.route || pathname.startsWith(p.route + "/"),
+  );
+  const isActive = (prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix + "/");
+
   return (
     <Card className="flex flex-row justify-between px-4 rounded py-2 fixed w-7xl h-17 z-40">
       {/* logo  */}
@@ -71,7 +82,7 @@ const TopBar = () => {
                 <Button
                   asChild
                   key={index}
-                  className={`${index === 0 ? "bg-primary" : "bg-transparent"} ${index === 0 ? "text-white" : "text-black"} ${index === 0 ? "hover:text-white" : "hover:text-black"} ${index === 0 ? "" : "hover:bg-accent"} flex flex-row items-center`}
+                  className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-black hover:text-black hover:bg-accent"} flex flex-row items-center`}
                 >
                   <Link href={item.route}>
                     <item.icon className="size-4" />
