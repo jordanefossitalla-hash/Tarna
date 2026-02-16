@@ -77,7 +77,7 @@ const Sidebar = () => {
             <Button
               asChild
               key={index}
-              className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-black hover:text-black hover:bg-accent"}
+              className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-white hover:text-white hover:bg-accent"}
                flex flex-row items-center justify-start py-5`}
             >
               <Link href={item.route}>

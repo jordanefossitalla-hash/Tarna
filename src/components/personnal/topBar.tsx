@@ -93,7 +93,7 @@ const TopBar = () => {
                 <Button
                   asChild
                   key={index}
-                  className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-black hover:text-black hover:bg-accent"} flex flex-row items-center`}
+                  className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-white hover:text-white hover:bg-accent"} flex flex-row items-center`}
                 >
                   <Link href={item.route}>
                     <item.icon className="size-4" />
@@ -107,38 +107,10 @@ const TopBar = () => {
       </Card>
       {/* avatar  */}
       <Card className="p-0 border-0 shadow-none flex flex-col items-end">
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger asChild>
             <Avatar className="hidden lg:block">
               <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-40" align="start">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Menu</DropdownMenuLabel>
-              <DropdownMenuItem className="flex flex-row gap-2">
-                <User className="size-4" /> Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-row gap-2">
-                <Settings className="size-4" /> Setting
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-row gap-2">
-                <LogOut className="size-4" /> Logout
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Avatar size="sm">
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="profil"
-                  />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                Profil
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Card className="flex flex-row items-center cursor-pointer hover:bg-accent p-2 lg:hidden">

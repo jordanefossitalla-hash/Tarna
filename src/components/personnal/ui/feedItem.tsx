@@ -106,7 +106,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             >
               <Heart
                 className="size-5"
-                color={isLikedType === "heart" ? "red" : "black"}
+                color={isLikedType === "heart" ? "red" : "white"}
               />
               <p>
                 {isLikedType === "heart"
@@ -122,7 +122,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             >
               <Lightbulb
                 className="size-5"
-                color={isLikedType === "light" ? "yellow" : "black"}
+                color={isLikedType === "light" ? "yellow" : "white"}
               />
               <p>
                 {isLikedType === "light"
@@ -138,7 +138,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             >
               <Handshake
                 className="size-5"
-                color={isLikedType === "handshake" ? "blue" : "black"}
+                color={isLikedType === "handshake" ? "blue" : "white"}
               />
               <p>
                 {isLikedType === "handshake"
