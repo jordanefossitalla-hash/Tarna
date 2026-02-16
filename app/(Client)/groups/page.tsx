@@ -150,7 +150,7 @@ const GroupsHeader = () => {
 const GroupContent = () => {
   return (
     <div className="flex flex-col gap-3">
-      <Card className="p-2 bg-accent flex flex-row gap-2 xl:max-w-2xl w-full rounded-md">
+      {/* <Card className="p-2 bg-accent flex flex-row gap-2 xl:max-w-2xl w-full rounded-md">
         <div className="w-full">
           <Button
             className="w-full cursor-pointer flex flex-row items-center gap-2"
@@ -175,7 +175,7 @@ const GroupContent = () => {
             pending
           </Button>
         </div>
-      </Card>
+      </Card> */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <GroupDisplay />
         <GroupDisplay />

@@ -64,7 +64,7 @@ const NotificationPage = () => {
           </Button>
         </div>
       </div>
-      <Card className="p-2 bg-accent flex flex-row gap-2 max-w-2xl w-full rounded-md">
+      {/* <Card className="p-2 bg-accent flex flex-row gap-2 max-w-2xl w-full rounded-md">
         <div className="w-full">
           <Button
             className="w-full cursor-pointer flex flex-row items-center gap-2"
@@ -83,7 +83,7 @@ const NotificationPage = () => {
             Unread
           </Button>
         </div>
-      </Card>
+      </Card> */}
       <div className="flex flex-col gap-1">
         {Array.from({ length: 7 }).map((item, index) => {
           return <NotificationItem key={index} />;

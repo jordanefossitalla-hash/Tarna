@@ -9,6 +9,8 @@ import {
   MessageCircle,
   Pin,
   Share2,
+  TriangleAlert,
+  User,
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -25,6 +27,14 @@ import { commentsData } from "@/src/data/comments";
 import { Input } from "../../ui/input";
 import { Button } from "../../ui/button";
 import { Send } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "../../ui/dropdown-menu";
 
 const FeedItem = ({ post }: { post: Post }) => {
   const [isLikedType, setIsLikedType] = useState<string>("");
@@ -53,7 +63,21 @@ const FeedItem = ({ post }: { post: Post }) => {
             </div>
           </div>
           <div>
-            <Ellipsis />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild className="cursor-pointer">
+                <Ellipsis />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-40" align="start">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="size-4" /> View profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">
+                    <TriangleAlert className="size-4" /> Report post
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent>
@@ -148,7 +172,11 @@ const FeedItem = ({ post }: { post: Post }) => {
                 placeholder="Write a comment..."
                 className="border-0 h-7 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 p-0"
               />
-              <Button variant="ghost" size="sm" className="p-1 h-6 cursor-pointer">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1 h-6 cursor-pointer"
+              >
                 <Send className="size-3" />
               </Button>
             </div>
