@@ -116,7 +116,7 @@ const AddPostCard = () => {
             <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-           <div className="flex lg:hidden">
+          <div className="flex lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
@@ -133,11 +133,7 @@ const AddPostCard = () => {
                         className="flex flex-row gap-2"
                       >
                         <media.icon className="lg:size-4 size-3.5" />
-                        {media.title ? (
-                          <p>{media.title}</p>
-                        ) : (
-                          ""
-                        )}
+                        {media.title ? <p>{media.title}</p> : ""}
                       </DropdownMenuItem>
                     );
                   })}
@@ -155,24 +151,27 @@ const AddPostCard = () => {
             onFocus={() => setIsWrite(true)}
             onBlur={() => setIsWrite(false)}
           ></textarea>
-          <div className="flex-row flex-wrap items-center gap-2 justify-between hidden lg:flex">
-            {mediaElement.map((media, index) => {
-              return (
-                <Card
-                  key={index}
-                  className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2"
-                >
-                  <media.icon className="lg:size-4 size-3.5" />
-                  {media.title ? (
-                    <p className="hidden lg:block">{media.title}</p>
-                  ) : (
-                    ""
-                  )}
-                </Card>
-              );
-            })}
+          <div className="flex-row flex-wrap items-center gap-2 hidden lg:flex">
+            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+              <Image className="lg:size-4 size-3.5" />
+            </Card>
+            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+              <Camera className="lg:size-4 size-3.5" />
+            </Card>
+            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+              <FileText className="lg:size-4 size-3.5" />
+            </Card>
+            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+              <Link className="lg:size-4 size-3.5" />
+            </Card>
+            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+              <Smile className="lg:size-4 size-3.5" />
+            </Card>
+            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+              <Hash className="lg:size-4 size-3.5" />
+            </Card>
           </div>
-         
+
           <div>
             <Select>
               <SelectTrigger className="w-full max-w-48">

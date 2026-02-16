@@ -20,14 +20,18 @@ import {
   FieldTitle,
 } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/src/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/src/components/ui/input-group";
 import { Label } from "@/src/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/src/components/ui/radio-group";
 import { Globe, GlobeLock, Lock, Plus, Search } from "lucide-react";
 
-const GroupsPage = () => {
+const GroupsHeader = () => {
   return (
-    <div className="xl:w-2xl xl:max-w-2xl pb-20 flex flex-col gap-3 h-full overflow-scroll hide-scrollbar">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-col md:flex-row w-full gap-2 justify-between pt-10">
         <div className="w-3/4">
           <p className="text-2xl font-bold">Groups</p>
@@ -139,7 +143,14 @@ const GroupsPage = () => {
           <Search />
         </InputGroupAddon>
       </InputGroup>
-      <Card className="p-2 bg-accent flex flex-row gap-2 max-w-2xl w-full rounded-md">
+    </div>
+  );
+};
+
+const GroupContent = () => {
+  return (
+    <div className="flex flex-col gap-3">
+      <Card className="p-2 bg-accent flex flex-row gap-2 xl:max-w-2xl w-full rounded-md">
         <div className="w-full">
           <Button
             className="w-full cursor-pointer flex flex-row items-center gap-2"
@@ -170,6 +181,15 @@ const GroupsPage = () => {
         <GroupDisplay />
         <GroupDisplay />
       </div>
+    </div>
+  );
+};
+
+const GroupsPage = () => {
+  return (
+    <div className="xl:w-2xl xl:max-w-2xl w-/4 pb-20 flex flex-col gap-3 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
+      <GroupsHeader />
+      <GroupContent />
     </div>
   );
 };

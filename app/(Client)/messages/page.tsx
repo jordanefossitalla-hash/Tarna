@@ -52,7 +52,7 @@ const MessagesPage = () => {
               </Avatar>
             </div>
             <div className="flex flex-col gap-0 leading-5">
-              <p className=" max-w-[110px] truncate font-semibold">
+              <p className=" max-w-27.5 truncate font-semibold">
                 Marie Dupont
               </p>
             </div>
@@ -86,7 +86,7 @@ const MessagesPage = () => {
           </div>
           <Card className="flex flex-row items-center gap-1 border py-1 px-3 w-full">
             <Input
-              placeholder="Read anything..."
+              placeholder="Write anything..."
               className="border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
               tabIndex={-1}
             />

@@ -45,7 +45,7 @@ const GroupDetailPage = () => {
               </Avatar>
             </div>
             <div className="flex flex-col gap-0 leading-5">
-              <p className=" max-w-[110px] truncate font-semibold">
+              <p className=" max-w-27.5 truncate font-semibold">
                 Tech KIAMA
               </p>
             </div>
