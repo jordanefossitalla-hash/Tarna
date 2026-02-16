@@ -25,7 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import NextImage from "next/image";
+import { X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,10 +108,47 @@ const mediaElement: mediaType[] = [
 
 const AddPostCard = () => {
   const [isWrite, setIsWrite] = useState<boolean>(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handlePdfUpload = () => {
+    pdfInputRef.current?.click();
+  };
+
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPdfFile(file);
+    }
+  };
+
+  const removePdf = () => {
+    setPdfFile(null);
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+  };
   return (
     <form action="" className="py-4">
       <Card
-        className={`h-50 lg:w-full py-4 px-3 flex flex-row justify-between ${isWrite ? "shadow-blue-400" : "shadow-none"}`}
+        className={`h-60 lg:w-full py-4 px-3 flex flex-row justify-between ${isWrite ? "shadow-blue-400" : "shadow-none"}`}
       >
         <div className="pl-2 flex flex-col justify-between lg:block">
           <Avatar>
@@ -143,22 +182,72 @@ const AddPostCard = () => {
           </div>
         </div>
         <div className="w-full flex flex-col gap-3 justify-between lg:justify-normal">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <input
+            type="file"
+            ref={pdfInputRef}
+            accept="application/pdf"
+            className="hidden"
+            onChange={handlePdfChange}
+          />
           <textarea
             name="post"
             id="post"
             placeholder="What's up ?"
-            className="w-full h-full lg:h-20 border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
+            className="w-full h-full lg:h-50 border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
             onFocus={() => setIsWrite(true)}
             onBlur={() => setIsWrite(false)}
           ></textarea>
+          {imagePreview && (
+            <div className="relative w-20 h-80 rounded-xl overflow-hidden">
+              <NextImage
+                src={imagePreview}
+                alt="preview"
+                fill
+                className="object-cover"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          )}
+          {pdfFile && (
+            <div className="flex flex-row items-center gap-2 bg-accent rounded-lg px-3 py-2 w-fit">
+              <FileText className="size-4 text-red-500" />
+              <p className="text-sm truncate max-w-48">{pdfFile.name}</p>
+              <button
+                type="button"
+                onClick={removePdf}
+                className="bg-black/60 text-white rounded-full p-0.5 hover:bg-black/80 cursor-pointer"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          )}
           <div className="flex-row flex-wrap items-center gap-2 hidden lg:flex">
-            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+            <Card
+              className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2"
+              onClick={handleImageUpload}
+            >
               <Image className="lg:size-4 size-3.5" />
             </Card>
             <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
               <Camera className="lg:size-4 size-3.5" />
             </Card>
-            <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+            <Card
+              className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2"
+              onClick={handlePdfUpload}
+            >
               <FileText className="lg:size-4 size-3.5" />
             </Card>
             <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">

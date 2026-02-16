@@ -1,3 +1,17 @@
+export type Comment = {
+  id: number;
+  author: {
+    name: string;
+    username: string;
+    avatar: string;
+    initials: string;
+  };
+  content: string;
+  timeAgo: string;
+  likes: number;
+  replies?: Comment[];
+};
+
 export type Post = {
   id: number;
   author: {
