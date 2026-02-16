@@ -8,6 +8,7 @@ import {
   Image,
   Link,
   LucideIcon,
+  Plus,
   Smile,
   UserLock,
   Users,
@@ -25,6 +26,14 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 type selectType = {
   id: number;
@@ -100,36 +109,70 @@ const AddPostCard = () => {
   return (
     <form action="" className="py-4">
       <Card
-        className={`h-50 w-2xl py-4 px-3 flex flex-row justify-between ${isWrite ? "shadow-blue-400" : "shadow-none"}`}
+        className={`h-50 lg:w-full py-4 px-3 flex flex-row justify-between ${isWrite ? "shadow-blue-400" : "shadow-none"}`}
       >
-        <div className="pl-2">
+        <div className="pl-2 flex flex-col justify-between lg:block">
           <Avatar>
-            <AvatarImage
-              src="https://github.com/shadcn.png"
-              alt="profil"
-            />
+            <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
+           <div className="flex lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Card className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2">
+                  <Plus className="lg:size-4 size-3.5" />
+                </Card>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-40" align="start">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Medias</DropdownMenuLabel>
+                  {mediaElement.map((media, index) => {
+                    return (
+                      <DropdownMenuItem
+                        key={index}
+                        className="flex flex-row gap-2"
+                      >
+                        <media.icon className="lg:size-4 size-3.5" />
+                        {media.title ? (
+                          <p>{media.title}</p>
+                        ) : (
+                          ""
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <div className="w-full flex flex-col gap-3">
+        <div className="w-full flex flex-col gap-3 justify-between lg:justify-normal">
           <textarea
             name="post"
             id="post"
             placeholder="What's up ?"
-            className="w-full h-20 border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
+            className="w-full h-full lg:h-20 border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
             onFocus={() => setIsWrite(true)}
             onBlur={() => setIsWrite(false)}
           ></textarea>
-          <div className="flex flex-row items-center gap-2 justify-between">
+          <div className="flex-row flex-wrap items-center gap-2 justify-between hidden lg:flex">
             {mediaElement.map((media, index) => {
               return (
-                <Card key={index} className="flex flex-row items-center gap-2 cursor-pointer hover:bg-accent p-2">
-                  <media.icon className="size-4" />
-                  {media.title ? <p>{media.title}</p> : ""}
+                <Card
+                  key={index}
+                  className="flex flex-row items-center lg:gap-2 cursor-pointer hover:bg-accent p-2"
+                >
+                  <media.icon className="lg:size-4 size-3.5" />
+                  {media.title ? (
+                    <p className="hidden lg:block">{media.title}</p>
+                  ) : (
+                    ""
+                  )}
                 </Card>
               );
             })}
           </div>
+         
           <div>
             <Select>
               <SelectTrigger className="w-full max-w-48">

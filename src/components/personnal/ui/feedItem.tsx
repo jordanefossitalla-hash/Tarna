@@ -40,14 +40,14 @@ const FeedItem = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div>
+        <div className="flex flex-col gap-2">
           <p className="text-justify text-[15px]">
             Lorem ipsum, dolor sit amet consectetur adipisicing elit. Maiores
             soluta velit nulla inventore itaque minus omnis aspernatur,
             cupiditate temporibus animi molestiae, a eos reprehenderit totam
             odit, quisquam labore dicta eaque explicabo accusamus?
           </p>
-          {/* <div className="bg-gray-400 w-full h-100 rounded-2xl"></div> */}
+          {/* <div className="bg-gray-400 w-full h-50 lg:h-100 rounded-2xl"></div> */}
         </div>
       </CardContent>
       <CardFooter className="flex flex-row items-center justify-between">

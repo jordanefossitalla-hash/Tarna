@@ -70,14 +70,15 @@ const Sidebar = () => {
     pathname === prefix || pathname.startsWith(prefix + "/");
 
   return (
-    <Card className="w-[250px] pr-2 rounded h-fit">
+    <Card className="lg:w-72 xl:w-62.5 pr-2 rounded h-fit hidden lg:block">
       <Card className="flex flex-col shadow-none border-0 gap-1 p-0">
         {menuItem.map((item, index) => {
           return (
             <Button
               asChild
               key={index}
-              className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-black hover:text-black hover:bg-accent"} flex flex-row items-center justify-start py-5`}
+              className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-black hover:text-black hover:bg-accent"}
+               flex flex-row items-center justify-start py-5`}
             >
               <Link href={item.route}>
                 <item.icon className="size-4" />
@@ -100,7 +101,7 @@ const Sidebar = () => {
               key={index}
               className="justify-start cursor-pointer hover:text-blue-500"
             >
-              <Link href={"/groupdetail"}>
+              <Link href={"/groups/detail"}>
                 <Avatar className="rounded-md">
                   <AvatarImage
                     src="https://github.com/shadcn.png"

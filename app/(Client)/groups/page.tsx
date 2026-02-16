@@ -27,8 +27,8 @@ import { Globe, GlobeLock, Lock, Plus, Search } from "lucide-react";
 
 const GroupsPage = () => {
   return (
-    <div className="w-2xl pb-20 flex flex-col gap-3 h-full overflow-scroll hide-scrollbar">
-      <div className="flex flex-row w-full gap-2 justify-between pt-10">
+    <div className="xl:w-2xl xl:max-w-2xl pb-20 flex flex-col gap-3 h-full overflow-scroll hide-scrollbar">
+      <div className="flex flex-col md:flex-row w-full gap-2 justify-between pt-10">
         <div className="w-3/4">
           <p className="text-2xl font-bold">Groups</p>
           <p className="text-gray-600">
@@ -165,7 +165,7 @@ const GroupsPage = () => {
           </Button>
         </div>
       </Card>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <GroupDisplay />
         <GroupDisplay />
         <GroupDisplay />

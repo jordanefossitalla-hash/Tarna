@@ -38,14 +38,14 @@ const groupeSuggestion: groupeType[] = [
   },
   {
     id: 2,
-    title: "Développemen",
+    title: "Développment",
     memberCount: 78,
   },
 ];
 
 const RightBar = () => {
   return (
-    <Card className="w-[300px] pl-2 rounded h-full border-r-0 shadow-none">
+    <Card className="w-75 pl-2 rounded h-full border-r-0 shadow-none hidden xl:block">
       <Card className="gap-0 p-1">
         <CardHeader className="p-2">
           <div className="flex flex-row items-center gap-2">

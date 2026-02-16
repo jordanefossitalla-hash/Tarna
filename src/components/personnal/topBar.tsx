@@ -1,20 +1,32 @@
-"use client"
+"use client";
 import { Card, CardContent } from "../ui/card";
 import {
   Bell,
   GalleryVerticalEnd,
   House,
   LucideIcon,
+  Menu,
   MessageCircle,
   Search,
   Users,
 } from "lucide-react";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../ui/input-group";
 import { usePathname } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 type menuItemType = {
   id: number;
@@ -53,22 +65,18 @@ const menuItem: menuItemType[] = [
 const TopBar = () => {
   const pathname = usePathname();
 
-  // Renvoie le premier prefix qui matche, ou undefined
-  const currentPrefix = menuItem.find(
-    (p) => pathname === p.route || pathname.startsWith(p.route + "/"),
-  );
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
 
   return (
-    <Card className="flex flex-row justify-between px-4 rounded py-2 fixed w-7xl h-17 z-40">
+    <Card className="flex flex-row justify-between px-4 rounded py-2  xl:w-7xl h-17 z-40">
       {/* logo  */}
       <Card className="shadow-none border-0 p-0 flex flex-row gap-1 items-center">
         <GalleryVerticalEnd className="size-4" />
-        <p>Tarna</p>
+        <p className="hidden lg:block">Tarna</p>
       </Card>
       {/* search bar and nav item  */}
-      <Card className="border-0 shadow-none p-0 w-3/4">
+      <Card className="border-0 shadow-none p-0 w-3/4 hidden lg:block">
         <CardContent className="flex flex-row justify-between items-center p-0 gap-2">
           <InputGroup className="w-full">
             <InputGroupInput placeholder="Search anything..." />
@@ -96,10 +104,45 @@ const TopBar = () => {
       </Card>
       {/* avatar  */}
       <Card className="p-0 border-0 shadow-none flex flex-col items-end">
-        <Avatar>
+        <Avatar className="hidden lg:block">
           <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Card className="flex flex-row items-center cursor-pointer hover:bg-accent p-2 lg:hidden">
+              <Menu className="lg:size-4 size-3.5" />
+            </Card>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-40" align="start">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Menu</DropdownMenuLabel>
+              {menuItem.map((item, index) => {
+                return (
+                  <DropdownMenuItem
+                    asChild
+                    key={index}
+                    className="flex flex-row gap-2"
+                  >
+                    <Link href={item.route}>
+                      <item.icon className="size-3.5" /> {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+              <DropdownMenuItem>
+                <Avatar size="sm">
+                  <AvatarImage
+                    src="https://github.com/shadcn.png"
+                    alt="profil"
+                  />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                Profil
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </Card>
     </Card>
   );
