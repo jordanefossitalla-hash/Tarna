@@ -110,7 +110,7 @@ const TopBar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div>
-              <Avatar className="hidden lg:block">
+              <Avatar className="hidden lg:block cursor-pointer">
                 <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
