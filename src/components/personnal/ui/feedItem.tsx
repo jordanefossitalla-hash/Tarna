@@ -3,6 +3,7 @@ import {
   BadgeCheck,
   ChevronDown,
   Ellipsis,
+  FileText,
   Handshake,
   Heart,
   Lightbulb,
@@ -15,7 +16,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useState } from "react";
-import { Post } from "@/src/types/post";
+import { Post, Media } from "@/src/types/post";
 import Image from "next/image";
 import {
   Collapsible,
@@ -83,15 +84,77 @@ const FeedItem = ({ post }: { post: Post }) => {
         <CardContent>
           <div className="flex flex-col gap-2">
             <p className="text-justify text-[15px]">{post.content}</p>
-            {post.image != null && (
-              <div className="bg-gray-400 w-full h-50 lg:h-100 rounded-2xl">
-                <Image
-                  src={post.image}
-                  alt="post image"
-                  width={600}
-                  height={400}
-                  className="rounded-2xl w-full h-full object-cover"
-                />
+
+            {/* Images */}
+            {post.media.filter((m) => m.type === "image").length > 0 && (
+              <div
+                className={`grid gap-2 ${
+                  post.media.filter((m) => m.type === "image").length === 1
+                    ? "grid-cols-1"
+                    : post.media.filter((m) => m.type === "image").length === 2
+                      ? "grid-cols-2"
+                      : post.media.filter((m) => m.type === "image").length ===
+                          3
+                        ? "grid-cols-2"
+                        : "grid-cols-2"
+                }`}
+              >
+                {post.media
+                  .filter((m) => m.type === "image")
+                  .map((media, index) => {
+                    const imageCount = post.media.filter(
+                      (m) => m.type === "image",
+                    ).length;
+                    const isFullWidth =
+                      imageCount === 1 || (imageCount === 3 && index === 0);
+                    return (
+                      <div
+                        key={media.id}
+                        className={`bg-gray-400 rounded-2xl overflow-hidden ${
+                          isFullWidth
+                            ? "col-span-2 h-50 lg:h-100"
+                            : "h-40 lg:h-60"
+                        } ${imageCount === 1 ? "col-span-1" : ""}`}
+                      >
+                        <Image
+                          src={media.url}
+                          alt={media.alt || "post image"}
+                          width={600}
+                          height={400}
+                          className="rounded-2xl w-full h-full object-cover"
+                        />
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
+            {/* Documents */}
+            {post.media.filter((m) => m.type === "document").length > 0 && (
+              <div className="flex flex-col gap-2">
+                {post.media
+                  .filter((m) => m.type === "document")
+                  .map((media) => (
+                    <div
+                      key={media.id}
+                      rel="noopener noreferrer"
+                      className="flex flex-row items-center gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-700">
+                        <FileText className="size-5 text-blue-400" />
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {media.fileName || "Document"}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {media.fileExtension?.toUpperCase()}
+                          {media.fileSize &&
+                            ` · ${(media.fileSize / 1024).toFixed(0)} Ko`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -151,7 +214,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             <CollapsibleTrigger asChild>
               <div className="flex flex-row items-center gap-0.5 cursor-pointer">
                 <MessageCircle className="size-5" />
-                <p>{post.comments}</p>
+                <p>{commentsData[post.id]?.length || 0}</p>
                 <ChevronDown className="size-5" />
               </div>
             </CollapsibleTrigger>

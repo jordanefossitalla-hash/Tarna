@@ -12,6 +12,21 @@ export type Comment = {
   replies?: Comment[];
 };
 
+export type MediaType = "image" | "video" | "document";
+
+export type Media = {
+  id: number;
+  type: MediaType;
+  url: string;
+  alt?: string;
+  /** Nom du fichier (utile pour les documents) */
+  fileName?: string;
+  /** Taille du fichier en octets (utile pour les documents) */
+  fileSize?: number;
+  /** Extension du fichier (ex: pdf, docx, xlsx) */
+  fileExtension?: string;
+};
+
 export type Post = {
   id: number;
   author: {
@@ -23,7 +38,7 @@ export type Post = {
   };
   content: string;
   isPinned: boolean;
-  image: string | null;
+  media: Media[];
   reactions: {
     heart: number;
     lightbulb: number;
