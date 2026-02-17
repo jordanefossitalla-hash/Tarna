@@ -107,18 +107,38 @@ const TopBar = () => {
       </Card>
       {/* avatar  */}
       <Card className="p-0 border-0 shadow-none flex flex-col items-end">
-            <Avatar className="hidden lg:block">
-              <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Card className="flex flex-row items-center cursor-pointer hover:bg-accent p-2 lg:hidden">
-              <Menu className="lg:size-4 size-3.5" />
-            </Card>
+            <div>
+              <Avatar className="hidden lg:block">
+                <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+              <Card className="flex flex-row items-center cursor-pointer hover:bg-accent p-2 lg:hidden">
+                <Menu className="lg:size-4 size-3.5" />
+              </Card>
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-40" align="start">
-            <DropdownMenuGroup>
+            <DropdownMenuGroup className="hidden lg:block">
+              <DropdownMenuLabel>Menu</DropdownMenuLabel>
+              <DropdownMenuItem asChild className="flex flex-row gap-2">
+                <div>
+                  <User className="size-3.5" /> Profil
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="flex flex-row gap-2">
+                <div>
+                  <Settings className="size-3.5" /> Settings
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="flex flex-row gap-2">
+                <div>
+                  <LogOut className="size-3.5" /> Log out
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuGroup className="lg:hidden">
               <DropdownMenuLabel>Menu</DropdownMenuLabel>
               {menuItem.map((item, index) => {
                 return (
