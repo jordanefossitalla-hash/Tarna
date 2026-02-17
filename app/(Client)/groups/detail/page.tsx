@@ -70,7 +70,7 @@ const GroupDetailPage = () => {
       </Card>
 
       {/* Add Post */}
-      <AddPostCard />
+      <AddPostCard isgroup={true} />
 
       {/* Group Feed */}
       <NewFeed />

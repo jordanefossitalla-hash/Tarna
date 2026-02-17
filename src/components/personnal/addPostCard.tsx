@@ -68,12 +68,6 @@ const SelectElement: selectType[] = [
     icon: Users,
     value: "friend",
   },
-  {
-    id: 3,
-    title: "Group",
-    icon: UserLock,
-    value: "group",
-  },
 ];
 const mediaElement: mediaType[] = [
   {
@@ -106,7 +100,7 @@ const mediaElement: mediaType[] = [
   },
 ];
 
-const AddPostCard = () => {
+const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   const [isWrite, setIsWrite] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -225,13 +219,13 @@ const AddPostCard = () => {
             <div className="flex flex-row items-center gap-2 bg-accent rounded-lg px-3 py-2 w-fit">
               <FileText className="size-4 text-red-500" />
               <p className="text-sm truncate max-w-48">{pdfFile.name}</p>
-              <button
+              <Button
                 type="button"
                 onClick={removePdf}
                 className="bg-black/60 text-white rounded-full p-0.5 hover:bg-black/80 cursor-pointer"
               >
                 <X className="size-3" />
-              </button>
+              </Button>
             </div>
           )}
           <div className="flex-row flex-wrap items-center gap-2 hidden lg:flex">
@@ -261,29 +255,31 @@ const AddPostCard = () => {
             </Card>
           </div>
 
-          <div>
-            <Select>
-              <SelectTrigger className="w-full max-w-48">
-                <SelectValue placeholder="Select visibility" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Visibility</SelectLabel>
-                  {SelectElement.map((el, index) => {
-                    return (
-                      <SelectItem
-                        key={index}
-                        value={el.value}
-                        className="flex flex-row items-center gap-2"
-                      >
-                        <el.icon /> {el.title}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+          {!isgroup && (
+            <div>
+              <Select>
+                <SelectTrigger className="w-full max-w-48">
+                  <SelectValue placeholder="Select visibility" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Visibility</SelectLabel>
+                    {SelectElement.map((el, index) => {
+                      return (
+                        <SelectItem
+                          key={index}
+                          value={el.value}
+                          className="flex flex-row items-center gap-2"
+                        >
+                          <el.icon /> {el.title}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <div className="flex flex-col justify-end h-full">
           <Button>Publish</Button>
