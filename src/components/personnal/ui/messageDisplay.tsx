@@ -12,8 +12,8 @@ const MessageSend = () => {
 const MessageReceive = () => {
   return (
     <div className="flex flex-row justify-start">
-      <div className="bg-white px-2 py-1 w-3/5 rounded-t-2xl rounded-br-2xl border shadow">
-        <p className="text-black text-[15px]">
+      <div className="px-2 py-1 w-3/5 rounded-t-2xl rounded-br-2xl border shadow">
+        <p className="text-white text-[15px]">
           Lorem ipsum dolor sit amet consectetur adipisicing elit.
         </p>
       </div>

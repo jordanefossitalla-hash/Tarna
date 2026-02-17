@@ -21,10 +21,10 @@ const MessageReceive = () => {
       <Avatar>
         <AvatarFallback>ML</AvatarFallback>
       </Avatar>
-      <div className="bg-white px-2 py-1 w-3/5 rounded-t-2xl rounded-br-2xl border shadow">
+      <div className="px-2 py-1 w-3/5 rounded-t-2xl rounded-br-2xl border shadow">
         <div>
           <Badge variant="secondary">Marie Lepen</Badge>
-          <p className="text-black text-[15px]">
+          <p className="text-white text-[15px]">
             Lorem, ipsum dolor sit amet consectetur adipisicing elit. Eos id
             ipsum quaerat vel ab, repudiandae tempora deleniti ullam nemo quis?
           </p>
