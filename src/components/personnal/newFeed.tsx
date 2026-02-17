@@ -11,7 +11,7 @@ const NewFeed = () => {
   return (
     <div className="flex flex-col gap-2">
         {/* Feed action  */}
-      <Card className="p-2 bg-accent flex flex-row gap-2 lg:max-w-2xl w-full rounded-md">
+      <Card className="p-2 bg-accent flex flex-row gap-2  w-full rounded-md">
         <div className="w-full">
           <Button
             className="w-full cursor-pointer flex flex-row items-center gap-2"

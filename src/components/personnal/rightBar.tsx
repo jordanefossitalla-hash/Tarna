@@ -46,7 +46,7 @@ const groupeSuggestion: groupeType[] = [
 const RightBar = () => {
   return (
     <Card className="w-75 pl-2 rounded h-full border-r-0 shadow-none hidden xl:block">
-      <Card className="gap-0 p-1">
+      {/* <Card className="gap-0 p-1">
         <CardHeader className="p-2">
           <div className="flex flex-row items-center gap-2">
             <TrendingUp className="size-4" color="#1549e6" />
@@ -58,7 +58,7 @@ const RightBar = () => {
             return <HastagItem item={item} key={index} />;
           })}
         </CardContent>
-      </Card>
+      </Card> */}
       <Card className="gap-0 p-1">
         <CardHeader className="p-2">
           <div className="flex flex-row items-center gap-2 justify-center">

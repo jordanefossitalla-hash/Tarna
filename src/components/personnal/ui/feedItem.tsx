@@ -218,9 +218,9 @@ const FeedItem = ({ post }: { post: Post }) => {
                 <ChevronDown className="size-5" />
               </div>
             </CollapsibleTrigger>
-            <div className="flex flex-row items-center gap-2 cursor-pointer">
+            {/* <div className="flex flex-row items-center gap-2 cursor-pointer">
               <Share2 className="size-5" />
-            </div>
+            </div> */}
           </div>
         </CardFooter>
         <CollapsibleContent className="flex flex-col gap-3 px-4 pb-4">
