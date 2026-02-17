@@ -1,5 +1,18 @@
 import { Post } from "../types/post";
 
+/** Génère une date ISO relative à maintenant */
+function hoursAgo(h: number): string {
+  return new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
+}
+
+/** Formate un écart en texte lisible */
+function formatTimeAgo(h: number): string {
+  if (h < 1) return "now";
+  if (h < 24) return `${h}h`;
+  const days = Math.floor(h / 24);
+  return `${days}d`;
+}
+
 export const PostsData: Post[] = [
   {
     // Texte seul (aucun média)
@@ -18,8 +31,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 60, lightbulb: 12, handshake: 9 },
     comments: 5,
     shares: 3,
-    createdAt: "2026-02-16T08:30:00Z",
-    timeAgo: "6h",
+    createdAt: hoursAgo(2),
+    timeAgo: formatTimeAgo(2),
   },
   {
     // Texte + 1 image
@@ -45,8 +58,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 128, lightbulb: 34, handshake: 22 },
     comments: 18,
     shares: 7,
-    createdAt: "2026-02-16T06:15:00Z",
-    timeAgo: "8h",
+    createdAt: hoursAgo(5),
+    timeAgo: formatTimeAgo(5),
   },
   {
     // Texte seul
@@ -65,8 +78,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 15, lightbulb: 3, handshake: 8 },
     comments: 2,
     shares: 0,
-    createdAt: "2026-02-16T04:00:00Z",
-    timeAgo: "10h",
+    createdAt: hoursAgo(8),
+    timeAgo: formatTimeAgo(8),
   },
   {
     // Texte + plusieurs images (galerie)
@@ -104,8 +117,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 245, lightbulb: 67, handshake: 41 },
     comments: 32,
     shares: 15,
-    createdAt: "2026-02-15T18:30:00Z",
-    timeAgo: "1d",
+    createdAt: hoursAgo(14),
+    timeAgo: formatTimeAgo(14),
   },
   {
     // Texte + 1 document
@@ -134,8 +147,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 89, lightbulb: 45, handshake: 56 },
     comments: 11,
     shares: 4,
-    createdAt: "2026-02-15T14:00:00Z",
-    timeAgo: "1d",
+    createdAt: hoursAgo(20),
+    timeAgo: formatTimeAgo(20),
   },
   {
     // Texte + image + document
@@ -170,8 +183,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 312, lightbulb: 28, handshake: 95 },
     comments: 47,
     shares: 22,
-    createdAt: "2026-02-15T10:00:00Z",
-    timeAgo: "1d",
+    createdAt: hoursAgo(30),
+    timeAgo: formatTimeAgo(30),
   },
   {
     // Texte + 2 images (avant / après)
@@ -203,8 +216,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 176, lightbulb: 89, handshake: 33 },
     comments: 24,
     shares: 18,
-    createdAt: "2026-02-14T16:45:00Z",
-    timeAgo: "2d",
+    createdAt: hoursAgo(40),
+    timeAgo: formatTimeAgo(40),
   },
   {
     // Texte + document seul (rapport)
@@ -233,8 +246,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 98, lightbulb: 52, handshake: 27 },
     comments: 9,
     shares: 6,
-    createdAt: "2026-02-14T12:00:00Z",
-    timeAgo: "2d",
+    createdAt: hoursAgo(48),
+    timeAgo: formatTimeAgo(48),
   },
   {
     // Texte + 1 image + 2 documents
@@ -278,8 +291,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 42, lightbulb: 18, handshake: 31 },
     comments: 6,
     shares: 12,
-    createdAt: "2026-02-14T09:30:00Z",
-    timeAgo: "2d",
+    createdAt: hoursAgo(52),
+    timeAgo: formatTimeAgo(52),
   },
   {
     // Texte + 4 images (galerie riche)
@@ -323,8 +336,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 203, lightbulb: 15, handshake: 64 },
     comments: 38,
     shares: 25,
-    createdAt: "2026-02-13T15:00:00Z",
-    timeAgo: "3d",
+    createdAt: hoursAgo(72),
+    timeAgo: formatTimeAgo(72),
   },
   {
     // Texte + 1 document (doc technique)
@@ -353,8 +366,8 @@ export const PostsData: Post[] = [
     reactions: { heart: 156, lightbulb: 78, handshake: 45 },
     comments: 21,
     shares: 14,
-    createdAt: "2026-02-13T11:00:00Z",
-    timeAgo: "3d",
+    createdAt: hoursAgo(80),
+    timeAgo: formatTimeAgo(80),
   },
   {
     // Texte seul
@@ -373,7 +386,7 @@ export const PostsData: Post[] = [
     reactions: { heart: 267, lightbulb: 8, handshake: 112 },
     comments: 43,
     shares: 5,
-    createdAt: "2026-02-13T08:00:00Z",
-    timeAgo: "3d",
+    createdAt: hoursAgo(96),
+    timeAgo: formatTimeAgo(96),
   },
 ];
