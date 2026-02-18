@@ -45,7 +45,7 @@ const MessagesPage = () => {
   }, [selectedId]);
 
   return (
-    <div className="max-w-2xl w-full xl:w-2xl h-full pb-20 flex flex-row gap-0 justify-between">
+    <div className="xl:max-w-2xl w-full xl:w-2xl h-full pb-20 flex flex-row gap-0 justify-between md:px-10 xl:px-0">
       {/* ─── Conversation List ─── */}
       <Card
         className={`${

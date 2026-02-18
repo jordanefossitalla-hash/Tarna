@@ -81,7 +81,7 @@ const NotificationPage = () => {
   );
 
   return (
-    <div className="max-w-2xl w-full xl:w-2xl pb-20 flex flex-col gap-0 h-full overflow-scroll hide-scrollbar">
+    <div className="xl:max-w-2xl w-full xl:w-2xl pb-20 flex flex-col gap-0 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
       {/* ─── Header ─── */}
       <div className="flex flex-row w-full items-center justify-between pt-8 pb-4 px-2">
         <div className="flex flex-row items-center gap-2">

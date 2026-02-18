@@ -56,7 +56,7 @@ const RightBar = () => {
   return (
     <div className="w-75 pl-2 h-full hidden xl:flex flex-col gap-3 overflow-y-auto hide-scrollbar py-1 pr-1">
       {/* ─── Tendances ─── */}
-      <Card className="gap-0 py-3 px-0 border shadow-none">
+      {/* <Card className="gap-0 py-3 px-0 border shadow-none">
         <CardHeader className="px-4 pb-2 pt-0">
           <div className="flex flex-row items-center gap-2">
             <TrendingUp className="size-4 text-primary" />
@@ -82,7 +82,7 @@ const RightBar = () => {
             </a>
           ))}
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* ─── Suggestions de personnes ─── */}
       <Card className="gap-0 py-3 px-0 border shadow-none">

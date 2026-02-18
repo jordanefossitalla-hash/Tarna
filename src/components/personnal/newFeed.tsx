@@ -1,54 +1,73 @@
 "use client";
-import { Card } from "../ui/card";
 import { Button } from "../ui/button";
-import { Clock9, Sparkle } from "lucide-react";
+import { Clock9, Sparkles } from "lucide-react";
 import FeedItem from "./ui/feedItem";
 import { PostsData } from "@/src/data/posts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+
+type FeedFilter = "for-you" | "recent";
 
 const NewFeed = () => {
-  const [postStatus, setPostStatus] = useState<string>("for you");
+  const [filter, setFilter] = useState<FeedFilter>("for-you");
+
+  const posts = useMemo(() => {
+    if (filter === "recent") {
+      return PostsData.filter((post) => {
+        const diffMs = Date.now() - new Date(post.createdAt).getTime();
+        return diffMs <= 24 * 60 * 60 * 1000;
+      }).sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+    return PostsData;
+  }, [filter]);
+
   return (
-    <div className="flex flex-col gap-2">
-        {/* Feed action  */}
-      <Card className="p-2 bg-accent flex flex-row gap-2  w-full rounded-md">
-        <div className="w-full">
+    <div className="flex flex-col gap-3">
+      {/* ─── Filtres ─── */}
+      <div className="flex flex-row gap-2">
+        <Button
+          variant={filter === "for-you" ? "default" : "outline"}
+          size="sm"
+          className="cursor-pointer gap-1.5 rounded-full"
+          onClick={() => setFilter("for-you")}
+        >
+          <Sparkles className="size-3.5" />
+          Pour vous
+        </Button>
+        <Button
+          variant={filter === "recent" ? "default" : "outline"}
+          size="sm"
+          className="cursor-pointer gap-1.5 rounded-full"
+          onClick={() => setFilter("recent")}
+        >
+          <Clock9 className="size-3.5" />
+          Récents
+        </Button>
+      </div>
+
+      {/* ─── Posts ─── */}
+      {posts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
+          <Clock9 className="size-10 opacity-30" />
+          <p className="text-sm">Aucun post récent dans les dernières 24h.</p>
           <Button
-            className="w-full cursor-pointer flex flex-row items-center gap-2"
-            variant={postStatus === "for you" ? "outline" : "ghost"}
-            onClick={() => setPostStatus("for you")}
+            variant="outline"
+            size="sm"
+            className="cursor-pointer mt-1"
+            onClick={() => setFilter("for-you")}
           >
-            <Sparkle />
-            For you
+            Voir tous les posts
           </Button>
         </div>
-        <div className="w-full">
-          <Button
-            className="w-full cursor-pointer flex flex-row items-center gap-2"
-            variant={postStatus === "recent" ? "outline" : "ghost"}
-            onClick={() => setPostStatus("recent")}
-          >
-            <Clock9 />
-            Recent
-          </Button>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {posts.map((post) => (
+            <FeedItem key={post.id} post={post} />
+          ))}
         </div>
-      </Card>
-      {/* Feed listing  */}
-      {
-        (postStatus === "recent"
-          ? PostsData
-              .filter((post) => {
-                const postDate = new Date(post.createdAt);
-                const now = new Date();
-                const diffMs = now.getTime() - postDate.getTime();
-                return diffMs <= 24 * 60 * 60 * 1000; // dernières 24h
-              })
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          : PostsData
-        ).map((post, index) => {
-            return <FeedItem key={index} post={post} />
-        })
-      }
+      )}
     </div>
   );
 };

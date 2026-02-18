@@ -1,22 +1,26 @@
 "use client";
 import {
   BadgeCheck,
+  Bookmark,
   ChevronDown,
   Ellipsis,
   FileText,
+  Flag,
   Handshake,
   Heart,
   Lightbulb,
   MessageCircle,
   Pin,
   Share2,
-  TriangleAlert,
+  Send,
   User,
+  UserPlus,
+  EyeOff,
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useState } from "react";
-import { Post, Media } from "@/src/types/post";
+import { Post } from "@/src/types/post";
 import Image from "next/image";
 import {
   Collapsible,
@@ -27,239 +31,307 @@ import CommentItem from "./commentItem";
 import { commentsData } from "@/src/data/comments";
 import { Input } from "../../ui/input";
 import { Button } from "../../ui/button";
-import { Send } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { useUserStore } from "@/src/store/userStore";
 
+type ReactionType = "" | "heart" | "light" | "handshake";
+
 const FeedItem = ({ post }: { post: Post }) => {
-  const [isLikedType, setIsLikedType] = useState<string>("");
+  const [reaction, setReaction] = useState<ReactionType>("");
+  const [saved, setSaved] = useState(false);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const currentUser = useUserStore((state) => state.user);
+
+  const toggleReaction = (type: ReactionType) => {
+    if (!isAuthenticated) return;
+    setReaction((prev) => (prev === type ? "" : type));
+  };
+
+  const commentCount = commentsData[post.id]?.length || 0;
+  const images = post.media.filter((m) => m.type === "image");
+  const documents = post.media.filter((m) => m.type === "document");
 
   return (
     <Collapsible asChild>
-      <Card>
-        <CardHeader className="flex flex-row justify-between">
-          <div className="flex flex-row items-center gap-2.5">
-            <Avatar>
-              <AvatarImage src={post.author.avatar} alt="profil" />
-              <AvatarFallback>{post.author.initials}</AvatarFallback>
+      <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+        {/* ─── Header ─── */}
+        <CardHeader className="flex flex-row items-start justify-between pb-2">
+          <div className="flex flex-row items-center gap-3">
+            <Avatar className="size-10">
+              <AvatarImage src={post.author.avatar} alt={post.author.name} />
+              <AvatarFallback className="text-xs font-semibold">
+                {post.author.initials}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <div className="flex flex-row items-center gap-2">
-                <p className="font-bold">{post.author.name}</p>
-                <div className="flex flex-row items-center gap-1.5">
-                  {post.author.isVerified && (
-                    <BadgeCheck className="size-3" color="#1549e6" />
-                  )}
-                  <Pin className="size-3" />
-                </div>
+              <div className="flex flex-row items-center gap-1.5">
+                <p className="text-sm font-semibold">{post.author.name}</p>
+                {post.author.isVerified && (
+                  <BadgeCheck className="size-3.5 text-primary" />
+                )}
+                {post.isPinned && (
+                  <Pin className="size-3 text-muted-foreground" />
+                )}
               </div>
-              <p className="text-[12px] text-gray-500">
-                {post.author.username} . {post.timeAgo}
+              <p className="text-xs text-muted-foreground">
+                {post.author.username} · {post.timeAgo}
               </p>
             </div>
           </div>
-          <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="cursor-pointer">
-                <Ellipsis />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40" align="start">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <User className="size-4" /> View profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <TriangleAlert className="size-4" /> Report post
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1.5 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                <Ellipsis className="size-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-44" align="end">
+              <DropdownMenuGroup>
+                <DropdownMenuItem className="cursor-pointer gap-2">
+                  <User className="size-4" /> Voir le profil
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2">
+                  <UserPlus className="size-4" /> Suivre
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2"
+                  onClick={() => setSaved(!saved)}
+                >
+                  <Bookmark className="size-4" />
+                  {saved ? "Retirer des favoris" : "Enregistrer"}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem className="cursor-pointer gap-2">
+                  <EyeOff className="size-4" /> Masquer
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2 text-destructive focus:text-destructive">
+                  <Flag className="size-4" /> Signaler
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-2">
-            <p className="text-justify text-[15px]">{post.content}</p>
 
-            {/* Images */}
-            {post.media.filter((m) => m.type === "image").length > 0 && (
-              <div
-                className={`grid gap-2 ${
-                  post.media.filter((m) => m.type === "image").length === 1
-                    ? "grid-cols-1"
-                    : post.media.filter((m) => m.type === "image").length === 2
-                      ? "grid-cols-2"
-                      : post.media.filter((m) => m.type === "image").length ===
-                          3
-                        ? "grid-cols-2"
-                        : "grid-cols-2"
-                }`}
-              >
-                {post.media
-                  .filter((m) => m.type === "image")
-                  .map((media, index) => {
-                    const imageCount = post.media.filter(
-                      (m) => m.type === "image",
-                    ).length;
-                    const isFullWidth =
-                      imageCount === 1 || (imageCount === 3 && index === 0);
-                    return (
-                      <div
-                        key={media.id}
-                        className={`bg-gray-400 rounded-2xl overflow-hidden ${
-                          isFullWidth
-                            ? "col-span-2 h-50 lg:h-100"
-                            : "h-40 lg:h-60"
-                        } ${imageCount === 1 ? "col-span-1" : ""}`}
-                      >
-                        <Image
-                          src={media.url}
-                          alt={media.alt || "post image"}
-                          width={600}
-                          height={400}
-                          className="rounded-2xl w-full h-full object-cover"
-                        />
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
+        {/* ─── Content ─── */}
+        <CardContent className="pb-2 pt-0">
+          {/* Texte */}
+          <p className="text-sm leading-relaxed whitespace-pre-line">
+            {post.content}
+          </p>
 
-            {/* Documents */}
-            {post.media.filter((m) => m.type === "document").length > 0 && (
-              <div className="flex flex-col gap-2">
-                {post.media
-                  .filter((m) => m.type === "document")
-                  .map((media) => (
-                    <div
-                      key={media.id}
-                      rel="noopener noreferrer"
-                      className="flex flex-row items-center gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 transition-colors"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-700">
-                        <FileText className="size-5 text-blue-400" />
-                      </div>
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {media.fileName || "Document"}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {media.fileExtension?.toUpperCase()}
-                          {media.fileSize &&
-                            ` · ${(media.fileSize / 1024).toFixed(0)} Ko`}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-row items-center justify-between">
-          <div className="flex flex-row items-center gap-4">
+          {/* Images */}
+          {images.length > 0 && (
             <div
-              className="flex flex-row items-center gap-2 cursor-pointer"
-              onClick={() => {
-                isAuthenticated && setIsLikedType("heart");
-              }}
+              className={`grid gap-1.5 mt-3 rounded-xl overflow-hidden ${
+                images.length === 1
+                  ? "grid-cols-1"
+                  : images.length === 3
+                    ? "grid-cols-2"
+                    : "grid-cols-2"
+              }`}
+            >
+              {images.map((media, index) => {
+                const isFullWidth =
+                  images.length === 1 ||
+                  (images.length === 3 && index === 0);
+                return (
+                  <div
+                    key={media.id}
+                    className={`relative overflow-hidden bg-muted ${
+                      isFullWidth
+                        ? "col-span-2 h-52 lg:h-80"
+                        : "h-36 lg:h-52"
+                    } ${images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
+                  >
+                    <Image
+                      src={media.url}
+                      alt={media.alt || "post image"}
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                    />
+                    {/* Overlay pour +N images */}
+                    {images.length > 4 && index === 3 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
+                        <span className="text-white text-xl font-bold">
+                          +{images.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Documents */}
+          {documents.length > 0 && (
+            <div className="flex flex-col gap-2 mt-3">
+              {documents.map((media) => (
+                <div
+                  key={media.id}
+                  className="flex flex-row items-center gap-3 px-3 py-2.5 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
+                    <FileText className="size-4 text-primary" />
+                  </div>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {media.fileName || "Document"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {media.fileExtension?.toUpperCase()}
+                      {media.fileSize &&
+                        ` · ${(media.fileSize / 1024).toFixed(0)} Ko`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+
+        {/* ─── Reactions Footer ─── */}
+        <CardFooter className="flex flex-row items-center justify-between pt-1 pb-2">
+          {/* Réactions */}
+          <div className="flex flex-row items-center gap-1">
+            <button
+              className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
+                reaction === "heart"
+                  ? "bg-red-100 text-red-500 dark:bg-red-900/30"
+                  : "hover:bg-accent text-muted-foreground"
+              }`}
+              onClick={() => toggleReaction("heart")}
             >
               <Heart
-                className="size-5"
-                color={isLikedType === "heart" ? "red" : "white"}
+                className="size-4"
+                fill={reaction === "heart" ? "currentColor" : "none"}
               />
-              <p>
-                {isLikedType === "heart"
+              <span className="font-medium">
+                {reaction === "heart"
                   ? post.reactions.heart + 1
                   : post.reactions.heart}
-              </p>
-            </div>
-            <div
-              className="flex flex-row items-center gap-1 cursor-pointer"
-              onClick={() => {
-                isAuthenticated && setIsLikedType("light");
-              }}
+              </span>
+            </button>
+
+            <button
+              className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
+                reaction === "light"
+                  ? "bg-amber-100 text-amber-500 dark:bg-amber-900/30"
+                  : "hover:bg-accent text-muted-foreground"
+              }`}
+              onClick={() => toggleReaction("light")}
             >
               <Lightbulb
-                className="size-5"
-                color={isLikedType === "light" ? "yellow" : "white"}
+                className="size-4"
+                fill={reaction === "light" ? "currentColor" : "none"}
               />
-              <p>
-                {isLikedType === "light"
+              <span className="font-medium">
+                {reaction === "light"
                   ? post.reactions.lightbulb + 1
                   : post.reactions.lightbulb}
-              </p>
-            </div>
-            <div
-              className="flex flex-row items-center gap-2 cursor-pointer"
-              onClick={() => {
-                isAuthenticated && setIsLikedType("handshake");
-              }}
+              </span>
+            </button>
+
+            <button
+              className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
+                reaction === "handshake"
+                  ? "bg-blue-100 text-blue-500 dark:bg-blue-900/30"
+                  : "hover:bg-accent text-muted-foreground"
+              }`}
+              onClick={() => toggleReaction("handshake")}
             >
               <Handshake
-                className="size-5"
-                color={isLikedType === "handshake" ? "blue" : "white"}
+                className="size-4"
+                fill={reaction === "handshake" ? "currentColor" : "none"}
               />
-              <p>
-                {isLikedType === "handshake"
+              <span className="font-medium">
+                {reaction === "handshake"
                   ? post.reactions.handshake + 1
                   : post.reactions.handshake}
-              </p>
-            </div>
+              </span>
+            </button>
           </div>
-          <div className="flex flex-row items-center gap-4">
+
+          {/* Commentaires + Partage + Enregistrer */}
+          <div className="flex flex-row items-center gap-1">
             {isAuthenticated ? (
               <CollapsibleTrigger asChild>
-                <div className="flex flex-row items-center gap-0.5 cursor-pointer">
-                  <MessageCircle className="size-5" />
-                  <p>{commentsData[post.id]?.length || 0}</p>
-                  <ChevronDown className="size-5" />
-                </div>
+                <button className="flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs text-muted-foreground hover:bg-accent transition-colors cursor-pointer">
+                  <MessageCircle className="size-4" />
+                  <span className="font-medium">{commentCount}</span>
+                  <ChevronDown className="size-3.5" />
+                </button>
               </CollapsibleTrigger>
             ) : (
-              <div className="flex flex-row items-center gap-0.5 cursor-pointer">
-                <MessageCircle className="size-5" />
-                <p>{commentsData[post.id]?.length || 0}</p>
-                <ChevronDown className="size-5" />
+              <div className="flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs text-muted-foreground">
+                <MessageCircle className="size-4" />
+                <span className="font-medium">{commentCount}</span>
               </div>
             )}
 
-            {/* <div className="flex flex-row items-center gap-2 cursor-pointer">
-              <Share2 className="size-5" />
-            </div> */}
+            <button className="p-1.5 rounded-full text-muted-foreground hover:bg-accent transition-colors cursor-pointer">
+              <Share2 className="size-4" />
+            </button>
+
+            <button
+              className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                saved
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              onClick={() => isAuthenticated && setSaved(!saved)}
+            >
+              <Bookmark
+                className="size-4"
+                fill={saved ? "currentColor" : "none"}
+              />
+            </button>
           </div>
         </CardFooter>
-        <CollapsibleContent className="flex flex-col gap-3 px-4 pb-4">
-          {/* Write a comment */}
-          <div className="flex flex-row items-center gap-2">
-            <Avatar className="size-7">
-              <AvatarImage src="https://github.com/shadcn.png" alt="you" />
-              <AvatarFallback className="text-xs">ME</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-row items-center gap-1 border rounded-full px-3 py-1 w-full">
-              <Input
-                placeholder="Write a comment..."
-                className="border-0 h-7 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 p-0"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 h-6 cursor-pointer"
-              >
-                <Send className="size-3" />
-              </Button>
+
+        {/* ─── Comments Section ─── */}
+        <CollapsibleContent className="border-t">
+          <div className="flex flex-col gap-3 px-4 py-3">
+            {/* Écrire un commentaire */}
+            <div className="flex flex-row items-center gap-2.5">
+              <Avatar className="size-8 shrink-0">
+                <AvatarImage
+                  src={currentUser?.avatar_url || ""}
+                  alt="vous"
+                />
+                <AvatarFallback className="text-[10px] font-semibold">
+                  {currentUser?.initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-row items-center gap-1 border rounded-full px-3 py-1 w-full">
+                <Input
+                  placeholder="Écrire un commentaire..."
+                  className="border-0 h-7 text-sm focus:outline-none focus:ring-0 focus-visible:ring-0 p-0"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 h-6 cursor-pointer"
+                >
+                  <Send className="size-3.5" />
+                </Button>
+              </div>
             </div>
+
+            {/* Liste des commentaires */}
+            {(commentsData[post.id] || []).map((comment) => (
+              <CommentItem key={comment.id} comment={comment} />
+            ))}
           </div>
-          {/* Comments list */}
-          {(commentsData[post.id] || []).map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
-          ))}
         </CollapsibleContent>
       </Card>
     </Collapsible>
