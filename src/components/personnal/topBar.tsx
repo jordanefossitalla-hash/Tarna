@@ -2,7 +2,6 @@
 import { Card, CardContent } from "../ui/card";
 import {
   Bell,
-  GalleryVerticalEnd,
   House,
   LogOut,
   LucideIcon,
@@ -31,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import Image from "next/image";
+import { useUserStore } from "@/src/store/userStore";
 
 type menuItemType = {
   id: number;
@@ -68,10 +68,10 @@ const menuItem: menuItemType[] = [
 
 const TopBar = () => {
   const pathname = usePathname();
-
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
-
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const currentUser = useUserStore((state) => state.user);
   return (
     <Card className="flex flex-row justify-between px-4 rounded py-2 w-full xl:w-7xl h-17 z-40">
       {/* logo  */}
@@ -88,85 +88,101 @@ const TopBar = () => {
               <Search />
             </InputGroupAddon>
           </InputGroup>
-          <Card className="flex flex-row items-center gap-2 p-0 shadow-none border-0 w-fit">
-            {menuItem.map((item, index) => {
-              return (
-                <Button
-                  asChild
-                  key={index}
-                  className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-white hover:text-white hover:bg-accent"} flex flex-row items-center`}
-                >
-                  <Link href={item.route}>
-                    <item.icon className="size-4" />
-                    {item.name}
-                  </Link>
-                </Button>
-              );
-            })}
-          </Card>
+          {isAuthenticated && (
+            <Card className="flex flex-row items-center gap-2 p-0 shadow-none border-0 w-fit">
+              {menuItem.map((item, index) => {
+                return (
+                  <Button
+                    asChild
+                    key={index}
+                    className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-white hover:text-white hover:bg-accent"} flex flex-row items-center`}
+                  >
+                    <Link href={item.route}>
+                      <item.icon className="size-4" />
+                      {item.name}
+                    </Link>
+                  </Button>
+                );
+              })}
+            </Card>
+          )}
         </CardContent>
       </Card>
       {/* avatar  */}
       <Card className="p-0 border-0 shadow-none flex flex-col items-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div>
-              <Avatar className="hidden lg:block cursor-pointer">
-                <AvatarImage src="https://github.com/shadcn.png" alt="profil" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <Card className="flex flex-row items-center cursor-pointer hover:bg-accent p-2 lg:hidden">
-                <Menu className="lg:size-4 size-3.5" />
-              </Card>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-40" align="start">
-            <DropdownMenuGroup className="hidden lg:block">
-              <DropdownMenuLabel>Menu</DropdownMenuLabel>
-              <DropdownMenuItem asChild className="flex flex-row gap-2">
-                <div>
-                  <User className="size-3.5" /> Profil
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="flex flex-row gap-2">
-                <div>
-                  <Settings className="size-3.5" /> Settings
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="flex flex-row gap-2">
-                <div>
-                  <LogOut className="size-3.5" /> Log out
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuGroup className="lg:hidden">
-              <DropdownMenuLabel>Menu</DropdownMenuLabel>
-              {menuItem.map((item, index) => {
-                return (
-                  <DropdownMenuItem
-                    asChild
-                    key={index}
-                    className="flex flex-row gap-2"
-                  >
-                    <Link href={item.route}>
-                      <item.icon className="size-3.5" /> {item.name}
-                    </Link>
-                  </DropdownMenuItem>
-                );
-              })}
-              <DropdownMenuItem>
-                <Avatar size="sm">
+        {isAuthenticated ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <Avatar className="hidden lg:block cursor-pointer">
                   <AvatarImage
-                    src="https://github.com/shadcn.png"
+                    src={currentUser?.avatar_url || ""}
                     alt="profil"
                   />
-                  <AvatarFallback>CN</AvatarFallback>
+                  <AvatarFallback>{currentUser?.initials}</AvatarFallback>
                 </Avatar>
-                Profil
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <Card className="flex flex-row items-center cursor-pointer hover:bg-accent p-2 lg:hidden">
+                  <Menu className="lg:size-4 size-3.5" />
+                </Card>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-40" align="start">
+              <DropdownMenuGroup className="hidden lg:block">
+                <DropdownMenuLabel>Menu</DropdownMenuLabel>
+                <DropdownMenuItem asChild className="flex flex-row gap-2">
+                  <div>
+                    <User className="size-3.5" /> Profil
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="flex flex-row gap-2">
+                  <div>
+                    <Settings className="size-3.5" /> Settings
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="flex flex-row gap-2">
+                  <div>
+                    <LogOut className="size-3.5" /> Log out
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuGroup className="lg:hidden">
+                <DropdownMenuLabel>Menu</DropdownMenuLabel>
+                {menuItem.map((item, index) => {
+                  return (
+                    <DropdownMenuItem
+                      asChild
+                      key={index}
+                      className="flex flex-row gap-2"
+                    >
+                      <Link href={item.route}>
+                        <item.icon className="size-3.5" /> {item.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuItem>
+                  <Avatar size="sm">
+                    <AvatarImage
+                      src={currentUser?.avatar_url || ""}
+                      alt="profil"
+                    />
+                    <AvatarFallback>{currentUser?.initials}</AvatarFallback>
+                  </Avatar>
+                  Profil
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Card className="p-0 border-0 shadow-none flex flex-row items-center gap-2">
+            <Button variant={"outline"}>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button>
+              <Link href="/signup">Register</Link>
+            </Button>
+          </Card>
+        )}
       </Card>
     </Card>
   );

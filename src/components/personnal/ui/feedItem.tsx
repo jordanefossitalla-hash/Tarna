@@ -36,9 +36,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
+import { useUserStore } from "@/src/store/userStore";
 
 const FeedItem = ({ post }: { post: Post }) => {
   const [isLikedType, setIsLikedType] = useState<string>("");
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+
   return (
     <Collapsible asChild>
       <Card>
@@ -164,7 +167,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             <div
               className="flex flex-row items-center gap-2 cursor-pointer"
               onClick={() => {
-                setIsLikedType("heart");
+                isAuthenticated && setIsLikedType("heart");
               }}
             >
               <Heart
@@ -180,7 +183,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             <div
               className="flex flex-row items-center gap-1 cursor-pointer"
               onClick={() => {
-                setIsLikedType("light");
+                isAuthenticated && setIsLikedType("light");
               }}
             >
               <Lightbulb
@@ -196,7 +199,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             <div
               className="flex flex-row items-center gap-2 cursor-pointer"
               onClick={() => {
-                setIsLikedType("handshake");
+                isAuthenticated && setIsLikedType("handshake");
               }}
             >
               <Handshake
@@ -211,13 +214,22 @@ const FeedItem = ({ post }: { post: Post }) => {
             </div>
           </div>
           <div className="flex flex-row items-center gap-4">
-            <CollapsibleTrigger asChild>
+            {isAuthenticated ? (
+              <CollapsibleTrigger asChild>
+                <div className="flex flex-row items-center gap-0.5 cursor-pointer">
+                  <MessageCircle className="size-5" />
+                  <p>{commentsData[post.id]?.length || 0}</p>
+                  <ChevronDown className="size-5" />
+                </div>
+              </CollapsibleTrigger>
+            ) : (
               <div className="flex flex-row items-center gap-0.5 cursor-pointer">
                 <MessageCircle className="size-5" />
                 <p>{commentsData[post.id]?.length || 0}</p>
                 <ChevronDown className="size-5" />
               </div>
-            </CollapsibleTrigger>
+            )}
+
             {/* <div className="flex flex-row items-center gap-2 cursor-pointer">
               <Share2 className="size-5" />
             </div> */}
