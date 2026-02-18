@@ -30,6 +30,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import Image from "next/image";
 
 type menuItemType = {
   id: number;
@@ -75,7 +76,7 @@ const TopBar = () => {
     <Card className="flex flex-row justify-between px-4 rounded py-2 w-full xl:w-7xl h-17 z-40">
       {/* logo  */}
       <Card className="shadow-none border-0 p-0 flex flex-row gap-1 items-center">
-        <GalleryVerticalEnd className="size-4" />
+        <Image src="/logo.svg" alt="Tarna logo" width={20} height={20} />
         <p className="hidden lg:block">Tarna</p>
       </Card>
       {/* search bar and nav item  */}

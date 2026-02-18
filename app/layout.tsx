@@ -14,7 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Tarna",
-  description: "Tarna description",
+  description:
+    "Tarna is a professional social platform by KIAMA — connect with your team, share posts, join groups, and collaborate through real-time messaging.",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
