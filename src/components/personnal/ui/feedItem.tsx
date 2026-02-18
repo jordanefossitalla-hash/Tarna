@@ -278,11 +278,11 @@ const FeedItem = ({ post }: { post: Post }) => {
               </div>
             )}
 
-            <button className="p-1.5 rounded-full text-muted-foreground hover:bg-accent transition-colors cursor-pointer">
+            {/* <button className="p-1.5 rounded-full text-muted-foreground hover:bg-accent transition-colors cursor-pointer">
               <Share2 className="size-4" />
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               className={`p-1.5 rounded-full transition-colors cursor-pointer ${
                 saved
                   ? "text-primary bg-primary/10"
@@ -294,7 +294,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 className="size-4"
                 fill={saved ? "currentColor" : "none"}
               />
-            </button>
+            </button> */}
           </div>
         </CardFooter>
 
