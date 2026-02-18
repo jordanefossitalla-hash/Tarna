@@ -1,120 +1,146 @@
 "use client";
 import { Card, CardDescription } from "../ui/card";
 import { Button } from "../ui/button";
-import { Bell, House, LucideIcon, MessageCircle, Users } from "lucide-react";
-import { FieldSeparator } from "../ui/field";
+import {
+  Bell,
+  ChevronRight,
+  Hash,
+  House,
+  LucideIcon,
+  MessageCircle,
+  Settings,
+  Users,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { groupsData } from "@/src/data/groups";
 
 type menuItemType = {
   id: number;
   name: string;
   icon: LucideIcon;
   route: string;
-};
-type groupeType = {
-  id: number;
-  title: string;
+  badge?: number;
 };
 
-const menuItem: menuItemType[] = [
-  {
-    id: 0,
-    name: "Home",
-    icon: House,
-    route: "/home",
-  },
-  {
-    id: 1,
-    name: "Groups",
-    icon: Users,
-    route: "/groups",
-  },
-  {
-    id: 2,
-    name: "Messages",
-    icon: MessageCircle,
-    route: "/messages",
-  },
-  {
-    id: 3,
-    name: "Notifications",
-    icon: Bell,
-    route: "/notifications",
-  },
+const menuItems: menuItemType[] = [
+  { id: 0, name: "Accueil", icon: House, route: "/home" },
+  { id: 1, name: "Groupes", icon: Users, route: "/groups" },
+  { id: 2, name: "Messages", icon: MessageCircle, route: "/messages", badge: 4 },
+  { id: 3, name: "Notifications", icon: Bell, route: "/notifications", badge: 3 },
 ];
-const GroupItem: groupeType[] = [
-  {
-    id: 0,
-    title: "Tech KIAMA",
-  },
-  {
-    id: 1,
-    title: "Design Team",
-  },
-  {
-    id: 2,
-    title: "General",
-  },
-];
+
+const myGroups = groupsData.filter((g) => g.isMember).slice(0, 4);
 
 const Sidebar = () => {
   const pathname = usePathname();
 
-  // Renvoie le premier prefix qui matche, ou undefined
-  const currentPrefix = menuItem.find(
-    (p) => pathname === p.route || pathname.startsWith(p.route + "/"),
-  );
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
 
   return (
-    <Card className="lg:w-72 xl:w-62.5 pr-2 rounded h-fit hidden lg:block">
-      <Card className="flex flex-col shadow-none border-0 gap-1 p-0">
-        {menuItem.map((item, index) => {
+    <Card className="lg:w-72 xl:w-62.5 rounded h-fit hidden lg:block border-0 shadow-none gap-0 py-3">
+      {/* ─── Navigation principale ─── */}
+      <nav className="flex flex-col gap-0.5 px-2">
+        {menuItems.map((item) => {
+          const active = isActive(item.route);
           return (
             <Button
               asChild
-              key={index}
-              className={`${isActive(item.route) ? "bg-primary text-white hover:text-white" : "bg-transparent text-white hover:text-white hover:bg-accent"}
-               flex flex-row items-center justify-start py-5`}
+              key={item.id}
+              variant="ghost"
+              className={`justify-start py-5 px-3 cursor-pointer transition-colors ${
+                active
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                  : "text-foreground hover:bg-accent"
+              }`}
             >
               <Link href={item.route}>
-                <item.icon className="size-4" />
-                {item.name}
+                <item.icon
+                  className="size-4.5 mr-1"
+                  strokeWidth={active ? 2.5 : 2}
+                />
+                <span className={`flex-1 text-left text-sm ${active ? "font-semibold" : "font-medium"}`}>
+                  {item.name}
+                </span>
+                {item.badge && item.badge > 0 && (
+                  <span
+                    className={`flex items-center justify-center text-[10px] font-bold rounded-full size-5 ${
+                      active
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : "bg-primary/10 text-primary"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             </Button>
           );
         })}
-      </Card>
-      <Card className="p-0 pl-2 border-0 shadow-none gap-1.5">
-        <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card" />
-        <CardDescription className="font-semibold">MY GROUPS</CardDescription>
-      </Card>
-      <Card className="gap-1 border-0 shadow-none p-0">
-        {GroupItem.slice(0, 3).map((el, index) => {
+      </nav>
+
+      {/* ─── Séparateur ─── */}
+      <div className="mx-4 my-3 h-px bg-border" />
+
+      {/* ─── Mes groupes ─── */}
+      <div className="flex flex-col gap-1 px-2">
+        <div className="flex flex-row items-center justify-between px-3 mb-1">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Mes groupes
+          </p>
+          <Link
+            href="/groups"
+            className="text-[11px] text-muted-foreground hover:text-primary transition-colors"
+          >
+            Voir tout
+          </Link>
+        </div>
+
+        {myGroups.map((group) => {
+          const active = pathname === `/groups/detail` || pathname.startsWith(`/groups/detail/`);
           return (
             <Button
               asChild
-              variant={"ghost"}
-              key={index}
-              className="justify-start cursor-pointer hover:text-blue-500"
+              variant="ghost"
+              key={group.id}
+              className="justify-start cursor-pointer h-9 px-3 hover:bg-accent group"
             >
-              <Link href={"/groups/detail"}>
-                <Avatar className="rounded-md">
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="profil"
-                  />
-                  <AvatarFallback>CN</AvatarFallback>
+              <Link href="/groups/detail">
+                <Avatar className="size-6 rounded-md shrink-0">
+                  <AvatarImage src={group.avatar} alt={group.name} />
+                  <AvatarFallback className="rounded-md text-[9px] font-bold">
+                    {group.initials}
+                  </AvatarFallback>
                 </Avatar>
-                <p>{el.title}</p>
+                <span className="text-sm font-medium truncate flex-1">
+                  {group.name}
+                </span>
+                {group.visibility === "private" && (
+                  <span className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronRight className="size-3.5" />
+                  </span>
+                )}
               </Link>
             </Button>
           );
         })}
-      </Card>
+      </div>
+
+      {/* ─── Séparateur ─── */}
+      <div className="mx-4 my-3 h-px bg-border" />
+
+      {/* ─── Paramètres ─── */}
+      <div className="px-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start cursor-pointer h-9 px-3 text-muted-foreground hover:text-foreground"
+        >
+          <Settings className="size-4.5 mr-1" strokeWidth={2} />
+          <span className="text-sm font-medium">Paramètres</span>
+        </Button>
+      </div>
     </Card>
   );
 };
