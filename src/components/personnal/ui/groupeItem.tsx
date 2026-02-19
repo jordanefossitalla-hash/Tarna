@@ -32,7 +32,7 @@ const GroupeItem = ({ item }: { item: groupeType }) => {
           </Avatar>
         </div>
         <ItemContent className="gap-0">
-          <p className="max-w-[95px] truncate font-semibold">{item.title}</p>
+          <p className="max-w-23.75 truncate font-semibold">{item.title}</p>
           <ItemDescription className="font-medium text-[13px]">
             {item.memberCount} membres
           </ItemDescription>
