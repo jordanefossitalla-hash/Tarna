@@ -39,13 +39,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
 import { useUserStore } from "@/src/store/userStore";
+import { Media } from "@/src/types/post";
 
 type ReactionType = "" | "heart" | "light" | "handshake";
 
 const FeedItem = ({ post }: { post: Post }) => {
   const [reaction, setReaction] = useState<ReactionType>("");
   const [saved, setSaved] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<Media | null>(null);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
 
@@ -179,6 +187,10 @@ const FeedItem = ({ post }: { post: Post }) => {
                 <div
                   key={media.id}
                   className="flex flex-row items-center gap-3 px-3 py-2.5 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                  // AFFICHER LE PREVIOUS DU PDF DANS UNE MODAL
+                  // onClick={() =>
+                  //   media.fileExtension === "pdf" && setPreviewDoc(media)
+                  // }
                 >
                   <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
                     <FileText className="size-4 text-primary" />
@@ -197,6 +209,30 @@ const FeedItem = ({ post }: { post: Post }) => {
               ))}
             </div>
           )}
+
+          {/* PDF Preview Dialog */}
+          <Dialog
+            open={!!previewDoc}
+            onOpenChange={(open) => !open && setPreviewDoc(null)}
+          >
+            <DialogContent className="sm:max-w-4xl h-[85vh] flex flex-col p-0 gap-0">
+              <DialogHeader className="px-6 py-4 border-b shrink-0">
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <FileText className="size-4 text-primary" />
+                  {previewDoc?.fileName || "Document"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 min-h-0">
+                {previewDoc && (
+                  <iframe
+                    src={previewDoc.url}
+                    title={previewDoc.fileName || "PDF Preview"}
+                    className="w-full h-full border-0"
+                  />
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
 
         {/* ─── Reactions Footer ─── */}
