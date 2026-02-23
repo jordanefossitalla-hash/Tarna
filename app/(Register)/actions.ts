@@ -1,0 +1,166 @@
+"use server";
+
+const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
+
+// ---------- Types partagés ----------
+export type SignupState = {
+  success: boolean;
+  errors: {
+    username?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    confirmPassword?: string;
+  };
+};
+
+export type LoginUser = {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  isVerified: boolean;
+  role: string;
+  status: string;
+  createdAt: string;
+};
+
+export type LoginState = {
+  success: boolean;
+  errors: {
+    email?: string;
+    password?: string;
+  };
+  user?: LoginUser;
+  accessToken?: string;
+  refreshToken?: string;
+};
+
+// ---------- Signup action ----------
+export async function signupAction(
+  _prev: SignupState,
+  formData: FormData,
+): Promise<SignupState> {
+  const username = (formData.get("username") as string) ?? "";
+  const name = (formData.get("name") as string) ?? "";
+  const email = (formData.get("email") as string) ?? "";
+  const phone = (formData.get("phone") as string) ?? "";
+  const password = (formData.get("password") as string) ?? "";
+  const confirmPassword = (formData.get("confirm-password") as string) ?? "";
+
+  const errors: SignupState["errors"] = {};
+
+  // Validation
+  if (!username.trim()) {
+    errors.username = "Username is required.";
+  } else if (username.trim().length < 3) {
+    errors.username = "Username must be at least 3 characters.";
+  }
+
+  if (!name.trim()) {
+    errors.name = "Full name is required.";
+  }
+
+  if (!email.trim()) {
+    errors.email = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = "Please enter a valid email address.";
+  }
+
+  if (!phone.trim()) {
+    errors.phone = "Phone number is required.";
+  } else if (!/^\+?[0-9\s\-()]{7,15}$/.test(phone)) {
+    errors.phone = "Please enter a valid phone number.";
+  }
+
+  if (!password) {
+    errors.password = "Password is required.";
+  } else if (password.length < 8) {
+    errors.password = "Password must be at least 8 characters.";
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = "Please confirm your password.";
+  } else if (password !== confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { success: false, errors };
+  }
+
+  const res = await fetch(`${API_BASE_URL}:${process.env.API_PORT}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: username,
+      email: email,
+      phone: phone,
+      password: password,
+      displayName: name,
+    }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    return {
+      success: false,
+      errors: { email: data?.message ?? "Signup failed. Please try again." },
+    };
+  }
+
+  return { success: true, errors: {} };
+}
+
+// ---------- Login action ----------
+export async function loginAction(
+  _prev: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  const email = (formData.get("email") as string) ?? "";
+  const password = (formData.get("password") as string) ?? "";
+
+  const errors: LoginState["errors"] = {};
+
+  if (!email.trim()) {
+    errors.email = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = "Please enter a valid email address.";
+  }
+
+  if (!password) {
+    errors.password = "Password is required.";
+  } else if (password.length < 8) {
+    errors.password = "Password must be at least 8 characters.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { success: false, errors };
+  }
+
+  const res = await fetch(`${API_BASE_URL}:${process.env.API_PORT}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier: email, password }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    return {
+      success: false,
+      errors: { email: data?.message ?? "Invalid credentials." },
+    };
+  }
+
+  const data = await res.json();
+
+  return {
+    success: true,
+    errors: {},
+    user: data.user,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+  };
+}

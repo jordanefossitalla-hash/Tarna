@@ -128,7 +128,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
         <div className="flex flex-row gap-3">
           <Avatar className="size-10 shrink-0 mt-0.5">
             <AvatarImage
-              src={currentUser?.avatar_url || ""}
+              src={currentUser?.avatarUrl || ""}
               alt="profil"
             />
             <AvatarFallback className="text-xs font-semibold">

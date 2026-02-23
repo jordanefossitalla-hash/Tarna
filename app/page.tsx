@@ -20,6 +20,6 @@ export default function Home() {
     //   </div>
     //   <BottomBar />
     // </div>
-    redirect("/home")
+    redirect("/login")
   );
 }

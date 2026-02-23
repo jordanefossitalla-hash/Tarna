@@ -341,7 +341,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             <div className="flex flex-row items-center gap-2.5">
               <Avatar className="size-8 shrink-0">
                 <AvatarImage
-                  src={currentUser?.avatar_url || ""}
+                  src={currentUser?.avatarUrl || ""}
                   alt="vous"
                 />
                 <AvatarFallback className="text-[10px] font-semibold">

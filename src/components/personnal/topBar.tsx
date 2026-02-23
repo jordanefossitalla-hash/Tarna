@@ -20,7 +20,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "../ui/input-group";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +32,7 @@ import {
 } from "../ui/dropdown-menu";
 import Image from "next/image";
 import { useUserStore } from "@/src/store/userStore";
+import { useEffect } from "react";
 
 type NavItem = {
   id: number;
@@ -44,8 +45,20 @@ type NavItem = {
 const navItems: NavItem[] = [
   { id: 0, name: "Accueil", icon: House, route: "/home" },
   { id: 1, name: "Groupes", icon: Users, route: "/groups" },
-  { id: 2, name: "Messages", icon: MessageCircle, route: "/messages", badge: 4 },
-  { id: 3, name: "Notifications", icon: Bell, route: "/notifications", badge: 3 },
+  {
+    id: 2,
+    name: "Messages",
+    icon: MessageCircle,
+    route: "/messages",
+    badge: 4,
+  },
+  {
+    id: 3,
+    name: "Notifications",
+    icon: Bell,
+    route: "/notifications",
+    badge: 3,
+  },
 ];
 
 const TopBar = () => {
@@ -55,6 +68,13 @@ const TopBar = () => {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
+  const router = useRouter();
+
+  useEffect(()=> {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated])
 
   return (
     <Card className="flex flex-row items-center justify-between px-4 rounded py-0 w-full xl:w-7xl h-14 z-40 gap-4">
@@ -90,7 +110,7 @@ const TopBar = () => {
                 href={item.route}
                 className={`relative flex flex-col items-center justify-center px-3.5 py-1.5 rounded-lg transition-colors ${
                   active
-                    ? "text-white bg-primary/10"
+                    ? "text-white bg-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 }`}
               >
@@ -136,7 +156,7 @@ const TopBar = () => {
                 {/* Avatar desktop */}
                 <Avatar className="hidden lg:flex size-9 ring-2 ring-transparent hover:ring-primary/20 transition-all cursor-pointer">
                   <AvatarImage
-                    src={currentUser?.avatar_url || ""}
+                    src={currentUser?.avatarUrl || ""}
                     alt="profil"
                   />
                   <AvatarFallback className="text-xs font-semibold">
@@ -155,7 +175,7 @@ const TopBar = () => {
               <div className="flex flex-row items-center gap-2.5 px-2 py-2">
                 <Avatar className="size-9 shrink-0">
                   <AvatarImage
-                    src={currentUser?.avatar_url || ""}
+                    src={currentUser?.avatarUrl || ""}
                     alt="profil"
                   />
                   <AvatarFallback className="text-xs font-semibold">
@@ -164,7 +184,7 @@ const TopBar = () => {
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <p className="text-sm font-semibold truncate">
-                    {currentUser?.display_name || currentUser?.username}
+                    {currentUser?.displayName || currentUser?.username}
                   </p>
                   <p className="text-[11px] text-muted-foreground truncate">
                     @{currentUser?.username}
@@ -228,7 +248,12 @@ const TopBar = () => {
           </DropdownMenu>
         ) : (
           <div className="flex flex-row items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="cursor-pointer">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="cursor-pointer"
+            >
               <Link href="/login">Connexion</Link>
             </Button>
             <Button size="sm" asChild className="cursor-pointer">

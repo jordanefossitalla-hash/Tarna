@@ -14,48 +14,51 @@ import {
   FieldLabel,
 } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
+import { loginAction, type LoginState } from "@/app/(Register)/actions";
+import { useUserStore } from "@/src/store/userStore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState, useEffect } from "react";
+import { Spinner } from "../ui/spinner";
+
+const initialState: LoginState = { success: false, errors: {} };
 
 export default function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const setUser = useUserStore((s) => s.setUser);
+  const [state, formAction, isPending] = useActionState(loginAction, initialState);
 
-  const validate = (email: string, password: string) => {
-    const newErrors: { email?: string; password?: string } = {};
-
-    if (!email.trim()) {
-      newErrors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required.";
-    } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters.";
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    const validationErrors = validate(email, password);
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
+  useEffect(() => {
+    if (state.success && state.user && state.accessToken && state.refreshToken) {
+      const u = state.user;
+      setUser(
+        {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl,
+          isVerified: u.isVerified,
+          role: u.role,
+          status: u.status,
+          createdAt: u.createdAt,
+          initials: (u.displayName ?? u.username)
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2),
+          online: true,
+        },
+        state.accessToken,
+        state.refreshToken,
+      );
       router.push("/home");
     }
-  };
+  }, [state, router]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -64,7 +67,7 @@ export default function LoginForm({
           <CardTitle className="text-xl">Welcome back</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} noValidate>
+          <form action={formAction} noValidate>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -73,11 +76,10 @@ export default function LoginForm({
                   name="email"
                   type="email"
                   placeholder="name@example.com"
-                  className={errors.email ? "border-red-500" : ""}
-                  onChange={() => setErrors((prev) => ({ ...prev, email: undefined }))}
+                  className={state.errors.email ? "border-red-500" : ""}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
+                {state.errors.email && (
+                  <p className="text-sm text-red-500">{state.errors.email}</p>
                 )}
               </Field>
               <Field>
@@ -95,15 +97,16 @@ export default function LoginForm({
                   name="password"
                   type="password"
                   placeholder="********"
-                  className={errors.password ? "border-red-500" : ""}
-                  onChange={() => setErrors((prev) => ({ ...prev, password: undefined }))}
+                  className={state.errors.password ? "border-red-500" : ""}
                 />
-                {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password}</p>
+                {state.errors.password && (
+                  <p className="text-sm text-red-500">{state.errors.password}</p>
                 )}
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? <Spinner className="size-4" /> : "Login"}
+                </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}
                   <Link href="/signup">Sign up</Link>
