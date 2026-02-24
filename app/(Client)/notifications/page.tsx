@@ -10,7 +10,6 @@ import {
   BellDot,
   Check,
   RefreshCcw,
-  Settings,
 } from "lucide-react";
 import {
   Empty,
@@ -24,7 +23,6 @@ import { useState, useMemo } from "react";
 
 type Filter = "all" | "unread";
 
-/** Regroupe les notifications par période */
 function groupByPeriod(notifications: Notification[]) {
   const now = Date.now();
   const today: Notification[] = [];
@@ -41,6 +39,12 @@ function groupByPeriod(notifications: Notification[]) {
 
   return { today, thisWeek, earlier };
 }
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-4 pb-1">
+    {label}
+  </p>
+);
 
 const NotificationPage = () => {
   const [filter, setFilter] = useState<Filter>("all");
@@ -73,12 +77,6 @@ const NotificationPage = () => {
 
   const deleteNotification = (id: number) =>
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-
-  const SectionHeader = ({ label }: { label: string }) => (
-    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 pt-4 pb-1">
-      {label}
-    </p>
-  );
 
   return (
     <div className="xl:max-w-2xl w-full xl:w-2xl pb-20 flex flex-col gap-0 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">

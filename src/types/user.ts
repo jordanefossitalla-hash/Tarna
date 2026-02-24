@@ -3,12 +3,14 @@ export type User = {
   username: string;
   email: string;
   phone?: string | null;
-  password_hash?: string;
-  display_name?: string | null;
+  displayName?: string | null;
   bio?: string | null;
-  avatar_url?: string | null;
-  cover_url?: string | null;
-  is_verified: boolean;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+  isVerified: boolean;
+  role?: string;
+  status?: string;
+  createdAt?: string;
   /** Champs front-end uniquement */
   initials: string;
   online: boolean;

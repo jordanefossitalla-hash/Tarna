@@ -7,7 +7,7 @@ import {
 } from "@/src/components/ui/avatar";
 import { Card } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
-import { ChevronLeft, Globe, Settings, Users } from "lucide-react";
+import { ChevronLeft, Globe, Users } from "lucide-react";
 import Link from "next/link";
 
 const GroupDetailPage = () => {

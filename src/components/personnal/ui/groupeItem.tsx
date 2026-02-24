@@ -5,8 +5,6 @@ import {
   ItemActions,
   ItemContent,
   ItemDescription,
-  ItemHeader,
-  ItemTitle,
 } from "../../ui/item";
 
 export type groupeType = {

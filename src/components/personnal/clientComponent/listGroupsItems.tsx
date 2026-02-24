@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { CardContent } from "../../ui/card";
 import MessageGroupDisplay from "../ui/messageGroupDisplay";
 
-const ListGroupsItems = ({ items }: { items: any[] }) => {
+const ListGroupsItems = ({ items }: { items: unknown[] }) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

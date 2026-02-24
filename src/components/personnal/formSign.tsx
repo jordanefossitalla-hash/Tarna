@@ -14,96 +14,43 @@ import {
   FieldLabel,
 } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
+import { signupAction, type SignupState } from "@/app/(Register)/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState, useEffect } from "react";
+import { Spinner } from "../ui/spinner";
+import { toast } from "sonner";
 
-type SignupErrors = {
-  username?: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-  confirmPassword?: string;
-};
+const initialState: SignupState = { success: false, errors: {} };
 
 export default function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [errors, setErrors] = useState<SignupErrors>({});
+  const [state, formAction, isPending] = useActionState(signupAction, initialState);
 
-  const validate = (data: {
-    username: string;
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-    confirmPassword: string;
-  }) => {
-    const e: SignupErrors = {};
+  
 
-    if (!data.username.trim()) {
-      e.username = "Username is required.";
-    } else if (data.username.trim().length < 3) {
-      e.username = "Username must be at least 3 characters.";
-    }
-
-    if (!data.name.trim()) {
-      e.name = "Full name is required.";
-    }
-
-    if (!data.email.trim()) {
-      e.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      e.email = "Please enter a valid email address.";
-    }
-
-    if (!data.phone.trim()) {
-      e.phone = "Phone number is required.";
-    } else if (!/^\+?[0-9\s\-()]{7,15}$/.test(data.phone)) {
-      e.phone = "Please enter a valid phone number.";
-    }
-
-    if (!data.password) {
-      e.password = "Password is required.";
-    } else if (data.password.length < 8) {
-      e.password = "Password must be at least 8 characters.";
-    }
-
-    if (!data.confirmPassword) {
-      e.confirmPassword = "Please confirm your password.";
-    } else if (data.password !== data.confirmPassword) {
-      e.confirmPassword = "Passwords do not match.";
-    }
-
-    return e;
-  };
-
-  const clearError = (field: keyof SignupErrors) => {
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const data = {
-      username: fd.get("username") as string,
-      name: fd.get("name") as string,
-      email: fd.get("email") as string,
-      phone: fd.get("phone") as string,
-      password: fd.get("password") as string,
-      confirmPassword: fd.get("confirm-password") as string,
-    };
-
-    const validationErrors = validate(data);
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
+  useEffect(() => {
+    if (state.success) {
+      toast.success("Compte créé avec succès", {
+        description: "Vous pouvez maintenant vous connecter.",
+      });
       router.push("/login");
+    } else if (!state.success && Object.keys(state.errors).length > 0) {
+      const firstError =
+        state.errors.username ??
+        state.errors.name ??
+        state.errors.email ??
+        state.errors.phone ??
+        state.errors.password ??
+        state.errors.confirmPassword;
+      toast.error("Erreur d'inscription", {
+        description: firstError ?? "Vérifiez vos informations.",
+      });
     }
-  };
+  }, [state, router]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -112,7 +59,7 @@ export default function SignupForm({
           <CardTitle className="text-xl">Create your account</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} noValidate>
+          <form action={formAction} noValidate>
             <FieldGroup className="gap-2">
               <Field className="gap-1.5">
                 <FieldLabel htmlFor="username">Username</FieldLabel>
@@ -121,11 +68,10 @@ export default function SignupForm({
                   name="username"
                   type="text"
                   placeholder="Enter your username"
-                  className={errors.username ? "border-red-500" : ""}
-                  onChange={() => clearError("username")}
+                  className={state.errors.username ? "border-red-500" : ""}
                 />
-                {errors.username && (
-                  <p className="text-sm text-red-500">{errors.username}</p>
+                {state.errors.username && (
+                  <p className="text-sm text-red-500">{state.errors.username}</p>
                 )}
               </Field>
               <Field className="gap-1.5">
@@ -135,11 +81,10 @@ export default function SignupForm({
                   name="name"
                   type="text"
                   placeholder="Enter your full name"
-                  className={errors.name ? "border-red-500" : ""}
-                  onChange={() => clearError("name")}
+                  className={state.errors.name ? "border-red-500" : ""}
                 />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name}</p>
+                {state.errors.name && (
+                  <p className="text-sm text-red-500">{state.errors.name}</p>
                 )}
               </Field>
               <Field className="gap-1.5">
@@ -149,11 +94,10 @@ export default function SignupForm({
                   name="email"
                   type="email"
                   placeholder="name@example.com"
-                  className={errors.email ? "border-red-500" : ""}
-                  onChange={() => clearError("email")}
+                  className={state.errors.email ? "border-red-500" : ""}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
+                {state.errors.email && (
+                  <p className="text-sm text-red-500">{state.errors.email}</p>
                 )}
               </Field>
               <Field className="gap-1.5">
@@ -163,11 +107,10 @@ export default function SignupForm({
                   name="phone"
                   type="tel"
                   placeholder="Enter your phone number"
-                  className={errors.phone ? "border-red-500" : ""}
-                  onChange={() => clearError("phone")}
+                  className={state.errors.phone ? "border-red-500" : ""}
                 />
-                {errors.phone && (
-                  <p className="text-sm text-red-500">{errors.phone}</p>
+                {state.errors.phone && (
+                  <p className="text-sm text-red-500">{state.errors.phone}</p>
                 )}
               </Field>
               <Field className="gap-1.5">
@@ -179,11 +122,10 @@ export default function SignupForm({
                       name="password"
                       type="password"
                       placeholder="********"
-                      className={errors.password ? "border-red-500" : ""}
-                      onChange={() => clearError("password")}
+                      className={state.errors.password ? "border-red-500" : ""}
                     />
-                    {errors.password && (
-                      <p className="text-sm text-red-500">{errors.password}</p>
+                    {state.errors.password && (
+                      <p className="text-sm text-red-500">{state.errors.password}</p>
                     )}
                   </Field>
                   <Field>
@@ -195,11 +137,10 @@ export default function SignupForm({
                       name="confirm-password"
                       type="password"
                       placeholder="********"
-                      className={errors.confirmPassword ? "border-red-500" : ""}
-                      onChange={() => clearError("confirmPassword")}
+                      className={state.errors.confirmPassword ? "border-red-500" : ""}
                     />
-                    {errors.confirmPassword && (
-                      <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+                    {state.errors.confirmPassword && (
+                      <p className="text-sm text-red-500">{state.errors.confirmPassword}</p>
                     )}
                   </Field>
                 </Field>
@@ -208,7 +149,9 @@ export default function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ?  <Spinner className="size-4" /> : "Create Account"}
+                </Button>
                 <FieldDescription className="text-center">
                   Already have an account? <Link href="/login">Sign in</Link>
                 </FieldDescription>
