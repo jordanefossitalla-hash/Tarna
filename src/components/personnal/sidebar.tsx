@@ -1,10 +1,9 @@
 "use client";
-import { Card, CardDescription } from "../ui/card";
+import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import {
   Bell,
   ChevronRight,
-  Hash,
   House,
   LucideIcon,
   MessageCircle,
@@ -99,7 +98,6 @@ const Sidebar = () => {
         </div>
 
         {myGroups.map((group) => {
-          const active = pathname === `/groups/detail` || pathname.startsWith(`/groups/detail/`);
           return (
             <Button
               asChild
