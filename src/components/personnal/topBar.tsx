@@ -20,7 +20,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "../ui/input-group";
-import { usePathname, useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,11 +70,11 @@ const TopBar = () => {
   const logout = useUserStore((state) => state.logout);
   const router = useRouter();
 
-  useEffect(()=> {
-    if (!isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated])
+  // useEffect(()=> {
+  //   if (!isAuthenticated) {
+  //     redirect("/login");
+  //   }
+  // }, [isAuthenticated])
 
   return (
     <Card className="flex flex-row items-center justify-between px-4 rounded py-0 w-full xl:w-7xl h-14 z-40 gap-4">

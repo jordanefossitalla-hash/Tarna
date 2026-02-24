@@ -1,5 +1,7 @@
 "use server";
 
+import { cookies } from "next/headers";
+
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
 
 // ---------- Types partagés ----------
@@ -91,17 +93,20 @@ export async function signupAction(
     return { success: false, errors };
   }
 
-  const res = await fetch(`${API_BASE_URL}:${process.env.API_PORT}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: username,
-      email: email,
-      phone: phone,
-      password: password,
-      displayName: name,
-    }),
-  });
+  const res = await fetch(
+    `${API_BASE_URL}:${process.env.API_PORT}/auth/register`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username,
+        email: email,
+        phone: phone,
+        password: password,
+        displayName: name,
+      }),
+    },
+  );
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
@@ -140,11 +145,14 @@ export async function loginAction(
     return { success: false, errors };
   }
 
-  const res = await fetch(`${API_BASE_URL}:${process.env.API_PORT}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ identifier: email, password }),
-  });
+  const res = await fetch(
+    `${API_BASE_URL}:${process.env.API_PORT}/auth/login`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: email, password }),
+    },
+  );
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
@@ -155,6 +163,16 @@ export async function loginAction(
   }
 
   const data = await res.json();
+
+  // 🔥 Stockage du token en cookie HTTP-only
+  const cookieStore = await cookies();
+  cookieStore.set("access_token", data.accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24, // 1 jour
+  });
 
   return {
     success: true,

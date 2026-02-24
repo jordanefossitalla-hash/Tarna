@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { Spinner } from "../ui/spinner";
+import { toast } from "sonner";
 
 const initialState: LoginState = { success: false, errors: {} };
 
@@ -56,9 +57,17 @@ export default function LoginForm({
         state.accessToken,
         state.refreshToken,
       );
+      toast.success("Connexion réussie", {
+        description: `Bienvenue, ${u.displayName ?? u.username} !`,
+      });
       router.push("/home");
+    } else if (!state.success && Object.keys(state.errors).length > 0) {
+      const firstError = state.errors.email ?? state.errors.password;
+      toast.error("Erreur de connexion", {
+        description: firstError ?? "Identifiants invalides.",
+      });
     }
-  }, [state, router]);
+  }, [state, setUser, router]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

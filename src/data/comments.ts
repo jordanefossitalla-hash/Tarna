@@ -1,6 +1,6 @@
 import { Comment } from "../types/post";
 
-export const commentsData: Record<number, Comment[]> = {
+export const commentsData: Record<string, Comment[]> = {
   1: [
     {
       id: 101,

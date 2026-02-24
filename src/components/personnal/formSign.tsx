@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { Spinner } from "../ui/spinner";
+import { toast } from "sonner";
 
 const initialState: SignupState = { success: false, errors: {} };
 
@@ -33,9 +34,23 @@ export default function SignupForm({
 
   useEffect(() => {
     if (state.success) {
+      toast.success("Compte créé avec succès", {
+        description: "Vous pouvez maintenant vous connecter.",
+      });
       router.push("/login");
+    } else if (!state.success && Object.keys(state.errors).length > 0) {
+      const firstError =
+        state.errors.username ??
+        state.errors.name ??
+        state.errors.email ??
+        state.errors.phone ??
+        state.errors.password ??
+        state.errors.confirmPassword;
+      toast.error("Erreur d'inscription", {
+        description: firstError ?? "Vérifiez vos informations.",
+      });
     }
-  }, [state.success, router]);
+  }, [state, router]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

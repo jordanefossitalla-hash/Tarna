@@ -1,14 +1,26 @@
 export type Comment = {
-  id: number;
+  id: string;
+  postId: string;
+  authorId: string;
+  parentCommentId: string | null;
   author: {
+    id: string;
     name: string;
     username: string;
     avatar: string;
     initials: string;
   };
   content: string;
+  mediaUrl: string | null;
+  isEdited: boolean;
+  stats: {
+    replies_count: number;
+    reactions_count: number;
+  };
+  createdAt: string;
+  updatedAt: string;
   timeAgo: string;
-  likes: number;
+  /** Réponses (calculées côté client pour l'arbre 3 niveaux) */
   replies?: Comment[];
 };
 
@@ -28,24 +40,39 @@ export type Media = {
 };
 
 export type Post = {
-  id: number;
+  id: string;
+  authorId?: string;
+  groupId?: string | null;
+  parentPostId?: string | null;
   author: {
+    id?: string;
     name: string;
     username: string;
     avatar: string;
     initials: string;
-    isVerified: boolean;
+    isVerified?: boolean;
   };
   content: string;
+  visibility?: string;
   isPinned: boolean;
+  isEdited?: boolean;
+  commentsEnabled?: boolean;
+  sharesEnabled?: boolean;
   media: Media[];
   reactions: {
     heart: number;
     lightbulb: number;
     handshake: number;
   };
+  stats?: {
+    views_count: number;
+    shares_count: number;
+    comments_count: number;
+    reactions_count: number;
+  };
   comments: number;
   shares: number;
   createdAt: string;
+  updatedAt?: string;
   timeAgo: string;
 };

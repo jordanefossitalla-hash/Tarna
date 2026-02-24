@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import NextImage from "next/image";
 import {
   DropdownMenu,
@@ -37,6 +37,10 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useUserStore } from "@/src/store/userStore";
+import { useFeedStore } from "@/src/store/feedStore";
+import { createPostAction, type CreatePostState } from "@/app/(Client)/home/actions";
+import { Spinner } from "../ui/spinner";
+import { toast } from "sonner";
 
 type VisibilityOption = {
   value: string;
@@ -60,12 +64,42 @@ const visibilityOptions: VisibilityOption[] = [
 const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
+  const [visibility, setVisibility] = useState("public");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const currentUser = useUserStore((state) => state.user);
+  const accessToken = useUserStore((state) => state.accessToken);
+  const addPost = useFeedStore((s) => s.addPost);
+
+  const initialState: CreatePostState = { success: false, error: null, post: null };
+  const [state, formAction, isPending] = useActionState(createPostAction, initialState);
+
+  // Reset le formulaire après un post réussi + ajout au store
+  useEffect(() => {
+    if (state.success) {
+      // Ajoute le post au store feed (en tête)
+      if (state.post) {
+        addPost(state.post);
+      }
+      setContent("");
+      setImagePreview(null);
+      setPdfFile(null);
+      setIsFocused(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (pdfInputRef.current) pdfInputRef.current.value = "";
+      toast.success("Post publié", {
+        description: "Votre publication est en ligne.",
+      });
+    } else if (state.error) {
+      toast.error("Échec de la publication", {
+        description: state.error,
+      });
+    }
+  }, [state, addPost]);
 
   const handleImageUpload = () => fileInputRef.current?.click();
   const handlePdfUpload = () => pdfInputRef.current?.click();
@@ -102,13 +136,19 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   ];
 
   return (
-    <form className="pt-4 pb-2">
+    <form ref={formRef} action={formAction} className="pt-4 pb-2">
       <Card
         className={`px-4 py-3 transition-shadow ${
           isFocused ? "shadow-md ring-1 ring-primary/20" : "shadow-sm"
         }`}
       >
-        {/* Hidden inputs */}
+        {/* Hidden inputs for server action */}
+        <input type="hidden" name="token" value={accessToken ?? ""} />
+        <input type="hidden" name="authorId" value={currentUser?.id ?? ""} />
+        <input type="hidden" name="contentText" value={content} />
+        <input type="hidden" name="visibility" value={visibility} />
+
+        {/* File inputs */}
         <input
           type="file"
           ref={fileInputRef}
@@ -239,7 +279,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
           <div className="flex flex-row items-center gap-2">
             {/* Visibilité */}
             {!isgroup && (
-              <Select defaultValue="public">
+              <Select defaultValue="public" value={visibility} onValueChange={setVisibility}>
                 <SelectTrigger className="h-8 text-xs w-28 border-0 shadow-none">
                   <SelectValue />
                 </SelectTrigger>
@@ -261,12 +301,19 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
 
             {/* Publier */}
             <Button
+              type="submit"
               size="sm"
               className="cursor-pointer gap-1.5 rounded-full px-4"
-              disabled={!hasContent}
+              disabled={!hasContent || isPending}
             >
-              <Send className="size-3.5" />
-              <span className="hidden sm:inline">Publier</span>
+              {isPending ? (
+                <Spinner className="size-3.5" />
+              ) : (
+                <Send className="size-3.5" />
+              )}
+              <span className="hidden sm:inline">
+                {isPending ? "Publication…" : "Publier"}
+              </span>
             </Button>
           </div>
         </div>

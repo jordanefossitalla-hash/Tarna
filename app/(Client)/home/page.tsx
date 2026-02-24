@@ -9,7 +9,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/src/components/ui/empty";
-import { Bell, Image, RefreshCcwIcon } from "lucide-react";
+import { get } from "http";
+import { Image, RefreshCcwIcon } from "lucide-react";
+import { fetchPostsAction } from "./actions";
+import { cookies } from "next/headers";
+import PostsHydratation from "@/src/hydratation/postsHydratation";
 
 export function EmptyMuted() {
   return (
@@ -33,12 +37,13 @@ export function EmptyMuted() {
   );
 }
 
-const HomePage = () => {
+const HomePage = async () => {
+  const posts = await fetchPostsAction();
   return (
     <div className="xl:max-w-2xl xl:w-2xl w-full pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
+      <PostsHydratation state={posts.posts} />
       <AddPostCard isgroup={false} />
       <NewFeed />
-      {/* <EmptyMuted/> */}
     </div>
   );
 };
