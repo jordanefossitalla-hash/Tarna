@@ -68,7 +68,7 @@ const CommentItem = ({
     } finally {
       setSending(false);
     }
-  }, [replyText, sending, accessToken, comment.postId, comment.id, addComment]);
+  }, [replyText, sending, accessToken, comment.postId, comment.id, addComment, currentUser?.id]);
 
   return (
     <div

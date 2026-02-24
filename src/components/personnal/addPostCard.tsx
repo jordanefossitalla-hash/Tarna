@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import NextImage from "next/image";
 import {
   DropdownMenu,
@@ -52,7 +52,6 @@ type MediaAction = {
   id: number;
   label: string;
   icon: LucideIcon;
-  action?: () => void;
 };
 
 const visibilityOptions: VisibilityOption[] = [
@@ -76,15 +75,11 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   const addPost = useFeedStore((s) => s.addPost);
 
   const initialState: CreatePostState = { success: false, error: null, post: null };
-  const [state, formAction, isPending] = useActionState(createPostAction, initialState);
 
-  // Reset le formulaire après un post réussi + ajout au store
-  useEffect(() => {
-    if (state.success) {
-      // Ajoute le post au store feed (en tête)
-      if (state.post) {
-        addPost(state.post);
-      }
+  const handleFormAction = async (prevState: CreatePostState, formData: FormData) => {
+    const result = await createPostAction(prevState, formData);
+    if (result.success) {
+      if (result.post) addPost(result.post);
       setContent("");
       setImagePreview(null);
       setPdfFile(null);
@@ -94,15 +89,15 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
       toast.success("Post publié", {
         description: "Votre publication est en ligne.",
       });
-    } else if (state.error) {
+    } else if (result.error) {
       toast.error("Échec de la publication", {
-        description: state.error,
+        description: result.error,
       });
     }
-  }, [state, addPost]);
+    return result;
+  };
 
-  const handleImageUpload = () => fileInputRef.current?.click();
-  const handlePdfUpload = () => pdfInputRef.current?.click();
+  const [, formAction, isPending] = useActionState(handleFormAction, initialState);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,10 +121,15 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
 
   const hasContent = content.trim().length > 0 || imagePreview || pdfFile;
 
+  const handleMediaAction = (id: number) => {
+    if (id === 0) fileInputRef.current?.click();
+    else if (id === 2) pdfInputRef.current?.click();
+  };
+
   const mediaActions: MediaAction[] = [
-    { id: 0, label: "Photo", icon: ImageIcon, action: handleImageUpload },
+    { id: 0, label: "Photo", icon: ImageIcon },
     { id: 1, label: "Vidéo", icon: Camera },
-    { id: 2, label: "Document", icon: FileText, action: handlePdfUpload },
+    { id: 2, label: "Document", icon: FileText },
     { id: 3, label: "Lien", icon: Link2 },
     { id: 4, label: "Emoji", icon: Smile },
     { id: 5, label: "Hashtag", icon: Hash },
@@ -237,7 +237,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
                 <button
                   key={media.id}
                   type="button"
-                  onClick={media.action}
+                  onClick={() => handleMediaAction(media.id)}
                   className="p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer group"
                   title={media.label}
                 >
@@ -264,7 +264,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
                       <DropdownMenuItem
                         key={media.id}
                         className="cursor-pointer gap-2"
-                        onClick={media.action}
+                        onClick={() => handleMediaAction(media.id)}
                       >
                         <media.icon className="size-4" />
                         {media.label}

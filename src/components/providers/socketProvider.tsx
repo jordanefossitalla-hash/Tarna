@@ -3,12 +3,35 @@ import {
   createContext,
   useContext,
   useEffect,
-  useRef,
+  useSyncExternalStore,
   ReactNode,
 } from "react";
 import { Socket } from "socket.io-client";
 import { getSocket, disconnectSocket } from "@/src/lib/socket";
 import { useUserStore } from "@/src/store/userStore";
+
+// ── External store for socket ────────────────────────────────────
+
+let _socket: Socket | null = null;
+const _listeners = new Set<() => void>();
+
+function subscribe(listener: () => void) {
+  _listeners.add(listener);
+  return () => { _listeners.delete(listener); };
+}
+
+function getSnapshot() {
+  return _socket;
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
+function setSocket(socket: Socket | null) {
+  _socket = socket;
+  _listeners.forEach((l) => l());
+}
 
 // ── Context ──────────────────────────────────────────────────
 
@@ -23,27 +46,27 @@ export function useSocket(): Socket | null {
 export function SocketProvider({ children }: { children: ReactNode }) {
   const accessToken = useUserStore((state) => state.accessToken);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
-  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
       disconnectSocket();
-      socketRef.current = null;
+      setSocket(null);
       return;
     }
 
     const sock = getSocket(accessToken);
-    socketRef.current = sock;
+    setSocket(sock);
 
     return () => {
-      // Cleanup on unmount or token change
       disconnectSocket();
-      socketRef.current = null;
+      setSocket(null);
     };
   }, [isAuthenticated, accessToken]);
 
+  const socket = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
   return (
-    <SocketContext.Provider value={socketRef.current}>
+    <SocketContext.Provider value={socket}>
       {children}
     </SocketContext.Provider>
   );

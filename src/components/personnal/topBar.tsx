@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardContent } from "../ui/card";
+import { Card } from "../ui/card";
 import {
   Bell,
   House,
@@ -20,19 +20,17 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "../ui/input-group";
-import { redirect, usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import Image from "next/image";
 import { useUserStore } from "@/src/store/userStore";
-import { useEffect } from "react";
 
 type NavItem = {
   id: number;
@@ -68,7 +66,7 @@ const TopBar = () => {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
-  const router = useRouter();
+
 
   // useEffect(()=> {
   //   if (!isAuthenticated) {

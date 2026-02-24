@@ -22,6 +22,7 @@ const NewFeed = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const loadMoreFormRef = useRef<HTMLFormElement>(null);
   const [filter, setFilter] = useState<FeedFilter>("for-you");
+  const [now, setNow] = useState(() => Date.now());
 
   // ── Feed store ──
   const feedPosts = useFeedStore((s) => s.posts);
@@ -81,7 +82,7 @@ const NewFeed = () => {
     if (filter === "recent") {
       return feedPosts
         .filter((post) => {
-          const diffMs = Date.now() - new Date(post.createdAt).getTime();
+          const diffMs = now - new Date(post.createdAt).getTime();
           return diffMs <= 24 * 60 * 60 * 1000;
         })
         .sort(
@@ -90,7 +91,7 @@ const NewFeed = () => {
         );
     }
     return feedPosts;
-  }, [filter, feedPosts]);
+  }, [filter, feedPosts, now]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -120,7 +121,7 @@ const NewFeed = () => {
           variant={filter === "recent" ? "default" : "outline"}
           size="sm"
           className="cursor-pointer gap-1.5 rounded-full"
-          onClick={() => setFilter("recent")}
+          onClick={() => { setFilter("recent"); setNow(Date.now()); }}
         >
           <Clock9 className="size-3.5" />
           Récents

@@ -9,18 +9,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/src/components/ui/empty";
-import { get } from "http";
-import { Image, RefreshCcwIcon } from "lucide-react";
-import { fetchPostsAction } from "./actions";
-import { cookies } from "next/headers";
-import PostsHydratation from "@/src/hydratation/postsHydratation";
+import { Image as ImageIcon, RefreshCcwIcon } from "lucide-react";
 
 export function EmptyMuted() {
   return (
     <Empty className="bg-muted/30 h-full py-0">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <Image />
+          <ImageIcon />
         </EmptyMedia>
         <EmptyTitle>Aucune publication</EmptyTitle>
         <EmptyDescription className="max-w-xs text-pretty">

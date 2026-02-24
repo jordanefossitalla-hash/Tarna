@@ -1,18 +1,9 @@
-import { Hash, TrendingUp, Users, UserPlus } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { groupsData } from "@/src/data/groups";
 import Link from "next/link";
-
-/* ─── Tendances ─── */
-const trends = [
-  { id: 1, tag: "#ReactAfrica", posts: 1243 },
-  { id: 2, tag: "#NextJS15", posts: 876 },
-  { id: 3, tag: "#TechCameroun", posts: 654 },
-  { id: 4, tag: "#DevOps", posts: 432 },
-  { id: 5, tag: "#TailwindCSS", posts: 321 },
-];
 
 /* ─── Suggestions de personnes ─── */
 const suggestedPeople = [
@@ -46,11 +37,6 @@ const suggestedPeople = [
 const suggestedGroups = groupsData
   .filter((g) => !g.isMember && !g.isPending)
   .slice(0, 3);
-
-function formatCount(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-  return n.toString();
-}
 
 const RightBar = () => {
   return (

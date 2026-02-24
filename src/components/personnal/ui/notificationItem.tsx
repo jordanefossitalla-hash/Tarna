@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { Notification, NotificationType } from "@/src/types/notification";
+import Image from "next/image";
 
 /* ── Icon / couleur par type ── */
 const typeConfig: Record<
@@ -142,11 +143,12 @@ const NotificationItem = ({
 
       {/* Thumbnail (si disponible) */}
       {notification.thumbnail && (
-        <div className="shrink-0 size-12 rounded-md overflow-hidden">
-          <img
+        <div className="shrink-0 size-12 rounded-md overflow-hidden relative">
+          <Image
             src={notification.thumbnail}
             alt=""
-            className="size-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
       )}

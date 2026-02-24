@@ -215,4 +215,7 @@ export async function createPostAction(
   }
 }
 
-export async function deletePost(id: string) {}
+export async function deletePost(_id: string) {
+  void _id;
+  // TODO: implement server-side post deletion
+}

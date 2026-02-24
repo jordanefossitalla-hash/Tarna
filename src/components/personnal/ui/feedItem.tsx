@@ -5,14 +5,12 @@ import {
   ChevronDown,
   Ellipsis,
   FileText,
-  Flag,
   Handshake,
   Heart,
   Lightbulb,
   Loader2,
   MessageCircle,
   Pin,
-  Share2,
   Send,
   User,
   UserCheck,
@@ -154,7 +152,7 @@ const FeedItem = ({ post }: { post: Post }) => {
     } finally {
       setCommentSending(false);
     }
-  }, [commentText, commentSending, accessToken, post.id, addComment]);
+  }, [commentText, commentSending, accessToken, post.id, addComment, currentUser?.id]);
 
   // Vérifie le statut de follow au montage
   useEffect(() => {
