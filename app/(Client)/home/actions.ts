@@ -1,7 +1,6 @@
 "use server";
 
 import { Post } from "@/src/types/post";
-import { cookies } from "next/headers";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
 const API_PORT = process.env.API_PORT ?? "4000";
@@ -9,18 +8,26 @@ const API_PORT = process.env.API_PORT ?? "4000";
 export type FeedState = {
   posts: Post[];
   error: string | null;
+  nextCursor: string | null;
+  hasMore: boolean;
 };
 
-export async function fetchPostsAction(): Promise<FeedState> {
-  const cookieStore = cookies();
-  const token = (await cookieStore).get("access_token")?.value;
+export async function fetchPostsAction(
+  _prev: FeedState,
+  formData: FormData,
+): Promise<FeedState> {
+  const token = formData.get("token") as string;
+  const cursor = formData.get("cursor") as string | null;
   
   if (!token) {
-    return { posts: [], error: "Not authenticated." };
+    return { posts: [], error: "Not authenticated.", nextCursor: null, hasMore: false };
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}:${API_PORT}/posts/feed`, {
+    const url = new URL(`${API_BASE_URL}:${API_PORT}/posts/feed`);
+    if (cursor) url.searchParams.set("cursor", cursor);
+
+    const res = await fetch(url.toString(), {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -32,6 +39,8 @@ export async function fetchPostsAction(): Promise<FeedState> {
       return {
         posts: [],
         error: data?.message ?? `Request failed (${res.status})`,
+        nextCursor: null,
+        hasMore: false,
       };
     }
 
@@ -100,9 +109,9 @@ export async function fetchPostsAction(): Promise<FeedState> {
       };
     });
 
-    return { posts, error: null };
+    return { posts, error: null, nextCursor: json.meta?.nextCursor ?? null, hasMore: json.meta?.hasMore ?? false };
   } catch {
-    return { posts: [], error: "Failed to fetch posts." };
+    return { posts: [], error: "Failed to fetch posts.", nextCursor: null, hasMore: false };
   }
 }
 

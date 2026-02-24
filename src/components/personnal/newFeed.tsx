@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "../ui/button";
-import { Clock9, Sparkles } from "lucide-react";
+import { Clock9, Loader2, Sparkles } from "lucide-react";
 import { Spinner } from "../ui/spinner";
 import FeedItem from "./ui/feedItem";
 import { useUserStore } from "@/src/store/userStore";
@@ -15,23 +15,44 @@ import { useState, useMemo, useEffect, useRef, useActionState, useCallback } fro
 
 type FeedFilter = "for-you" | "recent";
 
-const initialState: FeedState = { posts: [], error: null };
+const initialState: FeedState = { posts: [], error: null, nextCursor: null, hasMore: false };
 
 const NewFeed = () => {
   const accessToken = useUserStore((s) => s.accessToken);
   const formRef = useRef<HTMLFormElement>(null);
+  const loadMoreFormRef = useRef<HTMLFormElement>(null);
   const [filter, setFilter] = useState<FeedFilter>("for-you");
 
   // ── Feed store ──
   const feedPosts = useFeedStore((s) => s.posts);
   const setPosts = useFeedStore((s) => s.setPosts);
+  const appendPosts = useFeedStore((s) => s.appendPosts);
   const addPost = useFeedStore((s) => s.addPost);
   const removePost = useFeedStore((s) => s.removePost);
+  const nextCursor = useFeedStore((s) => s.nextCursor);
+  const hasMore = useFeedStore((s) => s.hasMore);
+
+  const [state, formAction, isPending] = useActionState(fetchPostsAction, initialState);
+  const [loadMoreState, loadMoreAction, isLoadingMore] = useActionState(fetchPostsAction, initialState);
 
   // Auto-submit au montage pour charger les posts
   useEffect(() => {
     formRef.current?.requestSubmit();
   }, [accessToken]);
+
+  // Quand le fetch initial arrive, remplacer les posts
+  useEffect(() => {
+    if (state.posts.length > 0 || state.error === null) {
+      setPosts(state.posts, state.nextCursor, state.hasMore);
+    }
+  }, [state, setPosts]);
+
+  // Quand le loadMore arrive, ajouter les posts
+  useEffect(() => {
+    if (loadMoreState.posts.length > 0) {
+      appendPosts(loadMoreState.posts, loadMoreState.nextCursor, loadMoreState.hasMore);
+    }
+  }, [loadMoreState, appendPosts]);
 
   // ── WebSocket : nouveau post d'un utilisateur suivi (ou soi-même) ──
   const handleNewPost = useCallback(
@@ -73,6 +94,17 @@ const NewFeed = () => {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Formulaire caché — fetch initial */}
+      <form ref={formRef} action={formAction} className="hidden">
+        <input type="hidden" name="token" value={accessToken ?? ""} />
+      </form>
+
+      {/* Formulaire caché — charger plus */}
+      <form ref={loadMoreFormRef} action={loadMoreAction} className="hidden">
+        <input type="hidden" name="token" value={accessToken ?? ""} />
+        <input type="hidden" name="cursor" value={nextCursor ?? ""} />
+      </form>
+
       {/* ─── Filtres ─── */}
       <div className="flex flex-row gap-2">
         <Button
@@ -96,24 +128,52 @@ const NewFeed = () => {
       </div>
 
       {/* ─── Contenu ─── */}
-      {posts.length === 0 ? (
+      {isPending ? (
+        <div className="flex items-center justify-center py-16">
+          <Spinner className="size-6" />
+        </div>
+      ) : posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
           <Clock9 className="size-10 opacity-30" />
-          <p className="text-sm">Aucun post récent dans les dernières 24h.</p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="cursor-pointer mt-1"
-            onClick={() => setFilter("for-you")}
-          >
-            Voir tous les posts
-          </Button>
+          <p className="text-sm">
+            {filter === "recent"
+              ? "Aucun post dans les dernières 24h."
+              : "Aucun post pour le moment."}
+          </p>
+          {filter === "recent" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer mt-1"
+              onClick={() => setFilter("for-you")}
+            >
+              Voir tous les posts
+            </Button>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {posts?.map((post) => (
+          {posts.map((post) => (
             <FeedItem key={post.id} post={post} />
           ))}
+
+          {/* Bouton charger plus */}
+          {hasMore && filter === "for-you" && (
+            <div className="flex justify-center py-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer gap-2"
+                onClick={() => loadMoreFormRef.current?.requestSubmit()}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {isLoadingMore ? "Chargement..." : "Charger plus"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

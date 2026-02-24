@@ -59,7 +59,11 @@ import {
 } from "@/src/lib/api";
 import { useFeedStore } from "@/src/store/feedStore";
 import { useCommentStore } from "@/src/store/commentStore";
-import { mapRawComment, flattenRawComments, buildCommentTree } from "@/src/lib/mapComment";
+import {
+  mapRawComment,
+  flattenRawComments,
+  buildCommentTree,
+} from "@/src/lib/mapComment";
 import { Spinner } from "../../ui/spinner";
 import { toast } from "sonner";
 
@@ -96,7 +100,6 @@ const FeedItem = ({ post }: { post: Post }) => {
     () => buildCommentTree(flatComments),
     [flatComments],
   );
-  const commentCount = flatComments.length || post.comments || 0;
 
   const isOwnPost = currentUser?.id === post.authorId;
 
@@ -262,17 +265,24 @@ const FeedItem = ({ post }: { post: Post }) => {
                 <DropdownMenuItem className="cursor-pointer gap-2">
                   <User className="size-4" /> Voir le profil
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2"
-                  onClick={handleFollow}
-                >
-                  {isFollowing ? (
-                    <UserCheck className="size-4" />
-                  ) : (
-                    <UserPlus className="size-4" />
-                  )}
-                  {isFollowing ? "Ne plus suivre" : "Suivre"}
-                </DropdownMenuItem>
+                {isOwnPost ? (
+                  <DropdownMenuItem className="cursor-pointer gap-2">
+                    <Pin className="size-4" />{" "}
+                    {post.isPinned ? "Détacher" : "Épingler"}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    className="cursor-pointer gap-2"
+                    onClick={handleFollow}
+                  >
+                    {isFollowing ? (
+                      <UserCheck className="size-4" />
+                    ) : (
+                      <UserPlus className="size-4" />
+                    )}
+                    {isFollowing ? "Ne plus suivre" : "Suivre"}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   className="cursor-pointer gap-2"
                   onClick={() => setSaved(!saved)}
