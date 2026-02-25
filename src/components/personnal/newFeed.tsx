@@ -12,12 +12,13 @@ import {
   type FeedState,
 } from "@/app/(Client)/home/actions";
 import { useState, useMemo, useEffect, useRef, useActionState, useCallback } from "react";
+import { Post } from "@/src/types/post";
 
 type FeedFilter = "for-you" | "recent";
 
 const initialState: FeedState = { posts: [], error: null, nextCursor: null, hasMore: false };
 
-const NewFeed = () => {
+const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
   const accessToken = useUserStore((s) => s.accessToken);
   const formRef = useRef<HTMLFormElement>(null);
   const loadMoreFormRef = useRef<HTMLFormElement>(null);
@@ -37,9 +38,9 @@ const NewFeed = () => {
   const [loadMoreState, loadMoreAction, isLoadingMore] = useActionState(fetchPostsAction, initialState);
 
   // Auto-submit au montage pour charger les posts
-  useEffect(() => {
-    formRef.current?.requestSubmit();
-  }, [accessToken]);
+  // useEffect(() => {
+  //   formRef.current?.requestSubmit();
+  // }, [accessToken]);
 
   // Quand le fetch initial arrive, remplacer les posts
   useEffect(() => {
@@ -47,6 +48,13 @@ const NewFeed = () => {
       setPosts(state.posts, state.nextCursor, state.hasMore);
     }
   }, [state, setPosts]);
+
+  // Premier chargement au montage
+  useEffect(() => {
+    if (firstPost.length > 0) {
+      setPosts(firstPost, null, false);
+    }
+  }, [firstPost, setPosts]);
 
   // Quand le loadMore arrive, ajouter les posts
   useEffect(() => {

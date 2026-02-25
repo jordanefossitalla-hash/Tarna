@@ -1,6 +1,7 @@
 "use server";
 
 import { Post } from "@/src/types/post";
+import { cookies } from "next/headers";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
 const API_PORT = process.env.API_PORT ?? "4000";
@@ -12,20 +13,22 @@ export type FeedState = {
   hasMore: boolean;
 };
 
-export async function fetchPostsAction(
-  _prev: FeedState,
-  formData: FormData,
-): Promise<FeedState> {
-  const token = formData.get("token") as string;
-  const cursor = formData.get("cursor") as string | null;
-  
+export async function fetchPostsAction(): Promise<FeedState> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value ?? null;
+
   if (!token) {
-    return { posts: [], error: "Not authenticated.", nextCursor: null, hasMore: false };
+    return {
+      posts: [],
+      error: "Not authenticated.",
+      nextCursor: null,
+      hasMore: false,
+    };
   }
 
   try {
     const url = new URL(`${API_BASE_URL}:${API_PORT}/posts/feed`);
-    if (cursor) url.searchParams.set("cursor", cursor);
+    // if (cursor) url.searchParams.set("cursor", cursor);
 
     const res = await fetch(url.toString(), {
       headers: {
@@ -95,6 +98,8 @@ export async function fetchPostsAction(
           lightbulb: 0,
           handshake: 0,
         },
+        images: p.images ?? [],
+        files: p.files ?? [],
         stats: p.stats ?? {
           views_count: 0,
           shares_count: 0,
@@ -109,9 +114,19 @@ export async function fetchPostsAction(
       };
     });
 
-    return { posts, error: null, nextCursor: json.meta?.nextCursor ?? null, hasMore: json.meta?.hasMore ?? false };
+    return {
+      posts,
+      error: null,
+      nextCursor: json.meta?.nextCursor ?? null,
+      hasMore: json.meta?.hasMore ?? false,
+    };
   } catch {
-    return { posts: [], error: "Failed to fetch posts.", nextCursor: null, hasMore: false };
+    return {
+      posts: [],
+      error: "Failed to fetch posts.",
+      nextCursor: null,
+      hasMore: false,
+    };
   }
 }
 
@@ -139,21 +154,35 @@ export async function createPostAction(
     return { success: false, error: "Content cannot be empty.", post: null };
   }
 
+  // fichiers reçus depuis le form client
+  const images = formData
+    .getAll("images")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+
+  const doc = formData.get("files");
+  const document = doc instanceof File && doc.size > 0 ? doc : null;
+
+  const payload = new FormData();
+  payload.append("authorId", authorId);
+  payload.append("contentText", contentText);
+  payload.append("visibility", visibility);
+
+  // multer.array("images")
+  for (const image of images) {
+    payload.append("images", image, image.name);
+  }
+
+  if (document) {
+    payload.append("files", document, document.name);
+  }
+
   try {
     const res = await fetch(`${API_BASE_URL}:${API_PORT}/posts`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        authorId,
-        contentText,
-        visibility,
-        isPinned: false,
-        commentsEnabled: true,
-        sharesEnabled: true,
-      }),
+      body: payload,
     });
 
     if (!res.ok) {
@@ -196,6 +225,8 @@ export async function createPostAction(
       sharesEnabled: p.sharesEnabled ?? true,
       media: p.media ?? [],
       reactions: { heart: 0, lightbulb: 0, handshake: 0 },
+      images: p.images ?? [],
+      files: p.files ?? [],
       stats: p.stats ?? {
         views_count: 0,
         shares_count: 0,

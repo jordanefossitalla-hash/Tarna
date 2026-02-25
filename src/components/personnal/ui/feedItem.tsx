@@ -201,9 +201,6 @@ const FeedItem = ({ post }: { post: Post }) => {
     setReaction((prev) => (prev === type ? "" : type));
   };
 
-  const images = post.media.filter((m) => m.type === "image");
-  const documents = post.media.filter((m) => m.type === "document");
-
   return (
     <Collapsible asChild open={commentsOpen} onOpenChange={setCommentsOpen}>
       <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -324,37 +321,37 @@ const FeedItem = ({ post }: { post: Post }) => {
           </p>
 
           {/* Images */}
-          {images.length > 0 && (
+          {post.images?.length > 0 && (
             <div
               className={`grid gap-1.5 mt-3 rounded-xl overflow-hidden ${
-                images.length === 1
+                post.images.length === 1
                   ? "grid-cols-1"
-                  : images.length === 3
+                  : post.images.length === 3
                     ? "grid-cols-2"
                     : "grid-cols-2"
               }`}
             >
-              {images.map((media, index) => {
+              {post.images.map((media, index) => {
                 const isFullWidth =
-                  images.length === 1 || (images.length === 3 && index === 0);
+                  post.images.length === 1 || (post.images.length === 3 && index === 0);
                 return (
                   <div
-                    key={media.id}
+                    key={index}
                     className={`relative overflow-hidden bg-muted ${
                       isFullWidth ? "col-span-2 h-52 lg:h-80" : "h-36 lg:h-52"
-                    } ${images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
+                    } ${post.images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
                   >
                     <Image
-                      src={media.url}
-                      alt={media.alt || "post image"}
+                      src={media}
+                      alt={"post image"}
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                     />
                     {/* Overlay pour +N images */}
-                    {images.length > 4 && index === 3 && (
+                    {post.images.length > 4 && index === 3 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
                         <span className="text-white text-xl font-bold">
-                          +{images.length - 4}
+                          +{post.images.length - 4}
                         </span>
                       </div>
                     )}
@@ -365,11 +362,11 @@ const FeedItem = ({ post }: { post: Post }) => {
           )}
 
           {/* Documents */}
-          {documents.length > 0 && (
+          {/* {post.files.length > 0 && (
             <div className="flex flex-col gap-2 mt-3">
-              {documents.map((media) => (
+              {post.files.map((media, index) => (
                 <div
-                  key={media.id}
+                  key={index}
                   className="flex flex-row items-center gap-3 px-3 py-2.5 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
                   // AFFICHER LE PREVIOUS DU PDF DANS UNE MODAL
                   // onClick={() =>
@@ -392,7 +389,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 </div>
               ))}
             </div>
-          )}
+          )} */}
 
           {/* PDF Preview Dialog */}
           <Dialog

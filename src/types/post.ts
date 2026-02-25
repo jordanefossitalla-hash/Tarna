@@ -64,6 +64,8 @@ export type Post = {
     lightbulb: number;
     handshake: number;
   };
+  images: string[];
+  files: string[];
   stats?: {
     views_count: number;
     shares_count: number;
