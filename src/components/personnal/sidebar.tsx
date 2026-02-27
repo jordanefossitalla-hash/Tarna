@@ -63,7 +63,7 @@ const Sidebar = () => {
                 <span className={`flex-1 text-left text-sm ${active ? "font-semibold" : "font-medium"}`}>
                   {item.name}
                 </span>
-                {item.badge && item.badge > 0 && (
+                {/* {item.badge && item.badge > 0 && (
                   <span
                     className={`flex items-center justify-center text-[10px] font-bold rounded-full size-5 ${
                       active
@@ -73,7 +73,7 @@ const Sidebar = () => {
                   >
                     {item.badge}
                   </span>
-                )}
+                )} */}
               </Link>
             </Button>
           );
@@ -84,7 +84,7 @@ const Sidebar = () => {
       <div className="mx-4 my-3 h-px bg-border" />
 
       {/* ─── Mes groupes ─── */}
-      <div className="flex flex-col gap-1 px-2">
+      {/* <div className="flex flex-col gap-1 px-2">
         <div className="flex flex-row items-center justify-between px-3 mb-1">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Mes groupes
@@ -124,13 +124,13 @@ const Sidebar = () => {
             </Button>
           );
         })}
-      </div>
+      </div> */}
 
       {/* ─── Séparateur ─── */}
-      <div className="mx-4 my-3 h-px bg-border" />
+      {/* <div className="mx-4 my-3 h-px bg-border" /> */}
 
       {/* ─── Paramètres ─── */}
-      <div className="px-2">
+      {/* <div className="px-2">
         <Button
           variant="ghost"
           className="w-full justify-start cursor-pointer h-9 px-3 text-muted-foreground hover:text-foreground"
@@ -138,7 +138,7 @@ const Sidebar = () => {
           <Settings className="size-4.5 mr-1" strokeWidth={2} />
           <span className="text-sm font-medium">Paramètres</span>
         </Button>
-      </div>
+      </div> */}
     </Card>
   );
 };

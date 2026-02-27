@@ -41,6 +41,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { InBuild } from "@/src/components/personnal/inBuild";
 
 type Tab = "my-groups" | "discover" | "pending";
 
@@ -89,7 +90,7 @@ const GroupsPage = () => {
   return (
     <div className="xl:w-2xl xl:max-w-2xl w-full pb-20 flex flex-col gap-4 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
       {/* ─── Header ─── */}
-      <div className="flex flex-col sm:flex-row w-full gap-3 justify-between pt-8">
+      {/* <div className="flex flex-col sm:flex-row w-full gap-3 justify-between pt-8">
         <div>
           <h1 className="text-2xl font-bold">Groupes</h1>
           <p className="text-sm text-muted-foreground">
@@ -196,10 +197,10 @@ const GroupsPage = () => {
             </form>
           </Dialog>
         </div>
-      </div>
+      </div> */}
 
       {/* ─── Barre de recherche ─── */}
-      <InputGroup className="w-full">
+      {/* <InputGroup className="w-full">
         <InputGroupInput
           placeholder="Rechercher un groupe..."
           value={search}
@@ -208,10 +209,10 @@ const GroupsPage = () => {
         <InputGroupAddon>
           <Search />
         </InputGroupAddon>
-      </InputGroup>
+      </InputGroup> */}
 
       {/* ─── Onglets ─── */}
-      <div className="flex flex-row gap-2">
+      {/* <div className="flex flex-row gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -239,10 +240,10 @@ const GroupsPage = () => {
             </Button>
           );
         })}
-      </div>
+      </div> */}
 
       {/* ─── Grille de groupes ─── */}
-      {filtered.length === 0 ? (
+      {/* {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
           <Search className="size-10 opacity-30" />
           <p className="text-sm">
@@ -272,7 +273,8 @@ const GroupsPage = () => {
             <GroupDisplay key={group.id} group={group} />
           ))}
         </div>
-      )}
+      )} */}
+      <InBuild/>
     </div>
   );
 };

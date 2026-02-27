@@ -39,6 +39,12 @@ export type Media = {
   fileExtension?: string;
 };
 
+export type FileDocument = {
+    url: string;
+    fileName: string;
+    extension: string;
+  }
+
 export type Post = {
   id: string;
   authorId?: string;
@@ -65,7 +71,7 @@ export type Post = {
     handshake: number;
   };
   images: string[];
-  files: string[];
+  files: FileDocument[];
   stats?: {
     views_count: number;
     shares_count: number;

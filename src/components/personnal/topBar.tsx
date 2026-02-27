@@ -89,12 +89,12 @@ const TopBar = () => {
 
       {/* ─── Barre de recherche (desktop) ─── */}
       <div className="hidden lg:flex flex-1 max-w-md">
-        <InputGroup className="w-full">
+        {/* <InputGroup className="w-full">
           <InputGroupInput placeholder="Rechercher..." />
           <InputGroupAddon>
             <Search className="size-4" />
           </InputGroupAddon>
-        </InputGroup>
+        </InputGroup> */}
       </div>
 
       {/* ─── Navigation desktop ─── */}
@@ -117,11 +117,11 @@ const TopBar = () => {
                     className="size-5"
                     strokeWidth={active ? 2.5 : 2}
                   />
-                  {item.badge && item.badge > 0 && (
+                  {/* {item.badge && item.badge > 0 && (
                     <span className="absolute -top-1.5 -right-2 flex items-center justify-center text-[9px] font-bold text-primary-foreground bg-primary rounded-full size-4">
                       {item.badge}
                     </span>
-                  )}
+                  )} */}
                 </div>
                 <span
                   className={`text-[10px] mt-0.5 leading-none ${
@@ -225,12 +225,12 @@ const TopBar = () => {
                     Mon profil
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer">
+                {/* <DropdownMenuItem asChild className="cursor-pointer">
                   <Link href="#" className="flex flex-row items-center gap-2">
                     <Settings className="size-4" />
                     Paramètres
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
               </DropdownMenuGroup>
 
               <DropdownMenuSeparator />

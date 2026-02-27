@@ -13,6 +13,8 @@ import {
   Users,
   X,
   Send,
+  Megaphone,
+  TriangleAlert,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card } from "../ui/card";
@@ -26,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import NextImage from "next/image";
 import {
   DropdownMenu,
@@ -40,6 +42,8 @@ import { useUserStore } from "@/src/store/userStore";
 import { useFeedStore } from "@/src/store/feedStore";
 import {
   createPostAction,
+  FeedState,
+  fetchPostsAction,
   type CreatePostState,
 } from "@/app/(Client)/home/actions";
 import { Spinner } from "../ui/spinner";
@@ -57,15 +61,21 @@ type MediaAction = {
   icon: LucideIcon;
 };
 
+const postOptions: VisibilityOption[] = [
+  { value: "post", label: "Post", icon: Globe },
+  { value: "annonce", label: "Annonce", icon: Megaphone },
+  { value: "note", label: "Note", icon: TriangleAlert },
+];
 const visibilityOptions: VisibilityOption[] = [
   { value: "public", label: "Public", icon: Globe },
   { value: "private", label: "Privé", icon: GlobeLock },
   { value: "friends", label: "Amis", icon: Users },
 ];
-
+const initialStat: FeedState = { posts: [], error: null, nextCursor: null, hasMore: false };
 const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
+  const [postType, setPostType] = useState("post");
   const [visibility, setVisibility] = useState("public");
   const [imagePreview, setImagePreview] = useState<string[] | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -76,6 +86,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   const currentUser = useUserStore((state) => state.user);
   const accessToken = useUserStore((state) => state.accessToken);
   const addPost = useFeedStore((s) => s.addPost);
+   const [state, formFetchAction, _] = useActionState(fetchPostsAction, initialStat);
 
   const initialState: CreatePostState = {
     success: false,
@@ -111,6 +122,12 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
     handleFormAction,
     initialState,
   );
+  // useEffect(() => {
+  //   if (!isPending) {
+  //     formFetchAction(); // Re-fetch posts après création pour mettre à jour les stats
+
+  //   }
+  // }, [isPending])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImagePreview(null);
@@ -149,9 +166,9 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
     { id: 0, label: "Photo", icon: ImageIcon },
     { id: 1, label: "Vidéo", icon: Camera },
     { id: 2, label: "Document", icon: FileText },
-    { id: 3, label: "Lien", icon: Link2 },
-    { id: 4, label: "Emoji", icon: Smile },
-    { id: 5, label: "Hashtag", icon: Hash },
+    // { id: 3, label: "Lien", icon: Link2 },
+    // { id: 4, label: "Emoji", icon: Smile },
+    // { id: 5, label: "Hashtag", icon: Hash },
   ];
 
   return (
@@ -332,6 +349,28 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
           </div>
 
           <div className="flex flex-row items-center gap-2">
+            <Select
+                defaultValue="publication"
+                value={postType}
+                onValueChange={setPostType}
+              >
+                <SelectTrigger className="h-8 text-xs w-28 border-0 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>type de post</SelectLabel>
+                    {postOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        <div className="flex flex-row items-center gap-1.5">
+                          <opt.icon className="size-3.5" />
+                          {opt.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             {/* Visibilité */}
             {!isgroup && (
               <Select

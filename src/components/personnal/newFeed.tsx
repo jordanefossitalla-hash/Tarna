@@ -64,26 +64,26 @@ const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
   }, [loadMoreState, appendPosts]);
 
   // ── WebSocket : nouveau post d'un utilisateur suivi (ou soi-même) ──
-  const handleNewPost = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (rawPost: any) => {
-      const post = mapRawPost(rawPost);
-      addPost(post);
-    },
-    [addPost],
-  );
+  // const handleNewPost = useCallback(
+  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   (rawPost: any) => {
+  //     const post = mapRawPost(rawPost);
+  //     addPost(post);
+  //   },
+  //   [addPost],
+  // );
 
-  useSocketEvent("post:new", handleNewPost);
+  // useSocketEvent("post:new", handleNewPost);
 
-  // ── WebSocket : post supprimé ──
-  const handleDeletedPost = useCallback(
-    (data: { postId: string }) => {
-      removePost(data.postId);
-    },
-    [removePost],
-  );
+  // // ── WebSocket : post supprimé ──
+  // const handleDeletedPost = useCallback(
+  //   (data: { postId: string }) => {
+  //     removePost(data.postId);
+  //   },
+  //   [removePost],
+  // );
 
-  useSocketEvent("post:deleted", handleDeletedPost);
+  // useSocketEvent("post:deleted", handleDeletedPost);
 
   // Filtre appliqué sur les posts du store
   const posts = useMemo(() => {

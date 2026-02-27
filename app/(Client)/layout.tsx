@@ -19,10 +19,10 @@ export default function RootLayout({
           <div className="absolute top-0 left-0 right-0 xl:left-auto xl:right-auto z-10">
             <TopBar />
           </div>
-          <div className="flex flex-row justify-between h-full w-full pt-17">
+          <div className="flex flex-row gap-4 h-full w-full pt-17">
             <Sidebar />
             <div className="xl:max-w-2xl w-full px-3 lg:px-0">{children}</div>
-            <RightBar />
+            {/* <RightBar /> */}
           </div>
         </div>
         <BottomBar />

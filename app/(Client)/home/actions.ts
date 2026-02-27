@@ -106,7 +106,7 @@ export async function fetchPostsAction(): Promise<FeedState> {
           comments_count: 0,
           reactions_count: 0,
         },
-        comments: p.stats?.comments_count ?? p.comments ?? 0,
+        comments: p._count?.comments ?? 0,
         shares: p.stats?.shares_count ?? p.shares ?? 0,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
@@ -194,6 +194,7 @@ export async function createPostAction(
       };
     }
 
+
     const p = await res.json();
     const displayName: string =
       p.author?.displayName ?? p.author?.username ?? "Unknown";
@@ -203,7 +204,8 @@ export async function createPostAction(
       .join("")
       .toUpperCase()
       .slice(0, 2);
-
+      console.log(p);
+      
     const post: Post = {
       id: p.id,
       authorId: p.authorId ?? p.author?.id,

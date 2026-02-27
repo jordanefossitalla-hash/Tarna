@@ -17,11 +17,13 @@ import {
   UserPlus,
   EyeOff,
   Trash,
+  ArrowDownToLine,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Post } from "@/src/types/post";
+import { FileDocument, Post } from "@/src/types/post";
 import Image from "next/image";
 import {
   Collapsible,
@@ -64,13 +66,14 @@ import {
 } from "@/src/lib/mapComment";
 import { Spinner } from "../../ui/spinner";
 import { toast } from "sonner";
+import { linkifyText } from "@/src/lib/LinklyText";
 
 type ReactionType = "" | "heart" | "light" | "handshake";
 
 const FeedItem = ({ post }: { post: Post }) => {
   const [reaction, setReaction] = useState<ReactionType>("");
   const [saved, setSaved] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<Media | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<FileDocument | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -152,7 +155,14 @@ const FeedItem = ({ post }: { post: Post }) => {
     } finally {
       setCommentSending(false);
     }
-  }, [commentText, commentSending, accessToken, post.id, addComment, currentUser?.id]);
+  }, [
+    commentText,
+    commentSending,
+    accessToken,
+    post.id,
+    addComment,
+    currentUser?.id,
+  ]);
 
   // Vérifie le statut de follow au montage
   useEffect(() => {
@@ -199,6 +209,15 @@ const FeedItem = ({ post }: { post: Post }) => {
   const toggleReaction = (type: ReactionType) => {
     if (!isAuthenticated) return;
     setReaction((prev) => (prev === type ? "" : type));
+  };
+
+  const handleDownloadFile = (url: string, fileName: string, index: number) => {
+    const link = document.createElement("a");
+    link.target = "_blank";
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -260,7 +279,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 <DropdownMenuItem className="cursor-pointer gap-2">
                   <User className="size-4" /> Voir le profil
                 </DropdownMenuItem>
-                {isOwnPost ? (
+                {/* {isOwnPost ? (
                   <DropdownMenuItem className="cursor-pointer gap-2">
                     <Pin className="size-4" />{" "}
                     {post.isPinned ? "Détacher" : "Épingler"}
@@ -277,23 +296,23 @@ const FeedItem = ({ post }: { post: Post }) => {
                     )}
                     {isFollowing ? "Ne plus suivre" : "Suivre"}
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
+                )} */}
+                {/* <DropdownMenuItem
                   className="cursor-pointer gap-2"
                   onClick={() => setSaved(!saved)}
                 >
                   <Bookmark className="size-4" />
                   {saved ? "Retirer des favoris" : "Enregistrer"}
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem
+                {/* <DropdownMenuItem
                   onClick={() => {}}
                   className="cursor-pointer gap-2"
                 >
                   <EyeOff className="size-4" /> Masquer
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 {isOwnPost && (
                   <DropdownMenuItem
                     className="cursor-pointer gap-2 text-destructive focus:text-destructive"
@@ -317,7 +336,7 @@ const FeedItem = ({ post }: { post: Post }) => {
         <CardContent className="pb-2 pt-0">
           {/* Texte */}
           <p className="text-sm leading-relaxed whitespace-pre-line">
-            {post.content}
+            {linkifyText(post.content)}
           </p>
 
           {/* Images */}
@@ -333,7 +352,8 @@ const FeedItem = ({ post }: { post: Post }) => {
             >
               {post.images.map((media, index) => {
                 const isFullWidth =
-                  post.images.length === 1 || (post.images.length === 3 && index === 0);
+                  post.images.length === 1 ||
+                  (post.images.length === 3 && index === 0);
                 return (
                   <div
                     key={index}
@@ -362,34 +382,41 @@ const FeedItem = ({ post }: { post: Post }) => {
           )}
 
           {/* Documents */}
-          {/* {post.files.length > 0 && (
+          {post.files.length > 0 && (
             <div className="flex flex-col gap-2 mt-3">
               {post.files.map((media, index) => (
                 <div
                   key={index}
-                  className="flex flex-row items-center gap-3 px-3 py-2.5 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                  className="flex flex-row items-center gap-3 px-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer justify-between"
                   // AFFICHER LE PREVIOUS DU PDF DANS UNE MODAL
-                  // onClick={() =>
+                  
                   //   media.fileExtension === "pdf" && setPreviewDoc(media)
                   // }
                 >
-                  <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
-                    <FileText className="size-4 text-primary" />
+                  <div className="flex flex-row items-center gap-3 w-full py-2.5" onClick={() => setPreviewDoc(media)}>
+                    <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
+                      <FileText className="size-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {media.fileName || "Document"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {media.extension?.toUpperCase()}
+                        {/* {media.fileSize &&
+                        ` · ${(media.fileSize / 1024).toFixed(0)} Ko`} */}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {media.fileName || "Document"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {media.fileExtension?.toUpperCase()}
-                      {media.fileSize &&
-                        ` · ${(media.fileSize / 1024).toFixed(0)} Ko`}
-                    </p>
-                  </div>
+                    <Button asChild variant={"outline"} onClick={() => handleDownloadFile(media.url, media.fileName, index)}>
+                      <div>
+                        <ArrowDownToLine className="size-4" />
+                      </div>
+                    </Button>
                 </div>
               ))}
             </div>
-          )} */}
+          )}
 
           {/* PDF Preview Dialog */}
           <Dialog
