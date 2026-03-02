@@ -3,7 +3,7 @@
 import { Post } from "@/src/types/post";
 import { cookies } from "next/headers";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
+const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
 const API_PORT = process.env.API_PORT ?? "4000";
 
 export type FeedState = {
@@ -27,7 +27,7 @@ export async function fetchPostsAction(): Promise<FeedState> {
   }
 
   try {
-    const url = new URL(`${API_BASE_URL}:${API_PORT}/posts/feed`);
+    const url = new URL(`${API_BASE_URL}/posts`);
     // if (cursor) url.searchParams.set("cursor", cursor);
 
     const res = await fetch(url.toString(), {
@@ -177,7 +177,7 @@ export async function createPostAction(
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}:${API_PORT}/posts`, {
+    const res = await fetch(`${API_BASE_URL}/posts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

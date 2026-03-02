@@ -1,13 +1,13 @@
 import { useUserStore } from "@/src/store/userStore";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost";
 const API_PORT = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
 
 /**
  * Construit l'URL de base de l'API backend.
  */
 export function getApiUrl(path: string): string {
-  return `${API_BASE_URL}:${API_PORT}${path}`;
+  return `${API_BASE_URL}${path}`;
 }
 
 // ── Refresh token logic ─────────────────────────────────────
