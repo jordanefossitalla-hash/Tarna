@@ -1,15 +1,16 @@
 import { JSX } from "react";
 
-export function linkifyText(text: string) {
+export function linkifyText(text?: string | null) {
+  const safeText = text ?? "";
   const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
 
   const elements: (string | JSX.Element)[] = [];
   let lastIndex = 0;
 
-  text.replace(urlRegex, (url, _, offset) => {
+  safeText.replace(urlRegex, (url, _, offset) => {
     // texte avant le lien
     if (offset > lastIndex) {
-      elements.push(text.slice(lastIndex, offset));
+      elements.push(safeText.slice(lastIndex, offset));
     }
 
     const href = url.startsWith("http")
@@ -33,8 +34,8 @@ export function linkifyText(text: string) {
   });
 
   // texte restant
-  if (lastIndex < text.length) {
-    elements.push(text.slice(lastIndex));
+  if (lastIndex < safeText.length) {
+    elements.push(safeText.slice(lastIndex));
   }
 
   return elements;

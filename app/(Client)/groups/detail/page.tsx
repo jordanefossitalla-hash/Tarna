@@ -73,7 +73,7 @@ const GroupDetailPage = () => {
       <AddPostCard isgroup={true} />
 
       {/* Group Feed */}
-      <NewFeed />
+      {/* <NewFeed /> */}
     </div>
   );
 };

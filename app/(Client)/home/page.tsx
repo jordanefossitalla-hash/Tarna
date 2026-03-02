@@ -37,6 +37,8 @@ export function EmptyMuted() {
 
 const HomePage = async () => {
   const posts = await fetchPostsAction();
+  // console.log(posts);
+  
   return (
     <div className="xl:max-w-2xl xl:w-2xl w-full pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
       <PostsHydratation state={posts.posts} />

@@ -40,10 +40,10 @@ export type Media = {
 };
 
 export type FileDocument = {
-    url: string;
-    fileName: string;
-    extension: string;
-  }
+  url: string;
+  fileName: string;
+  extension: string;
+};
 
 export type Post = {
   id: string;
@@ -72,15 +72,19 @@ export type Post = {
   };
   images: string[];
   files: FileDocument[];
-  stats?: {
+  stats: {
+    likes_count: number;
     views_count: number;
     shares_count: number;
     comments_count: number;
+    supports_count: number;
     reactions_count: number;
+    illuminates_count: number;
   };
   comments: number;
   shares: number;
   createdAt: string;
   updatedAt?: string;
   timeAgo: string;
+  myReaction?: "like" | "illuminate" | "support" | null;
 };

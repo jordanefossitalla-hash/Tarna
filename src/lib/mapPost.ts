@@ -46,6 +46,8 @@ export function mapRawPost(p: any): Post {
       lightbulb: 0,
       handshake: 0,
     },
+    images: p.images ?? [],
+    files: p.files ?? [],
     stats: p.stats ?? {
       views_count: 0,
       shares_count: 0,

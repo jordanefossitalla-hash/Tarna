@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import {
   Bell,
@@ -7,8 +8,10 @@ import {
   LucideIcon,
   Menu,
   MessageCircle,
+  Moon,
   Search,
   Settings,
+  Sun,
   User,
   Users,
 } from "lucide-react";
@@ -61,6 +64,26 @@ const navItems: NavItem[] = [
 
 const TopBar = () => {
   const pathname = usePathname();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const savedTheme = localStorage.getItem("theme");
+    const shouldUseDark = savedTheme === "dark";
+
+    html.classList.toggle("dark", shouldUseDark);
+    setIsDark(shouldUseDark);
+  }, []);
+
+  const toggleTheme = () => {
+    const html = document.documentElement;
+    const nextIsDark = !html.classList.contains("dark");
+
+    html.classList.toggle("dark", nextIsDark);
+    localStorage.setItem("theme", nextIsDark ? "dark" : "light");
+    setIsDark(nextIsDark);
+  };
+
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
@@ -142,6 +165,17 @@ const TopBar = () => {
 
       {/* ─── Actions droite ─── */}
       <div className="flex flex-row items-center gap-2 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={toggleTheme}
+          className="rounded-lg"
+          aria-label={isDark ? "Passer au theme clair" : "Passer au theme sombre"}
+          title={isDark ? "Theme clair" : "Theme sombre"}
+        >
+          {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </Button>
+
         {/* Bouton recherche mobile */}
         <button className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
           <Search className="size-5 text-muted-foreground" />
@@ -220,7 +254,7 @@ const TopBar = () => {
               {/* Actions communes */}
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="#" className="flex flex-row items-center gap-2">
+                  <Link href={`/profil/${currentUser?.username}`} className="flex flex-row items-center gap-2">
                     <User className="size-4" />
                     Mon profil
                   </Link>

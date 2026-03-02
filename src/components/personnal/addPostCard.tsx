@@ -349,7 +349,8 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
           </div>
 
           <div className="flex flex-row items-center gap-2">
-            <Select
+            {/* Post type: */}
+            {/* <Select
                 defaultValue="publication"
                 value={postType}
                 onValueChange={setPostType}
@@ -370,7 +371,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
                     ))}
                   </SelectGroup>
                 </SelectContent>
-              </Select>
+              </Select> */}
             {/* Visibilité */}
             {!isgroup && (
               <Select

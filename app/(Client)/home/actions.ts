@@ -101,16 +101,20 @@ export async function fetchPostsAction(): Promise<FeedState> {
         images: p.images ?? [],
         files: p.files ?? [],
         stats: p.stats ?? {
+          likes_count: 0,
           views_count: 0,
           shares_count: 0,
           comments_count: 0,
-          reactions_count: 0,
+          supports_count: 0,
+          reactions_count: 1,
+          illuminates_count: 0,
         },
         comments: p._count?.comments ?? 0,
         shares: p.stats?.shares_count ?? p.shares ?? 0,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
         timeAgo,
+        myReaction: p.myReaction ?? null,
       };
     });
 
@@ -194,7 +198,6 @@ export async function createPostAction(
       };
     }
 
-
     const p = await res.json();
     const displayName: string =
       p.author?.displayName ?? p.author?.username ?? "Unknown";
@@ -204,8 +207,8 @@ export async function createPostAction(
       .join("")
       .toUpperCase()
       .slice(0, 2);
-      console.log(p);
-      
+    console.log(p);
+
     const post: Post = {
       id: p.id,
       authorId: p.authorId ?? p.author?.id,
@@ -230,10 +233,13 @@ export async function createPostAction(
       images: p.images ?? [],
       files: p.files ?? [],
       stats: p.stats ?? {
+        likes_count: 0,
         views_count: 0,
         shares_count: 0,
         comments_count: 0,
-        reactions_count: 0,
+        supports_count: 0,
+        reactions_count: 1,
+        illuminates_count: 0,
       },
       comments: 0,
       shares: 0,
