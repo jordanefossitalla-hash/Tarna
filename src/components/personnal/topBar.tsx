@@ -64,16 +64,14 @@ const navItems: NavItem[] = [
 
 const TopBar = () => {
   const pathname = usePathname();
-  const [isDark, setIsDark] = useState(false);
+  const shouldUseDark =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const [isDark, setIsDark] = useState(shouldUseDark);
 
   useEffect(() => {
-    const html = document.documentElement;
-    const savedTheme = localStorage.getItem("theme");
-    const shouldUseDark = savedTheme === "dark";
-
-    html.classList.toggle("dark", shouldUseDark);
-    setIsDark(shouldUseDark);
-  }, []);
+  document.documentElement.classList.toggle("dark", isDark);
+}, [isDark]);
 
   const toggleTheme = () => {
     const html = document.documentElement;
@@ -89,7 +87,6 @@ const TopBar = () => {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
-
 
   // useEffect(()=> {
   //   if (!isAuthenticated) {
@@ -170,7 +167,9 @@ const TopBar = () => {
           size="icon-sm"
           onClick={toggleTheme}
           className="rounded-lg"
-          aria-label={isDark ? "Passer au theme clair" : "Passer au theme sombre"}
+          aria-label={
+            isDark ? "Passer au theme clair" : "Passer au theme sombre"
+          }
           title={isDark ? "Theme clair" : "Theme sombre"}
         >
           {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
@@ -254,7 +253,10 @@ const TopBar = () => {
               {/* Actions communes */}
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href={`/profil/${currentUser?.username}`} className="flex flex-row items-center gap-2">
+                  <Link
+                    href={`/profil/${currentUser?.username}`}
+                    className="flex flex-row items-center gap-2"
+                  >
                     <User className="size-4" />
                     Mon profil
                   </Link>

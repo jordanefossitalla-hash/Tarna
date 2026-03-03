@@ -24,7 +24,7 @@ import { apiFetch } from "@/src/lib/api";
 import { User } from "@/src/types/user";
 import Link from "next/link";
 import FeedItem from "@/src/components/personnal/ui/feedItem";
-import { Post } from "@/src/types/post";
+import { Post, ReceivePost } from "@/src/types/post";
 import { Spinner } from "@/src/components/ui/spinner";
 import { getInitials } from "@/src/lib/getInitials";
 import { toast } from "sonner";
@@ -106,7 +106,7 @@ const ProfilePage = () => {
           console.log(rawPosts);
           
 
-        const posts: Post[] = rawPosts.map((p: any) => {
+        const posts: Post[] = rawPosts.map((p: ReceivePost) => {
           const displayName: string =
             p.author?.displayName ?? p.author?.username ?? "Unknown";
           const initials = displayName
