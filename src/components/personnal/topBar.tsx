@@ -34,6 +34,7 @@ import {
 } from "../ui/dropdown-menu";
 import Image from "next/image";
 import { useUserStore } from "@/src/store/userStore";
+import { useTheme } from "next-themes";
 
 type NavItem = {
   id: number;
@@ -64,29 +65,25 @@ const navItems: NavItem[] = [
 
 const TopBar = () => {
   const pathname = usePathname();
-  const shouldUseDark =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const [isDark, setIsDark] = useState(shouldUseDark);
-
-  useEffect(() => {
-  document.documentElement.classList.toggle("dark", isDark);
-}, [isDark]);
-
-  const toggleTheme = () => {
-    const html = document.documentElement;
-    const nextIsDark = !html.classList.contains("dark");
-
-    html.classList.toggle("dark", nextIsDark);
-    localStorage.setItem("theme", nextIsDark ? "dark" : "light");
-    setIsDark(nextIsDark);
-  };
-
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; // empêche le mismatch
+
+  const isDark = theme === "dark";
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
 
   // useEffect(()=> {
   //   if (!isAuthenticated) {
