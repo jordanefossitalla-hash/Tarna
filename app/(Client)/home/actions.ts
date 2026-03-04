@@ -1,6 +1,6 @@
 "use server";
 
-import { Post } from "@/src/types/post";
+import { Post, ReceivePost } from "@/src/types/post";
 import { cookies } from "next/headers";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
@@ -53,7 +53,7 @@ export async function fetchPostsAction(): Promise<FeedState> {
       : (json.data ?? json.posts ?? []);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const posts: Post[] = rawPosts.map((p: any) => {
+    const posts: Post[] = rawPosts.map((p: ReceivePost) => {
       const displayName: string =
         p.author?.displayName ?? p.author?.username ?? "Unknown";
       const initials = displayName
@@ -115,6 +115,7 @@ export async function fetchPostsAction(): Promise<FeedState> {
         updatedAt: p.updatedAt,
         timeAgo,
         myReaction: p.myReaction ?? null,
+        
       };
     });
 

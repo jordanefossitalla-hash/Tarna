@@ -161,3 +161,9 @@ export async function deleteReactionToPost(
 export async function DeleteToPost(postId: string, token: string | null) {
   return deleteReactionToPost(postId, token);
 }
+
+
+//  gestion utilisateur ────────────────────────────────────────
+export async function deleteUser(userId: string, token: string | null) {
+  return apiFetch(`/users/${userId}`, token, { method: "DELETE" });
+}

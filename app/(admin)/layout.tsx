@@ -1,10 +1,10 @@
 import "../globals.css";
-import TopBar from "@/src/components/personnal/topBar";
-import Sidebar from "@/src/components/personnal/sidebar";
-import RightBar from "@/src/components/personnal/rightBar";
-import BottomBar from "@/src/components/personnal/bottomBar";
 import { SocketProvider } from "@/src/components/providers/socketProvider";
+import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar";
+import { AppSidebar } from "@/src/components/app-sidebar";
+import { SiteHeader } from "@/src/components/site-header";
 import AuthGuard from "@/src/components/providers/authGuard";
+import LogOutGuard from "@/src/components/providers/logOutGuard";
 
 export default function RootLayout({
   children,
@@ -12,20 +12,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <LogOutGuard>
       <SocketProvider>
-      <div className="w-full h-screen overflow-hidden">
-        <div className="flex flex-col w-full h-full max-w-7xl mx-auto">
-          <div className="absolute top-0 left-0 right-0 xl:left-auto xl:right-auto z-10">
-            <TopBar />
-          </div>
-          <div className="flex flex-row gap-4 h-full w-full pt-17">
-            <Sidebar />
-            <div className="xl:max-w-2xl w-full px-3 lg:px-0">{children}</div>
-            {/* <RightBar /> */}
-          </div>
-        </div>
-        <BottomBar />
-      </div>
-    </SocketProvider>
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as React.CSSProperties
+          }
+        >
+          <AppSidebar variant="inset" />
+          <SidebarInset>
+            <SiteHeader />
+            {children}
+          </SidebarInset>
+        </SidebarProvider>
+      </SocketProvider>
+    </LogOutGuard>
   );
 }

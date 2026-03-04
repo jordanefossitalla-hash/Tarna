@@ -125,7 +125,6 @@
   display: none; /* Chrome, Safari, Edge récents */
 }
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;

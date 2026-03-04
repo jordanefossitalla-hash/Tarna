@@ -8,12 +8,14 @@ import {
   LucideIcon,
   MessageCircle,
   Settings,
+  ShieldUser,
   Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { groupsData } from "@/src/data/groups";
+import { useUserStore } from "@/src/store/userStore";
 
 type menuItemType = {
   id: number;
@@ -23,18 +25,21 @@ type menuItemType = {
   badge?: number;
 };
 
-const menuItems: menuItemType[] = [
-  { id: 0, name: "Accueil", icon: House, route: "/home" },
-  { id: 1, name: "Groupes", icon: Users, route: "/groups" },
-  { id: 2, name: "Messages", icon: MessageCircle, route: "/messages", badge: 4 },
-  { id: 3, name: "Notifications", icon: Bell, route: "/notifications", badge: 3 },
-];
 
 const myGroups = groupsData.filter((g) => g.isMember).slice(0, 4);
 
 const Sidebar = () => {
   const pathname = usePathname();
-
+  const user = useUserStore((s) => s.user)
+  
+  const initialMenu: menuItemType[] = [
+    { id: 0, name: "Accueil", icon: House, route: "/home" },
+    { id: 1, name: "Groupes", icon: Users, route: "/groups" },
+    { id: 2, name: "Messages", icon: MessageCircle, route: "/messages", badge: 4 },
+    { id: 3, name: "Notifications", icon: Bell, route: "/notifications", badge: 3 },
+  ];
+  const menuItems = user?.role === "admin" ? [...initialMenu, { id: 4, name: "Administration", icon: ShieldUser, route: "/dashboard/users" }] : initialMenu;
+  
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
 

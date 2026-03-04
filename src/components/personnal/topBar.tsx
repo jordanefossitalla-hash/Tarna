@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+
 import { Card } from "../ui/card";
 import {
   Bell,
@@ -66,19 +66,11 @@ const navItems: NavItem[] = [
 const TopBar = () => {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null; // empêche le mismatch
-
   const isDark = theme === "dark";
 
   const toggleTheme = () => {
@@ -173,9 +165,9 @@ const TopBar = () => {
         </Button>
 
         {/* Bouton recherche mobile */}
-        <button className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
+        {/* <button className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
           <Search className="size-5 text-muted-foreground" />
-        </button>
+        </button> */}
 
         {isAuthenticated ? (
           <DropdownMenu>
@@ -298,3 +290,4 @@ const TopBar = () => {
 };
 
 export default TopBar;
+
