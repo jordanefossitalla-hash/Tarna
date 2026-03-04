@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
+const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
 
 // ---------- Types partagés ----------
 export type SignupState = {
@@ -94,7 +94,7 @@ export async function signupAction(
   }
 
   const res = await fetch(
-    `${API_BASE_URL}:${process.env.API_PORT}/auth/register`,
+    `${API_BASE_URL}/auth/register`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -146,7 +146,7 @@ export async function loginAction(
   }
 
   const res = await fetch(
-    `${API_BASE_URL}:${process.env.API_PORT}/auth/login`,
+    `${API_BASE_URL}/auth/login`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

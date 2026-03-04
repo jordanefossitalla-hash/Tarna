@@ -15,3 +15,12 @@ export type User = {
   initials: string;
   online: boolean;
 };
+
+export type FetchUser = {
+  id: string;
+  userName: string;
+  fullName: string;
+  email: string;
+  role: string;
+  status: string;
+};

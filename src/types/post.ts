@@ -39,6 +39,12 @@ export type Media = {
   fileExtension?: string;
 };
 
+export type FileDocument = {
+  url: string;
+  fileName: string;
+  extension: string;
+};
+
 export type Post = {
   id: string;
   authorId?: string;
@@ -64,15 +70,69 @@ export type Post = {
     lightbulb: number;
     handshake: number;
   };
-  stats?: {
+  images: string[];
+  files: FileDocument[];
+  stats: {
+    likes_count: number;
     views_count: number;
     shares_count: number;
     comments_count: number;
+    supports_count: number;
     reactions_count: number;
+    illuminates_count: number;
   };
   comments: number;
   shares: number;
   createdAt: string;
   updatedAt?: string;
   timeAgo: string;
+  myReaction?: "like" | "illuminate" | "support" | null;
+};
+
+export type Visibility = "public" | "private" | "group";
+
+export type ReceivePost = {
+  id: string;
+  authorId: string;
+  groupId: string | null;
+  parentPostId: string | null;
+  contentText: string;
+  visibility: Visibility;
+  isPinned: boolean;
+  isEdited: boolean;
+  commentsEnabled: boolean;
+  sharesEnabled: boolean;
+  images: string[];
+  files: string[];
+  stats: {
+    likes_count: number;
+    views_count: number;
+    shares_count: number;
+    comments_count: number;
+    supports_count: number;
+    reactions_count: number;
+    illuminates_count: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    isVerified: boolean;
+  };
+  content?: string;
+  media: string[];
+  reactions: {
+    heart: number;
+    lightbulb: number;
+    handshake: number;
+  };
+  shares: number;
+  parentPost: string | null;
+  _count: {
+    comments: number;
+  };
+  myReaction: "like" | "illuminate" | "support" | null;
 };
