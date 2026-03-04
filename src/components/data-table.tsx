@@ -91,8 +91,8 @@ import {
 } from "@/src/components/ui/table";
 import { Tabs, TabsContent } from "@/src/components/ui/tabs";
 import { useUserStore } from "../store/userStore";
-import { deleteUser, setUserRole, updateUser } from "../lib/api";
-import { Loader2 } from "lucide-react";
+import { deleteUser, setUserRole, setUserStatus, updateUser } from "../lib/api";
+import { CircleAlert, CirclePercent, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -131,7 +131,15 @@ function DragHandle({ id }: { id: string }) {
   );
 }
 
-function RowActions({ userId, role }: { userId: string; role: string }) {
+function RowActions({
+  userId,
+  role,
+  status,
+}: {
+  userId: string;
+  role: string;
+  status: string;
+}) {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [editLoading, setEditLoading] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -142,6 +150,12 @@ function RowActions({ userId, role }: { userId: string; role: string }) {
     "admin",
     "moderator",
     "user",
+  ];
+  const userStatus: ("active" | "restricted" | "suspended" | "deleted")[] = [
+    "active",
+    "restricted",
+    "suspended",
+    "deleted",
   ];
 
   const handleDelete = React.useCallback(async () => {
@@ -189,6 +203,20 @@ function RowActions({ userId, role }: { userId: string; role: string }) {
     },
     [userId, loading, accessToken],
   );
+  const handleSetStatus = React.useCallback(
+    async (status: "active" | "restricted" | "suspended" | "deleted") => {
+      if (loading) return;
+      setLoading(true);
+      try {
+        const res = await setUserStatus(userId, status, accessToken);
+        if (res.ok) toast.success("Status modifier");
+        else toast.error("Echec de la modification");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, loading, accessToken],
+  );
 
   return (
     <>
@@ -225,6 +253,27 @@ function RowActions({ userId, role }: { userId: string; role: string }) {
                       <DropdownMenuItem
                         key={index}
                         onClick={() => handleSetRole(el)}
+                      >
+                        {el}
+                      </DropdownMenuItem>
+                    );
+                  }
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Éditer statut</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                {userStatus.map((el, index) => {
+                  if (el === status) {
+                    return null;
+                  } else {
+                    return (
+                      <DropdownMenuItem
+                        key={index}
+                        onClick={() => handleSetStatus(el)}
                       >
                         {el}
                       </DropdownMenuItem>
@@ -419,6 +468,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       <Badge variant="outline" className="px-1.5 text-muted-foreground">
         {row.original.status === "active" ? (
           <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
+        ) : row.original.status === "restricted" ? (
+          <CircleAlert className="fill-orange-500 dark:fill-orange-500" />
+        ) : row.original.status === "suspended" ? (
+          <CirclePercent className="fill-blue-500 dark:fill-blue-500" />
         ) : (
           <IconCircleXFilled className="fill-red-500 dark:fill-red-500" />
         )}
@@ -429,7 +482,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     id: "actions",
     cell: ({ row }) => (
-      <RowActions userId={row.original.id} role={row.original.role} />
+      <RowActions
+        userId={row.original.id}
+        role={row.original.role}
+        status={row.original.status}
+      />
     ),
   },
 ];

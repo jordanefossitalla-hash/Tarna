@@ -199,3 +199,13 @@ export async function setUserRole(
     body: JSON.stringify({ role: role }),
   });
 }
+export async function setUserStatus(
+  userId: string,
+  status: string,
+  token: string | null,
+) {
+  return apiFetch(`/users/${userId}`, token, {
+    method: "PATCH",
+    body: JSON.stringify({ status: status }),
+  });
+}
