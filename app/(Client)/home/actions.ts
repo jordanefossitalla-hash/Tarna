@@ -1,8 +1,9 @@
 "use server";
 
-import { Post } from "@/src/types/post";
+import { Post, ReceivePost } from "@/src/types/post";
+import { cookies } from "next/headers";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
+const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
 const API_PORT = process.env.API_PORT ?? "4000";
 
 export type FeedState = {
@@ -12,20 +13,22 @@ export type FeedState = {
   hasMore: boolean;
 };
 
-export async function fetchPostsAction(
-  _prev: FeedState,
-  formData: FormData,
-): Promise<FeedState> {
-  const token = formData.get("token") as string;
-  const cursor = formData.get("cursor") as string | null;
-  
+export async function fetchPostsAction(): Promise<FeedState> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value ?? null;
+
   if (!token) {
-    return { posts: [], error: "Not authenticated.", nextCursor: null, hasMore: false };
+    return {
+      posts: [],
+      error: "Not authenticated.",
+      nextCursor: null,
+      hasMore: false,
+    };
   }
 
   try {
-    const url = new URL(`${API_BASE_URL}:${API_PORT}/posts/feed`);
-    if (cursor) url.searchParams.set("cursor", cursor);
+    const url = new URL(`${API_BASE_URL}/posts`);
+    // if (cursor) url.searchParams.set("cursor", cursor);
 
     const res = await fetch(url.toString(), {
       headers: {
@@ -50,7 +53,7 @@ export async function fetchPostsAction(
       : (json.data ?? json.posts ?? []);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const posts: Post[] = rawPosts.map((p: any) => {
+    const posts: Post[] = rawPosts.map((p: ReceivePost) => {
       const displayName: string =
         p.author?.displayName ?? p.author?.username ?? "Unknown";
       const initials = displayName
@@ -95,23 +98,40 @@ export async function fetchPostsAction(
           lightbulb: 0,
           handshake: 0,
         },
+        images: p.images ?? [],
+        files: p.files ?? [],
         stats: p.stats ?? {
+          likes_count: 0,
           views_count: 0,
           shares_count: 0,
           comments_count: 0,
-          reactions_count: 0,
+          supports_count: 0,
+          reactions_count: 1,
+          illuminates_count: 0,
         },
-        comments: p.stats?.comments_count ?? p.comments ?? 0,
+        comments: p._count?.comments ?? 0,
         shares: p.stats?.shares_count ?? p.shares ?? 0,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
         timeAgo,
+        myReaction: p.myReaction ?? null,
+        
       };
     });
 
-    return { posts, error: null, nextCursor: json.meta?.nextCursor ?? null, hasMore: json.meta?.hasMore ?? false };
+    return {
+      posts,
+      error: null,
+      nextCursor: json.meta?.nextCursor ?? null,
+      hasMore: json.meta?.hasMore ?? false,
+    };
   } catch {
-    return { posts: [], error: "Failed to fetch posts.", nextCursor: null, hasMore: false };
+    return {
+      posts: [],
+      error: "Failed to fetch posts.",
+      nextCursor: null,
+      hasMore: false,
+    };
   }
 }
 
@@ -139,21 +159,35 @@ export async function createPostAction(
     return { success: false, error: "Content cannot be empty.", post: null };
   }
 
+  // fichiers reçus depuis le form client
+  const images = formData
+    .getAll("images")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+
+  const doc = formData.get("files");
+  const document = doc instanceof File && doc.size > 0 ? doc : null;
+
+  const payload = new FormData();
+  payload.append("authorId", authorId);
+  payload.append("contentText", contentText);
+  payload.append("visibility", visibility);
+
+  // multer.array("images")
+  for (const image of images) {
+    payload.append("images", image, image.name);
+  }
+
+  if (document) {
+    payload.append("files", document, document.name);
+  }
+
   try {
-    const res = await fetch(`${API_BASE_URL}:${API_PORT}/posts`, {
+    const res = await fetch(`${API_BASE_URL}/posts`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        authorId,
-        contentText,
-        visibility,
-        isPinned: false,
-        commentsEnabled: true,
-        sharesEnabled: true,
-      }),
+      body: payload,
     });
 
     if (!res.ok) {
@@ -174,6 +208,7 @@ export async function createPostAction(
       .join("")
       .toUpperCase()
       .slice(0, 2);
+    console.log(p);
 
     const post: Post = {
       id: p.id,
@@ -196,11 +231,16 @@ export async function createPostAction(
       sharesEnabled: p.sharesEnabled ?? true,
       media: p.media ?? [],
       reactions: { heart: 0, lightbulb: 0, handshake: 0 },
+      images: p.images ?? [],
+      files: p.files ?? [],
       stats: p.stats ?? {
+        likes_count: 0,
         views_count: 0,
         shares_count: 0,
         comments_count: 0,
-        reactions_count: 0,
+        supports_count: 0,
+        reactions_count: 1,
+        illuminates_count: 0,
       },
       comments: 0,
       shares: 0,

@@ -17,11 +17,13 @@ import {
   UserPlus,
   EyeOff,
   Trash,
+  ArrowDownToLine,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Post } from "@/src/types/post";
+import { FileDocument, Post } from "@/src/types/post";
 import Image from "next/image";
 import {
   Collapsible,
@@ -54,6 +56,8 @@ import {
   deletePost,
   fetchComments,
   createComment,
+  reactToPost,
+  deleteReactionToPost,
 } from "@/src/lib/api";
 import { useFeedStore } from "@/src/store/feedStore";
 import { useCommentStore } from "@/src/store/commentStore";
@@ -64,13 +68,17 @@ import {
 } from "@/src/lib/mapComment";
 import { Spinner } from "../../ui/spinner";
 import { toast } from "sonner";
+import { linkifyText } from "@/src/lib/LinklyText";
+import Link from "next/link";
 
-type ReactionType = "" | "heart" | "light" | "handshake";
+export type ReactionType = null | "like" | "illuminate" | "support";
 
 const FeedItem = ({ post }: { post: Post }) => {
-  const [reaction, setReaction] = useState<ReactionType>("");
+  const [reaction, setReaction] = useState<ReactionType>(
+    post.myReaction ?? null,
+  );
   const [saved, setSaved] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<Media | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<FileDocument | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -78,10 +86,16 @@ const FeedItem = ({ post }: { post: Post }) => {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentSending, setCommentSending] = useState(false);
+  const [reactionSyncing, setReactionSyncing] = useState(false);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const accessToken = useUserStore((state) => state.accessToken);
   const removePost = useFeedStore((s) => s.removePost);
+  const updatePost = useFeedStore((s) => s.updatePost);
+  const reactionRef = useRef<ReactionType>(post.myReaction ?? null);
+  const confirmedReactionRef = useRef<ReactionType>(post.myReaction ?? null);
+  const queuedReactionRef = useRef<ReactionType | undefined>(undefined);
+  const reactionInFlightRef = useRef(false);
 
   // ── Comment store ──
   const EMPTY: Comment[] = useMemo(() => [], []);
@@ -152,7 +166,14 @@ const FeedItem = ({ post }: { post: Post }) => {
     } finally {
       setCommentSending(false);
     }
-  }, [commentText, commentSending, accessToken, post.id, addComment, currentUser?.id]);
+  }, [
+    commentText,
+    commentSending,
+    accessToken,
+    post.id,
+    addComment,
+    currentUser?.id,
+  ]);
 
   // Vérifie le statut de follow au montage
   useEffect(() => {
@@ -196,13 +217,77 @@ const FeedItem = ({ post }: { post: Post }) => {
     }
   }, [isAuthenticated, post.id, accessToken, deleteLoading, removePost]);
 
-  const toggleReaction = (type: ReactionType) => {
-    if (!isAuthenticated) return;
-    setReaction((prev) => (prev === type ? "" : type));
-  };
+  useEffect(() => {
+    reactionRef.current = reaction;
+  }, [reaction]);
 
-  const images = post.media.filter((m) => m.type === "image");
-  const documents = post.media.filter((m) => m.type === "document");
+  const flushReactionQueue = useCallback(async () => {
+    if (reactionInFlightRef.current || !accessToken) return;
+
+    const next = queuedReactionRef.current;
+    if (next === undefined) return;
+
+    if (next === confirmedReactionRef.current) {
+      queuedReactionRef.current = undefined;
+      return;
+    }
+
+    queuedReactionRef.current = undefined;
+    reactionInFlightRef.current = true;
+    setReactionSyncing(true);
+
+    try {
+      const res =
+        next === null
+          ? await deleteReactionToPost(post.id, accessToken)
+          : await reactToPost(post.id, next, accessToken);
+
+      if (res.ok) {
+        confirmedReactionRef.current = next;
+        updatePost(post.id, { myReaction: next });
+      } else if (queuedReactionRef.current === undefined) {
+        setReaction(confirmedReactionRef.current);
+      }
+    } catch {
+      if (queuedReactionRef.current === undefined) {
+        setReaction(confirmedReactionRef.current);
+      }
+    } finally {
+      reactionInFlightRef.current = false;
+      setReactionSyncing(false);
+
+      if (
+        queuedReactionRef.current !== undefined &&
+        queuedReactionRef.current !== confirmedReactionRef.current
+      ) {
+        void flushReactionQueue();
+      }
+    }
+  }, [accessToken, post.id, updatePost]);
+
+  const toggleReaction = useCallback(
+    (type: Exclude<ReactionType, null>) => {
+      if (!isAuthenticated || !accessToken) return;
+
+      const next: ReactionType = reactionRef.current === type ? null : type;
+      reactionRef.current = next;
+      setReaction(next);
+      updatePost(post.id, { myReaction: next });
+      queuedReactionRef.current = next;
+
+      void flushReactionQueue();
+    },
+    [isAuthenticated, accessToken, post.id, updatePost, flushReactionQueue],
+  );
+
+  const handleDownloadFile = (url: string, fileName: string, index: number) => {
+    const link = document.createElement("a");
+    link.target = "_blank";
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Collapsible asChild open={commentsOpen} onOpenChange={setCommentsOpen}>
@@ -253,17 +338,21 @@ const FeedItem = ({ post }: { post: Post }) => {
           </div>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-1.5 rounded-lg hover:bg-accent cursor-pointer transition-colors">
-                <Ellipsis className="size-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
+            {isOwnPost && (
+              <DropdownMenuTrigger asChild>
+                <button className="p-1.5 rounded-lg hover:bg-accent cursor-pointer transition-colors">
+                  <Ellipsis className="size-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+            )}
             <DropdownMenuContent className="w-44" align="end">
-              <DropdownMenuGroup>
-                <DropdownMenuItem className="cursor-pointer gap-2">
-                  <User className="size-4" /> Voir le profil
-                </DropdownMenuItem>
-                {isOwnPost ? (
+              {/* <DropdownMenuGroup>
+                <DropdownMenuItem asChild className="cursor-pointer gap-2">
+                  <Link href={`/profil/${post.author.username}`}>
+                    <User className="size-4" /> Voir le profil
+                  </Link>
+                </DropdownMenuItem> */}
+              {/* {isOwnPost ? (
                   <DropdownMenuItem className="cursor-pointer gap-2">
                     <Pin className="size-4" />{" "}
                     {post.isPinned ? "Détacher" : "Épingler"}
@@ -280,23 +369,23 @@ const FeedItem = ({ post }: { post: Post }) => {
                     )}
                     {isFollowing ? "Ne plus suivre" : "Suivre"}
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
+                )} */}
+              {/* <DropdownMenuItem
                   className="cursor-pointer gap-2"
                   onClick={() => setSaved(!saved)}
                 >
                   <Bookmark className="size-4" />
                   {saved ? "Retirer des favoris" : "Enregistrer"}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+                </DropdownMenuItem> */}
+              {/* </DropdownMenuGroup>
+              <DropdownMenuSeparator /> */}
               <DropdownMenuGroup>
-                <DropdownMenuItem
+                {/* <DropdownMenuItem
                   onClick={() => {}}
                   className="cursor-pointer gap-2"
                 >
                   <EyeOff className="size-4" /> Masquer
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 {isOwnPost && (
                   <DropdownMenuItem
                     className="cursor-pointer gap-2 text-destructive focus:text-destructive"
@@ -320,41 +409,42 @@ const FeedItem = ({ post }: { post: Post }) => {
         <CardContent className="pb-2 pt-0">
           {/* Texte */}
           <p className="text-sm leading-relaxed whitespace-pre-line">
-            {post.content}
+            {linkifyText(post.content)}
           </p>
 
           {/* Images */}
-          {images.length > 0 && (
+          {post.images?.length > 0 && (
             <div
               className={`grid gap-1.5 mt-3 rounded-xl overflow-hidden ${
-                images.length === 1
+                post.images.length === 1
                   ? "grid-cols-1"
-                  : images.length === 3
+                  : post.images.length === 3
                     ? "grid-cols-2"
                     : "grid-cols-2"
               }`}
             >
-              {images.map((media, index) => {
+              {post.images.map((media, index) => {
                 const isFullWidth =
-                  images.length === 1 || (images.length === 3 && index === 0);
+                  post.images.length === 1 ||
+                  (post.images.length === 3 && index === 0);
                 return (
                   <div
-                    key={media.id}
+                    key={index}
                     className={`relative overflow-hidden bg-muted ${
                       isFullWidth ? "col-span-2 h-52 lg:h-80" : "h-36 lg:h-52"
-                    } ${images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
+                    } ${post.images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
                   >
                     <Image
-                      src={media.url}
-                      alt={media.alt || "post image"}
+                      src={media}
+                      alt={"post image"}
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                     />
                     {/* Overlay pour +N images */}
-                    {images.length > 4 && index === 3 && (
+                    {post.images.length > 4 && index === 3 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
                         <span className="text-white text-xl font-bold">
-                          +{images.length - 4}
+                          +{post.images.length - 4}
                         </span>
                       </div>
                     )}
@@ -365,30 +455,46 @@ const FeedItem = ({ post }: { post: Post }) => {
           )}
 
           {/* Documents */}
-          {documents.length > 0 && (
+          {post.files.length > 0 && (
             <div className="flex flex-col gap-2 mt-3">
-              {documents.map((media) => (
+              {post.files.map((media, index) => (
                 <div
-                  key={media.id}
-                  className="flex flex-row items-center gap-3 px-3 py-2.5 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                  key={index}
+                  className="flex flex-row items-center gap-3 px-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer justify-between"
                   // AFFICHER LE PREVIOUS DU PDF DANS UNE MODAL
-                  // onClick={() =>
+
                   //   media.fileExtension === "pdf" && setPreviewDoc(media)
                   // }
                 >
-                  <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
-                    <FileText className="size-4 text-primary" />
+                  <div
+                    className="flex flex-row items-center gap-3 w-full py-2.5"
+                    onClick={() => setPreviewDoc(media)}
+                  >
+                    <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
+                      <FileText className="size-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {media.fileName || "Document"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {media.extension?.toUpperCase()}
+                        {/* {media.fileSize &&
+                        ` · ${(media.fileSize / 1024).toFixed(0)} Ko`} */}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {media.fileName || "Document"}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {media.fileExtension?.toUpperCase()}
-                      {media.fileSize &&
-                        ` · ${(media.fileSize / 1024).toFixed(0)} Ko`}
-                    </p>
-                  </div>
+                  <Button
+                    asChild
+                    variant={"outline"}
+                    onClick={() =>
+                      handleDownloadFile(media.url, media.fileName, index)
+                    }
+                  >
+                    <div>
+                      <ArrowDownToLine className="size-4" />
+                    </div>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -457,61 +563,70 @@ const FeedItem = ({ post }: { post: Post }) => {
         {/* ─── Reactions Footer ─── */}
         <CardFooter className="flex flex-row items-center justify-between pt-1 pb-2">
           {/* Réactions */}
-          <div className="flex flex-row items-center gap-1">
+          <div
+            className="flex flex-row items-center gap-1"
+            aria-busy={reactionSyncing}
+          >
             <button
               className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
-                reaction === "heart"
+                reaction === "like"
                   ? "bg-red-100 text-red-500 dark:bg-red-900/30"
                   : "hover:bg-accent text-muted-foreground"
               }`}
-              onClick={() => toggleReaction("heart")}
+              onClick={() => toggleReaction("like")}
             >
               <Heart
                 className="size-4"
-                fill={reaction === "heart" ? "currentColor" : "none"}
+                fill={reaction === "like" ? "currentColor" : "none"}
               />
               <span className="font-medium">
-                {reaction === "heart"
-                  ? post.reactions.heart + 1
-                  : post.reactions.heart}
+                {reaction === "like"
+                  ? post.stats.likes_count || 0
+                  : post.stats.likes_count <= 0
+                    ? 0
+                    : post.stats.likes_count - 1 || 0}
               </span>
             </button>
 
             <button
               className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
-                reaction === "light"
+                reaction === "illuminate"
                   ? "bg-amber-100 text-amber-500 dark:bg-amber-900/30"
                   : "hover:bg-accent text-muted-foreground"
               }`}
-              onClick={() => toggleReaction("light")}
+              onClick={() => toggleReaction("illuminate")}
             >
               <Lightbulb
                 className="size-4"
-                fill={reaction === "light" ? "currentColor" : "none"}
+                fill={reaction === "illuminate" ? "currentColor" : "none"}
               />
               <span className="font-medium">
-                {reaction === "light"
-                  ? post.reactions.lightbulb + 1
-                  : post.reactions.lightbulb}
+                {reaction === "illuminate"
+                  ? post.stats.illuminates_count || 0
+                  : post.stats.illuminates_count <= 0
+                    ? 0
+                    : post.stats.illuminates_count - 1 || 0}
               </span>
             </button>
 
             <button
               className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
-                reaction === "handshake"
+                reaction === "support"
                   ? "bg-blue-100 text-blue-500 dark:bg-blue-900/30"
                   : "hover:bg-accent text-muted-foreground"
               }`}
-              onClick={() => toggleReaction("handshake")}
+              onClick={() => toggleReaction("support")}
             >
               <Handshake
                 className="size-4"
-                fill={reaction === "handshake" ? "currentColor" : "none"}
+                fill={reaction === "support" ? "currentColor" : "none"}
               />
               <span className="font-medium">
-                {reaction === "handshake"
-                  ? post.reactions.handshake + 1
-                  : post.reactions.handshake}
+                {reaction === "support"
+                  ? post.stats.supports_count || 0
+                  : post.stats.supports_count <= 0
+                    ? 0
+                    : post.stats.supports_count - 1 || 0}
               </span>
             </button>
           </div>

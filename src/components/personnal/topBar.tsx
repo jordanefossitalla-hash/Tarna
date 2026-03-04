@@ -1,4 +1,5 @@
 "use client";
+
 import { Card } from "../ui/card";
 import {
   Bell,
@@ -7,8 +8,10 @@ import {
   LucideIcon,
   Menu,
   MessageCircle,
+  Moon,
   Search,
   Settings,
+  Sun,
   User,
   Users,
 } from "lucide-react";
@@ -31,6 +34,7 @@ import {
 } from "../ui/dropdown-menu";
 import Image from "next/image";
 import { useUserStore } from "@/src/store/userStore";
+import { useTheme } from "next-themes";
 
 type NavItem = {
   id: number;
@@ -61,12 +65,17 @@ const navItems: NavItem[] = [
 
 const TopBar = () => {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
+  const isDark = theme === "dark";
 
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
 
   // useEffect(()=> {
   //   if (!isAuthenticated) {
@@ -89,12 +98,12 @@ const TopBar = () => {
 
       {/* ─── Barre de recherche (desktop) ─── */}
       <div className="hidden lg:flex flex-1 max-w-md">
-        <InputGroup className="w-full">
+        {/* <InputGroup className="w-full">
           <InputGroupInput placeholder="Rechercher..." />
           <InputGroupAddon>
             <Search className="size-4" />
           </InputGroupAddon>
-        </InputGroup>
+        </InputGroup> */}
       </div>
 
       {/* ─── Navigation desktop ─── */}
@@ -117,11 +126,11 @@ const TopBar = () => {
                     className="size-5"
                     strokeWidth={active ? 2.5 : 2}
                   />
-                  {item.badge && item.badge > 0 && (
+                  {/* {item.badge && item.badge > 0 && (
                     <span className="absolute -top-1.5 -right-2 flex items-center justify-center text-[9px] font-bold text-primary-foreground bg-primary rounded-full size-4">
                       {item.badge}
                     </span>
-                  )}
+                  )} */}
                 </div>
                 <span
                   className={`text-[10px] mt-0.5 leading-none ${
@@ -142,10 +151,23 @@ const TopBar = () => {
 
       {/* ─── Actions droite ─── */}
       <div className="flex flex-row items-center gap-2 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={toggleTheme}
+          className="rounded-lg"
+          aria-label={
+            isDark ? "Passer au theme clair" : "Passer au theme sombre"
+          }
+          title={isDark ? "Theme clair" : "Theme sombre"}
+        >
+          {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </Button>
+
         {/* Bouton recherche mobile */}
-        <button className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
+        {/* <button className="lg:hidden p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
           <Search className="size-5 text-muted-foreground" />
-        </button>
+        </button> */}
 
         {isAuthenticated ? (
           <DropdownMenu>
@@ -220,17 +242,20 @@ const TopBar = () => {
               {/* Actions communes */}
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="#" className="flex flex-row items-center gap-2">
+                  <Link
+                    href={`/profil/${currentUser?.username}`}
+                    className="flex flex-row items-center gap-2"
+                  >
                     <User className="size-4" />
                     Mon profil
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer">
+                {/* <DropdownMenuItem asChild className="cursor-pointer">
                   <Link href="#" className="flex flex-row items-center gap-2">
                     <Settings className="size-4" />
                     Paramètres
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
               </DropdownMenuGroup>
 
               <DropdownMenuSeparator />
@@ -265,3 +290,4 @@ const TopBar = () => {
 };
 
 export default TopBar;
+

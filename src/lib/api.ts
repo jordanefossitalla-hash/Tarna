@@ -1,13 +1,15 @@
 import { useUserStore } from "@/src/store/userStore";
+import { ReactionType } from "../components/personnal/ui/feedItem";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost";
 const API_PORT = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
 
 /**
  * Construit l'URL de base de l'API backend.
  */
 export function getApiUrl(path: string): string {
-  return `${API_BASE_URL}:${API_PORT}${path}`;
+  return `${API_BASE_URL}${path}`;
 }
 
 // ── Refresh token logic ─────────────────────────────────────
@@ -122,7 +124,7 @@ export async function createComment(
     postId: string;
     authorId: string;
     contentText: string;
-    parentCommentId?: string
+    parentCommentId?: string;
   },
   token: string | null,
 ) {
@@ -130,4 +132,38 @@ export async function createComment(
     method: "POST",
     body: JSON.stringify(body),
   });
+}
+
+// reactions sur les posts ─────────────────────────────────────────
+
+/** Réagit à un post avec un type de réaction donné */
+export async function reactToPost(
+  postId: string,
+  reactionType: ReactionType,
+  token: string | null,
+) {
+  return apiFetch(`/posts/${postId}/reaction`, token, {
+    method: "PUT",
+    body: JSON.stringify({ type: reactionType }),
+  });
+}
+
+export async function deleteReactionToPost(
+  postId: string,
+  token: string | null,
+) {
+  return apiFetch(`/posts/${postId}/reaction`, token, {
+    method: "DELETE",
+  });
+}
+
+// Compatibilite temporaire avec les imports existants
+export async function DeleteToPost(postId: string, token: string | null) {
+  return deleteReactionToPost(postId, token);
+}
+
+
+//  gestion utilisateur ────────────────────────────────────────
+export async function deleteUser(userId: string, token: string | null) {
+  return apiFetch(`/users/${userId}`, token, { method: "DELETE" });
 }
