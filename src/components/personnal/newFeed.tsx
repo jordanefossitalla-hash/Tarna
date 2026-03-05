@@ -28,19 +28,19 @@ const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
   // ── Feed store ──
   const feedPosts = useFeedStore((s) => s.posts);
   const setPosts = useFeedStore((s) => s.setPosts);
+  const addpost = useFeedStore((s) => s.addPost);
   const appendPosts = useFeedStore((s) => s.appendPosts);
-  const addPost = useFeedStore((s) => s.addPost);
-  const removePost = useFeedStore((s) => s.removePost);
+  // const addPost = useFeedStore((s) => s.addPost);
+  // const removePost = useFeedStore((s) => s.removePost);
   const nextCursor = useFeedStore((s) => s.nextCursor);
   const hasMore = useFeedStore((s) => s.hasMore);
 
   const [state, formAction, isPending] = useActionState(fetchPostsAction, initialState);
   const [loadMoreState, loadMoreAction, isLoadingMore] = useActionState(fetchPostsAction, initialState);
 
-  // Auto-submit au montage pour charger les posts
-  // useEffect(() => {
-  //   formRef.current?.requestSubmit();
-  // }, [accessToken]);
+  useSocketEvent("post:new", (post) => {
+  addpost(mapRawPost(post));
+});
 
   // Quand le fetch initial arrive, remplacer les posts
   useEffect(() => {

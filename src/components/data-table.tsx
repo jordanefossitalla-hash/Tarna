@@ -101,6 +101,8 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "./ui/field";
+import { useSocketEvent } from "../hooks/useSocketEvent";
+import { FetchUser } from "../types/user";
 
 export const schema = z.object({
   id: z.string(),
@@ -110,6 +112,15 @@ export const schema = z.object({
   role: z.string(),
   status: z.string(),
 });
+
+type AdminUserNewEvent = {
+  id: string;
+  username: string;
+  displayName?: string | null;
+  email: string;
+  role: string;
+  status: string;
+};
 
 // Create a separate component for the drag handle
 function DragHandle({ id }: { id: string }) {
@@ -533,12 +544,45 @@ export function DataTable({
     pageIndex: 0,
     pageSize: 10,
   });
+  const currentUserRole = useUserStore((state) => state.user?.role);
   const sortableId = React.useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {}),
   );
+
+  const handleAdminUserNew = React.useCallback(
+    (newUser: AdminUserNewEvent) => {
+      if (currentUserRole !== "admin") return;
+
+      const mappedUser: FetchUser = {
+        id: newUser.id,
+        userName: newUser.username,
+        fullName: newUser.displayName ?? "",
+        email: newUser.email,
+        role: newUser.role,
+        status: newUser.status,
+      };
+
+      setData((prev) => {
+        if (prev.some((user) => user.id === mappedUser.id)) return prev;
+        return [mappedUser, ...prev];
+      });
+    },
+    [currentUserRole],
+  );
+
+  // useSocketEvent<AdminUserNewEvent>("admin:userNew", handleAdminUserNew);
+  // useSocketEvent<AdminUserNewEvent>("admin:userNew", () => {
+  //   console.log('nouveau user');
+    
+  // });
+    useSocketEvent("post:new", (post) => {
+      console.log("new post");
+      
+  });
+
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
