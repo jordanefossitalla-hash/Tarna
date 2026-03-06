@@ -573,14 +573,10 @@ export function DataTable({
     [currentUserRole],
   );
 
-  // useSocketEvent<AdminUserNewEvent>("admin:userNew", handleAdminUserNew);
-  // useSocketEvent<AdminUserNewEvent>("admin:userNew", () => {
-  //   console.log('nouveau user');
+  useSocketEvent<AdminUserNewEvent>("admin:userNew", handleAdminUserNew);
+  useSocketEvent<AdminUserNewEvent>("admin:userNew", () => {
+    console.log('nouveau user');
     
-  // });
-    useSocketEvent("post:new", (post) => {
-      console.log("new post");
-      
   });
 
 

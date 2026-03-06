@@ -13,7 +13,7 @@ export function linkifyText(text?: string | null) {
       elements.push(safeText.slice(lastIndex, offset));
     }
 
-    const href = url.startsWith("http")
+    const href = url.startsWith("http") || url.startsWith("Https") || url.startsWith("HTTPS")
       ? url
       : `https://${url}`;
 
