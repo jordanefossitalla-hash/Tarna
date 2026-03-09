@@ -21,7 +21,7 @@ import Image from "next/image";
 import { Badge } from "../../ui/badge";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
-import { Organization, OrgRole } from "@/src/types/organization";
+import type { OrganizationResponse, OrgRole } from "@/src/types/organization";
 
 const roleConfig: Record<
   OrgRole,
@@ -59,27 +59,44 @@ const roleConfig: Record<
   },
 };
 
+/** Génère les initiales à partir du nom (max 2 caractères). */
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+}
+
 type OrgCardProps = {
-  org: Organization;
-  onJoin?: (id: number) => void;
-  onCancel?: (id: number) => void;
+  org: OrganizationResponse;
+  /** "mine" | "discover" | "pending" — détermine le footer affiché */
+  variant: "mine" | "discover" | "pending";
+  onJoin?: (id: string) => void;
+  onCancel?: (id: string) => void;
 };
 
-const OrgCard = ({ org, onJoin, onCancel }: OrgCardProps) => {
-  const isMember = org.currentUserRole !== null;
-  const role = org.currentUserRole ? roleConfig[org.currentUserRole] : null;
+const OrgCard = ({ org, variant, onJoin, onCancel }: OrgCardProps) => {
+  const role =
+    org.currentUserRole ? roleConfig[org.currentUserRole] : null;
   const RoleIcon = role?.icon;
+  const initials = getInitials(org.name);
 
   return (
     <Card className="overflow-hidden rounded-xl border shadow-sm hover:shadow-md transition-shadow py-0 gap-0">
       {/* Banner */}
       <div className="relative h-24 overflow-hidden">
-        <Image
-          src={org.banner}
-          alt={org.name}
-          fill
-          className="object-cover"
-        />
+        {org.bannerUrl ? (
+          <Image
+            src={org.bannerUrl}
+            alt={org.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10" />
+        )}
         <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
 
         {/* Rôle badge */}
@@ -108,9 +125,11 @@ const OrgCard = ({ org, onJoin, onCancel }: OrgCardProps) => {
         {/* Logo overlay */}
         <div className="absolute -bottom-5 right-3">
           <Avatar className="size-10 border-2 border-background shadow-sm rounded-lg">
-            <AvatarImage src={org.logo} alt={org.name} />
+            {org.logoUrl && (
+              <AvatarImage src={org.logoUrl} alt={org.name} />
+            )}
             <AvatarFallback className="rounded-lg text-xs font-bold">
-              {org.initials}
+              {initials}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -128,37 +147,39 @@ const OrgCard = ({ org, onJoin, onCancel }: OrgCardProps) => {
           <span className="text-xs text-muted-foreground">·</span>
           <span className="text-xs text-muted-foreground">{org.country}</span>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
-          {org.description}
-        </p>
+        {org.bio && (
+          <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+            {org.bio}
+          </p>
+        )}
       </CardHeader>
 
       <CardContent className="px-3 pb-2 pt-1">
         <div className="flex flex-row items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="size-3" />
-            {org.membersCount.toLocaleString()} membres
+            {org._count.memberships.toLocaleString()} membres
           </span>
           <span>·</span>
-          <span>{org.postsCount} publications</span>
+          <span>{org._count.posts} publications</span>
         </div>
       </CardContent>
 
       {/* Footer */}
       <CardFooter className="px-3 pb-3 pt-0">
-        {isMember ? (
+        {variant === "mine" ? (
           <Button
             asChild
             className="w-full cursor-pointer"
             variant="outline"
             size="sm"
           >
-            <Link href="/organizations/detail">
+            <Link href={`/organizations/${org.id}`}>
               <Building2 className="size-3.5 mr-1.5" />
               Accéder
             </Link>
           </Button>
-        ) : org.isPending ? (
+        ) : variant === "pending" ? (
           <Button
             variant="ghost"
             size="sm"

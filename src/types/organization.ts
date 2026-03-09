@@ -2,36 +2,37 @@ export type OrgRole = "owner" | "admin" | "manager" | "member" | "guest";
 
 export type OrgStatus = "active" | "archived";
 
-export type Organization = {
-  id: number;
-  /** Nom de l'organisation */
+/**
+ * Shape renvoyée par GET /organizations/mine, /discover, /pending.
+ * Correspond au select `orgPreview` du backend.
+ */
+export type OrganizationResponse = {
+  id: string;
   name: string;
-  /** Domaine (ex : kiama.cm) */
   domain: string;
-  /** Logo / avatar URL */
-  logo: string;
-  /** Initiales pour fallback */
-  initials: string;
-  /** Bannière URL */
-  banner: string;
-  /** Description courte de l'entité */
-  description: string;
-  /** Pays d'implantation */
-  country: string;
-  /** Secteur d'activité */
+  logoUrl: string | null;
+  bannerUrl: string | null;
   sector: string;
-  /** Nombre de membres */
-  membersCount: number;
-  /** Nombre de publications */
-  postsCount: number;
-  /** Statut de l'organisation */
-  status: OrgStatus;
-  /** Rôle de l'utilisateur courant (null si non-membre) */
-  currentUserRole: OrgRole | null;
-  /** L'utilisateur a une demande d'adhésion en cours */
-  isPending: boolean;
-  /** Date de création lisible */
+  country: string;
+  bio: string | null;
+  siteWeb: string;
+  visibility: string;
+  status: string;
   createdAt: string;
-  /** Dernière activité lisible */
-  lastActivity: string;
+  _count: {
+    memberships: number;
+    posts: number;
+  };
+  /** Présent uniquement dans /mine */
+  currentUserRole?: OrgRole | null;
+};
+
+/** Réponse paginée commune */
+export type PaginatedOrgResponse = {
+  data: OrganizationResponse[];
+  meta: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
 };

@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import OrgCard from "@/src/components/personnal/ui/orgCard";
-import { organizationsData } from "@/src/data/organizations";
 import { Button } from "@/src/components/ui/button";
 import {
   Dialog,
@@ -28,6 +27,7 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { Textarea } from "@/src/components/ui/textarea";
+import type { OrganizationResponse } from "@/src/types/organization";
 import {
   Building2,
   Plus,
@@ -36,8 +36,18 @@ import {
   Compass,
   Clock,
   Globe,
+  Loader2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  fetchMyOrgs,
+  fetchDiscoverOrgs,
+  fetchPendingOrgs,
+} from "./action";
+import { useUserStore } from "@/src/store/userStore";
+import { toast } from "sonner";
+
+// ── Types & constants ────────────────────────────────────────
 
 type Tab = "my-orgs" | "discover" | "pending";
 
@@ -77,46 +87,94 @@ const countries = [
   "Autre",
 ];
 
+// ── Page component ───────────────────────────────────────────
+
 const OrganizationsPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>("my-orgs");
   const [search, setSearch] = useState("");
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
 
-  const filtered = useMemo(() => {
-    let list = organizationsData;
+  // Per-tab state
+  const [myOrgs, setMyOrgs] = useState<OrganizationResponse[]>([]);
+  const [discoverOrgs, setDiscoverOrgs] = useState<OrganizationResponse[]>([]);
+  const [pendingOrgs, setPendingOrgs] = useState<OrganizationResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState<Record<Tab, boolean>>({
+    "my-orgs": false,
+    discover: false,
+    pending: false,
+  });
 
-    switch (activeTab) {
-      case "my-orgs":
-        list = list.filter((o) => o.currentUserRole !== null);
-        break;
-      case "discover":
-        list = list.filter(
-          (o) => o.currentUserRole === null && !o.isPending
+  // ── Data fetchers ──────────────────────────────────────────
+
+  const loadTab = useCallback(
+    async (tab: Tab) => {
+      if (!isAuthenticated) return;
+      setLoading(true);
+      try {
+        switch (tab) {
+          case "my-orgs": {
+            const res = await fetchMyOrgs();
+            setMyOrgs(res.data);
+            break;
+          }
+          case "discover": {
+            const res = await fetchDiscoverOrgs();
+            setDiscoverOrgs(res.data);
+            break;
+          }
+          case "pending": {
+            const res = await fetchPendingOrgs();
+            setPendingOrgs(res.data);
+            break;
+          }
+        }
+        setLoaded((prev) => ({ ...prev, [tab]: true }));
+      } catch {
+        toast.error(
+          "Une erreur est survenue lors de la récupération des organisations.",
         );
-        break;
-      case "pending":
-        list = list.filter((o) => o.isPending);
-        break;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isAuthenticated],
+  );
+
+  // Load current tab if not yet loaded
+  useEffect(() => {
+    if (!loaded[activeTab]) {
+      void loadTab(activeTab);
     }
+  }, [activeTab, loaded, loadTab]);
 
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (o) =>
-          o.name.toLowerCase().includes(q) ||
-          o.description.toLowerCase().includes(q) ||
-          o.sector.toLowerCase().includes(q) ||
-          o.domain.toLowerCase().includes(q) ||
-          o.country.toLowerCase().includes(q)
-      );
-    }
+  // ── Derived lists ──────────────────────────────────────────
 
-    return list;
-  }, [activeTab, search]);
+  const currentList: OrganizationResponse[] = useMemo(() => {
+    const list =
+      activeTab === "my-orgs"
+        ? myOrgs
+        : activeTab === "discover"
+          ? discoverOrgs
+          : pendingOrgs;
 
-  const pendingCount = organizationsData.filter((o) => o.isPending).length;
-  const myOrgsCount = organizationsData.filter(
-    (o) => o.currentUserRole !== null
-  ).length;
+    if (!search.trim()) return list;
+
+    const q = search.toLowerCase();
+    return list.filter(
+      (o) =>
+        o.name.toLowerCase().includes(q) ||
+        (o.bio ?? "").toLowerCase().includes(q) ||
+        o.sector.toLowerCase().includes(q) ||
+        o.domain.toLowerCase().includes(q) ||
+        o.country.toLowerCase().includes(q),
+    );
+  }, [activeTab, search, myOrgs, discoverOrgs, pendingOrgs]);
+
+  const totalMembers = useMemo(
+    () => myOrgs.reduce((sum, o) => sum + o._count.memberships, 0),
+    [myOrgs],
+  );
 
   return (
     <div className="xl:w-2xl xl:max-w-2xl w-full pb-20 flex flex-col gap-4 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
@@ -254,7 +312,7 @@ const OrganizationsPage = () => {
         <div className="flex items-center gap-2 rounded-lg border p-3 bg-muted/30">
           <Building2 className="size-4 text-primary" />
           <div>
-            <p className="text-lg font-bold leading-none">{myOrgsCount}</p>
+            <p className="text-lg font-bold leading-none">{myOrgs.length}</p>
             <p className="text-[11px] text-muted-foreground">
               Mes organisations
             </p>
@@ -264,10 +322,7 @@ const OrganizationsPage = () => {
           <Users className="size-4 text-primary" />
           <div>
             <p className="text-lg font-bold leading-none">
-              {organizationsData
-                .filter((o) => o.currentUserRole !== null)
-                .reduce((sum, o) => sum + o.membersCount, 0)
-                .toLocaleString()}
+              {totalMembers.toLocaleString()}
             </p>
             <p className="text-[11px] text-muted-foreground">Membres total</p>
           </div>
@@ -275,7 +330,9 @@ const OrganizationsPage = () => {
         <div className="flex items-center gap-2 rounded-lg border p-3 bg-muted/30">
           <Clock className="size-4 text-amber-500" />
           <div>
-            <p className="text-lg font-bold leading-none">{pendingCount}</p>
+            <p className="text-lg font-bold leading-none">
+              {pendingOrgs.length}
+            </p>
             <p className="text-[11px] text-muted-foreground">En attente</p>
           </div>
         </div>
@@ -308,7 +365,7 @@ const OrganizationsPage = () => {
             >
               <Icon className="size-3.5" />
               {tab.label}
-              {tab.key === "pending" && pendingCount > 0 && (
+              {tab.key === "pending" && pendingOrgs.length > 0 && (
                 <span
                   className={`ml-0.5 text-[10px] font-bold rounded-full px-1.5 ${
                     isActive
@@ -316,7 +373,7 @@ const OrganizationsPage = () => {
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  {pendingCount}
+                  {pendingOrgs.length}
                 </span>
               )}
             </Button>
@@ -325,17 +382,21 @@ const OrganizationsPage = () => {
       </div>
 
       {/* Grille d'organisations */}
-      {filtered.length === 0 ? (
+      {loading && !loaded[activeTab] ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : currentList.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
           <Search className="size-10 opacity-30" />
           <p className="text-sm text-center">
             {search.trim()
               ? "Aucune organisation ne correspond à votre recherche."
               : activeTab === "my-orgs"
-              ? "Vous n'êtes membre d'aucune organisation pour le moment."
-              : activeTab === "pending"
-              ? "Aucune demande d'adhésion en attente."
-              : "Aucune organisation disponible pour le moment."}
+                ? "Vous n'êtes membre d'aucune organisation pour le moment."
+                : activeTab === "pending"
+                  ? "Aucune demande d'adhésion en attente."
+                  : "Aucune organisation disponible pour le moment."}
           </p>
           {activeTab !== "discover" && !search.trim() && (
             <Button
@@ -351,8 +412,8 @@ const OrganizationsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((org) => (
-            <OrgCard key={org.id} org={org} />
+          {currentList.map((org) => (
+            <OrgCard key={org.id} org={org} variant={activeTab === "my-orgs" ? "mine" : activeTab === "discover" ? "discover" : "pending"} />
           ))}
         </div>
       )}
@@ -361,6 +422,3 @@ const OrganizationsPage = () => {
 };
 
 export default OrganizationsPage;
-
-
-
