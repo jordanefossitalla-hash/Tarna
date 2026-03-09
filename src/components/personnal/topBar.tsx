@@ -35,6 +35,7 @@ import {
 import Image from "next/image";
 import { useUserStore } from "@/src/store/userStore";
 import { useTheme } from "next-themes";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 type NavItem = {
   id: number;
@@ -46,10 +47,10 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { id: 0, name: "Accueil", icon: House, route: "/home" },
-  { id: 1, name: "Groupes", icon: Users, route: "/groups" },
+  { id: 1, name: "Organisations", icon: Users, route: "/organizations" },
   {
     id: 2,
-    name: "Messages",
+    name: "Discussions",
     icon: MessageCircle,
     route: "/messages",
     badge: 4,
@@ -179,7 +180,9 @@ const TopBar = () => {
                     src={currentUser?.avatarUrl || ""}
                     alt="profil"
                   />
-                  <AvatarFallback className="text-xs font-semibold">
+                  <AvatarFallback
+                    className={`text-xs font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}
+                  >
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>
@@ -198,7 +201,9 @@ const TopBar = () => {
                     src={currentUser?.avatarUrl || ""}
                     alt="profil"
                   />
-                  <AvatarFallback className="text-xs font-semibold">
+                  <AvatarFallback
+                    className={`text-xs font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}
+                  >
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>
@@ -290,4 +295,3 @@ const TopBar = () => {
 };
 
 export default TopBar;
-

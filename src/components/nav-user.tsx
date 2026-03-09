@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   IconCreditCard,
@@ -6,13 +6,13 @@ import {
   IconLogout,
   IconNotification,
   IconUserCircle,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/src/components/ui/avatar"
+} from "@/src/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,27 +21,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu"
+} from "@/src/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/src/components/ui/sidebar"
-import { useUserStore } from "../store/userStore"
+} from "@/src/components/ui/sidebar";
+import { useUserStore } from "../store/userStore";
+import { getAvatarFallbackColor } from "../lib/avatarColor";
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
-    initials: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+    initials: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
-    const logout = useUserStore((state) => state.logout);
+  const { isMobile } = useSidebar();
+  const logout = useUserStore((state) => state.logout);
 
   return (
     <SidebarMenu>
@@ -54,7 +55,9 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{user.initials}</AvatarFallback>
+                <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(user.initials)}`}>
+                  {user.initials}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -75,7 +78,11 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">{user.initials}</AvatarFallback>
+                  <AvatarFallback
+                    className={`text-xs font-semibold ${getAvatarFallbackColor(user.initials)}`}
+                  >
+                    {user.initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -109,5 +116,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

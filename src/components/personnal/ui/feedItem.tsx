@@ -70,6 +70,7 @@ import { Spinner } from "../../ui/spinner";
 import { toast } from "sonner";
 import { linkifyText } from "@/src/lib/LinklyText";
 import Link from "next/link";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
@@ -348,7 +349,7 @@ const FeedItem = ({ post }: { post: Post }) => {
           <div className="flex flex-row items-center gap-3">
             <Avatar className="size-10">
               <AvatarImage src={post.author.avatar} alt={post.author.name} />
-              <AvatarFallback className="text-xs font-semibold">
+              <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(post.author.initials)}`}>
                 {post.author.initials}
               </AvatarFallback>
             </Avatar>
@@ -368,7 +369,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             </div>
 
             {/* Bouton Follow — directement après les infos auteur */}
-            {isAuthenticated && !isOwnPost && post.authorId && (
+            {/* {isAuthenticated && !isOwnPost && post.authorId && (
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 size="sm"
@@ -385,7 +386,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 )}
                 {isFollowing ? "Suivi" : "Suivre"}
               </Button>
-            )}
+            )} */}
           </div>
 
           <DropdownMenu>
@@ -641,7 +642,7 @@ const FeedItem = ({ post }: { post: Post }) => {
               </span>
             </button>
 
-            <button
+            {/* <button
               className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
                 reaction === "illuminate"
                   ? "bg-amber-100 text-amber-500 dark:bg-amber-900/30"
@@ -685,7 +686,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                   reaction,
                 )}
               </span>
-            </button>
+            </button> */}
           </div>
 
           {/* Commentaires + Partage + Enregistrer */}
@@ -733,7 +734,7 @@ const FeedItem = ({ post }: { post: Post }) => {
               <div className="flex flex-row items-center gap-2.5">
                 <Avatar className="size-8 shrink-0">
                   <AvatarImage src={currentUser?.avatarUrl || ""} alt="vous" />
-                  <AvatarFallback className="text-[10px] font-semibold">
+                  <AvatarFallback className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>
