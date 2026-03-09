@@ -10,8 +10,7 @@ import {
   EmptyTitle,
 } from "@/src/components/ui/empty";
 import { Image as ImageIcon, RefreshCcwIcon } from "lucide-react";
-import { fetchPostsAction } from "./actions";
-import PostsHydratation from "@/src/hydratation/postsHydratation";
+import { fetchInitialPosts } from "./actions";
 import { Suspense } from "react";
 import { Spinner } from "@/src/components/ui/spinner";
 
@@ -37,12 +36,15 @@ export function EmptyMuted() {
   );
 }
 async function PostsSection() {
-  const posts = await fetchPostsAction();
+  const data = await fetchInitialPosts();
 
   return (
     <>
-      <PostsHydratation state={posts.posts} />
-      <NewFeed firstPost={posts.posts} />
+      <NewFeed
+        firstPost={data.posts}
+        initialCursor={data.nextCursor}
+        initialHasMore={data.hasMore}
+      />
     </>
   );
 }

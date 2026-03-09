@@ -1,89 +1,98 @@
 "use client";
 import { Button } from "../ui/button";
-import { Clock9, Loader2, Sparkles } from "lucide-react";
+import { Clock9, Sparkles } from "lucide-react";
 import { Spinner } from "../ui/spinner";
 import FeedItem from "./ui/feedItem";
 import { useUserStore } from "@/src/store/userStore";
 import { useFeedStore } from "@/src/store/feedStore";
 import { useSocketEvent } from "@/src/hooks/useSocketEvent";
 import { mapRawPost } from "@/src/lib/mapPost";
-import {
-  fetchPostsAction,
-  type FeedState,
-} from "@/app/(Client)/home/actions";
-import { useState, useMemo, useEffect, useRef, useActionState, useCallback } from "react";
+import { fetchMorePosts } from "@/app/(Client)/home/actions";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Post } from "@/src/types/post";
 
 type FeedFilter = "for-you" | "recent";
 
-const initialState: FeedState = { posts: [], error: null, nextCursor: null, hasMore: false };
+type NewFeedProps = {
+  firstPost: Post[];
+  initialCursor: string | null;
+  initialHasMore: boolean;
+};
 
-const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
-  const accessToken = useUserStore((s) => s.accessToken);
-  const formRef = useRef<HTMLFormElement>(null);
-  const loadMoreFormRef = useRef<HTMLFormElement>(null);
+const NewFeed = ({ firstPost, initialCursor, initialHasMore }: NewFeedProps) => {
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<FeedFilter>("for-you");
   const [now, setNow] = useState(() => Date.now());
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // ── Feed store ──
   const feedPosts = useFeedStore((s) => s.posts);
   const setPosts = useFeedStore((s) => s.setPosts);
   const addpost = useFeedStore((s) => s.addPost);
   const appendPosts = useFeedStore((s) => s.appendPosts);
-  // const addPost = useFeedStore((s) => s.addPost);
-  // const removePost = useFeedStore((s) => s.removePost);
-  const nextCursor = useFeedStore((s) => s.nextCursor);
   const hasMore = useFeedStore((s) => s.hasMore);
 
-  const [state, formAction, isPending] = useActionState(fetchPostsAction, initialState);
-  const [loadMoreState, loadMoreAction, isLoadingMore] = useActionState(fetchPostsAction, initialState);
-
   useSocketEvent("post:new", (post) => {
-  addpost(mapRawPost(post));
-});
+    addpost(mapRawPost(post));
+  });
 
-  // Quand le fetch initial arrive, remplacer les posts
+  // ── Hydratation initiale — posts SSR + cursor/hasMore du serveur ──
+  const hydrated = useRef(false);
   useEffect(() => {
-    if (state.posts.length > 0 || state.error === null) {
-      setPosts(state.posts, state.nextCursor, state.hasMore);
+    if (!hydrated.current && firstPost.length > 0) {
+      setPosts(firstPost, initialCursor, initialHasMore);
+      hydrated.current = true;
     }
-  }, [state, setPosts]);
+  }, [firstPost, initialCursor, initialHasMore, setPosts]);
 
-  // Premier chargement au montage
+  // ── Charger la page suivante — appel direct server action ──
+  const loadingRef = useRef(false);
+  const handleLoadMore = async () => {
+    // Lire les stores directement pour avoir les valeurs fraîches
+    const { hasMore: canLoad, nextCursor: cursor } = useFeedStore.getState();
+    const token = useUserStore.getState().accessToken;
+    if (loadingRef.current || !canLoad || !cursor) return;
+
+    loadingRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const result = await fetchMorePosts(cursor, token);
+      
+      if (result.posts.length > 0) {
+        appendPosts(result.posts, result.nextCursor, result.hasMore);
+      } else {
+        useFeedStore.setState({ hasMore: false, nextCursor: null });
+      }
+    } catch {
+      useFeedStore.setState({ hasMore: false, nextCursor: null });
+    } finally {
+      loadingRef.current = false;
+      setIsLoadingMore(false);
+    }
+  };
+
+  // ── Infinite scroll via IntersectionObserver ──
+  const handleLoadMoreRef = useRef(handleLoadMore);
+  handleLoadMoreRef.current = handleLoadMore;
+
+  const postsReady = feedPosts.length > 0;
   useEffect(() => {
-    if (firstPost.length > 0) {
-      setPosts(firstPost, null, false);
-    }
-  }, [firstPost, setPosts]);
+    if (!postsReady || filter !== "for-you") return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
-  // Quand le loadMore arrive, ajouter les posts
-  useEffect(() => {
-    if (loadMoreState.posts.length > 0) {
-      appendPosts(loadMoreState.posts, loadMoreState.nextCursor, loadMoreState.hasMore);
-    }
-  }, [loadMoreState, appendPosts]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMoreRef.current();
+        }
+      },
+      { rootMargin: "200px" },
+    );
 
-  // ── WebSocket : nouveau post d'un utilisateur suivi (ou soi-même) ──
-  // const handleNewPost = useCallback(
-  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   (rawPost: any) => {
-  //     const post = mapRawPost(rawPost);
-  //     addPost(post);
-  //   },
-  //   [addPost],
-  // );
-
-  // useSocketEvent("post:new", handleNewPost);
-
-  // // ── WebSocket : post supprimé ──
-  // const handleDeletedPost = useCallback(
-  //   (data: { postId: string }) => {
-  //     removePost(data.postId);
-  //   },
-  //   [removePost],
-  // );
-
-  // useSocketEvent("post:deleted", handleDeletedPost);
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [postsReady, filter]);
 
   // Filtre appliqué sur les posts du store
   const posts = useMemo(() => {
@@ -103,17 +112,6 @@ const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Formulaire caché — fetch initial */}
-      <form ref={formRef} action={formAction} className="hidden">
-        <input type="hidden" name="token" value={accessToken ?? ""} />
-      </form>
-
-      {/* Formulaire caché — charger plus */}
-      <form ref={loadMoreFormRef} action={loadMoreAction} className="hidden">
-        <input type="hidden" name="token" value={accessToken ?? ""} />
-        <input type="hidden" name="cursor" value={nextCursor ?? ""} />
-      </form>
-
       {/* ─── Filtres ─── */}
       <div className="flex flex-row gap-2">
         <Button
@@ -137,11 +135,7 @@ const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
       </div>
 
       {/* ─── Contenu ─── */}
-      {isPending ? (
-        <div className="flex items-center justify-center py-16">
-          <Spinner className="size-6" />
-        </div>
-      ) : posts.length === 0 ? (
+      {posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
           <Clock9 className="size-10 opacity-30" />
           <p className="text-sm">
@@ -166,21 +160,21 @@ const NewFeed = ({firstPost} : {firstPost: Post[]}) => {
             <FeedItem key={post.id} post={post} />
           ))}
 
-          {/* Bouton charger plus */}
-          {hasMore && filter === "for-you" && (
-            <div className="flex justify-center py-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="cursor-pointer gap-2"
-                onClick={() => loadMoreFormRef.current?.requestSubmit()}
-                disabled={isLoadingMore}
-              >
-                {isLoadingMore ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {isLoadingMore ? "Chargement..." : "Charger plus"}
-              </Button>
+          {/* Sentinelle infinite scroll + spinner + fallback bouton */}
+          {filter === "for-you" && (
+            <div ref={sentinelRef} className="flex justify-center py-4">
+              {isLoadingMore && <Spinner className="size-5" />}
+              {hasMore && !isLoadingMore && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer gap-2"
+                  onClick={() => handleLoadMoreRef.current()}
+                  disabled={isLoadingMore}
+                >
+                  Charger plus
+                </Button>
+              )}
             </div>
           )}
         </div>

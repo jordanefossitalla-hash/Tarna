@@ -490,7 +490,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                       src={media}
                       alt={"post image"}
                       fill
-                      className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                      className="object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
                     />
                     {/* Overlay pour +N images */}
                     {post.images.length > 4 && index === 3 && (

@@ -22,6 +22,7 @@ import { Badge } from "../../ui/badge";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import type { OrganizationResponse, OrgRole } from "@/src/types/organization";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 const roleConfig: Record<
   OrgRole,
@@ -85,50 +86,53 @@ const OrgCard = ({ org, variant, onJoin, onCancel }: OrgCardProps) => {
 
   return (
     <Card className="overflow-hidden rounded-xl border shadow-sm hover:shadow-md transition-shadow py-0 gap-0">
-      {/* Banner */}
-      <div className="relative h-24 overflow-hidden">
-        {org.bannerUrl ? (
-          <Image
-            src={org.bannerUrl}
-            alt={org.name}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10" />
-        )}
-        <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+      {/* Banner + Avatar wrapper */}
+      <div className="relative">
+        {/* Banner */}
+        <div className="relative h-24 overflow-hidden">
+          {org.bannerUrl ? (
+            <Image
+              src={org.bannerUrl}
+              alt={org.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-linear-to-br from-primary/30 to-primary/10" />
+          )}
+          <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
 
-        {/* Rôle badge */}
-        {role && RoleIcon && (
-          <div className="absolute top-2 right-2">
+          {/* Rôle badge */}
+          {role && RoleIcon && (
+            <div className="absolute top-2 right-2">
+              <Badge
+                variant="secondary"
+                className={`text-[10px] gap-1 ${role.color}`}
+              >
+                <RoleIcon className="size-2.5" />
+                {role.label}
+              </Badge>
+            </div>
+          )}
+
+          {/* Secteur */}
+          <div className="absolute bottom-2 left-2">
             <Badge
               variant="secondary"
-              className={`text-[10px] gap-1 ${role.color}`}
+              className="text-[10px] bg-white/90 text-gray-700 dark:bg-black/60 dark:text-gray-300"
             >
-              <RoleIcon className="size-2.5" />
-              {role.label}
+              {org.sector}
             </Badge>
           </div>
-        )}
-
-        {/* Secteur */}
-        <div className="absolute bottom-2 left-2">
-          <Badge
-            variant="secondary"
-            className="text-[10px] bg-white/90 text-gray-700 dark:bg-black/60 dark:text-gray-300"
-          >
-            {org.sector}
-          </Badge>
         </div>
 
-        {/* Logo overlay */}
-        <div className="absolute -bottom-5 right-3">
-          <Avatar className="size-10 border-2 border-background shadow-sm rounded-lg">
+        {/* Logo overlay — outside the overflow-hidden banner */}
+        <div className="absolute -bottom-6 right-3 z-10">
+          <Avatar className="size-12 border-2 border-background shadow-md rounded-lg">
             {org.logoUrl && (
               <AvatarImage src={org.logoUrl} alt={org.name} />
             )}
-            <AvatarFallback className="rounded-lg text-xs font-bold">
+            <AvatarFallback className={`rounded-lg text-sm font-bold  ${getAvatarFallbackColor(org.name)}`}>
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -136,7 +140,7 @@ const OrgCard = ({ org, variant, onJoin, onCancel }: OrgCardProps) => {
       </div>
 
       {/* Content */}
-      <CardHeader className="pt-4 pb-1 px-3 gap-0">
+      <CardHeader className="pt-6 pb-1 px-3 gap-0">
         <CardTitle className="text-base font-semibold leading-tight truncate flex items-center gap-1.5">
           <Building2 className="size-3.5 text-muted-foreground shrink-0" />
           {org.name}
