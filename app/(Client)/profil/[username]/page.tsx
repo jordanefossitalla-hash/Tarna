@@ -102,9 +102,8 @@ const ProfilePage = () => {
         const rawPosts = Array.isArray(json)
           ? json
           : (json.data ?? json.posts ?? []);
-        
-          console.log(rawPosts);
-          
+
+        console.log(rawPosts);
 
         const posts: Post[] = rawPosts.map((p: ReceivePost) => {
           const displayName: string =
@@ -206,7 +205,6 @@ const ProfilePage = () => {
   //       setFollowLoading(false);
   //     }
   //   }, [profile?.id, isFollowing, accessToken, followLoading]);
-
   if (loading) {
     return (
       <div className="xl:max-w-2xl xl:w-2xl w-full flex flex-row items-center justify-center pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
@@ -214,6 +212,7 @@ const ProfilePage = () => {
       </div>
     );
   }
+
   if (!profile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -225,9 +224,9 @@ const ProfilePage = () => {
   return (
     <div className="xl:max-w-2xl xl:w-2xl w-full pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
       <div className="relative h-52 md:h-64 rounded-2xl overflow-hidden border bg-linear-to-br from-primary/20 via-primary/5 to-background">
-        {profile.coverUrl && (
+        {profile?.coverUrl && (
           <img
-            src={profile.coverUrl}
+            src={profile?.coverUrl}
             alt="cover"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -245,11 +244,13 @@ const ProfilePage = () => {
         <div className="flex flex-col md:flex-row md:items-start gap-5">
           <Avatar className="size-24 md:size-28 border-4 border-background shadow-sm -mt-16 md:-mt-20 shrink-0">
             <AvatarImage
-              src={profile.avatarUrl ?? ""}
-              alt={profile.displayName ?? profile.username}
+              src={profile?.avatarUrl ?? ""}
+              alt={profile?.displayName ?? profile?.username}
             />
             <AvatarFallback className="text-2xl font-bold">
-              {getInitials(profile.displayName || profile.username)}
+              {getInitials(
+                profile?.displayName || profile?.username || "User Name",
+              )}
             </AvatarFallback>
           </Avatar>
 
@@ -257,12 +258,12 @@ const ProfilePage = () => {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                  {profile.displayName || profile.username}
+                  {profile?.displayName || profile?.username}
                 </h1>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  @{profile.username}
+                  @{profile?.username}
                 </p>
-                {profile.isVerified && (
+                {profile?.isVerified && (
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 mt-2">
                     <UserCheck className="size-3.5" />
                     Verified
@@ -302,9 +303,9 @@ const ProfilePage = () => {
               </div> */}
             </div>
 
-            {profile.bio && (
+            {profile?.bio && (
               <p className="text-sm text-foreground/80 leading-relaxed mt-3">
-                {profile.bio}
+                {profile?.bio}
               </p>
             )}
 

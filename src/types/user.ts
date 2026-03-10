@@ -24,3 +24,9 @@ export type FetchUser = {
   role: string;
   status: string;
 };
+
+export type updateUserType = {
+  displayName?: string;
+  username?: string;
+  phone?: string;
+}

@@ -18,6 +18,7 @@ import { useCommentStore } from "@/src/store/commentStore";
 import { createComment } from "@/src/lib/api";
 import { mapRawComment } from "@/src/lib/mapComment";
 import { toast } from "sonner";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 const MAX_DEPTH = 3;
 
@@ -77,7 +78,7 @@ const CommentItem = ({
       <div className="flex flex-row gap-2">
         <Avatar className="size-7">
           <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-          <AvatarFallback className="text-xs">
+          <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(comment.author.initials)}`}>
             {comment.author.initials}
           </AvatarFallback>
         </Avatar>
@@ -145,7 +146,7 @@ const CommentItem = ({
             <div className="flex flex-row items-center gap-2 mt-1">
               <Avatar className="size-6">
                 <AvatarImage src={currentUser?.avatarUrl || ""} alt="vous" />
-                <AvatarFallback className="text-[10px]">
+                <AvatarFallback className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
                   {currentUser?.initials ?? "?"}
                 </AvatarFallback>
               </Avatar>

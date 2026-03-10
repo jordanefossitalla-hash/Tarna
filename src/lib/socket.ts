@@ -2,7 +2,7 @@ import { io, Socket } from "socket.io-client";
 
 const WS_URL =
   process.env.NEXT_PUBLIC_WS_URL ??
-  `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost"}:${process.env.NEXT_PUBLIC_API_PORT ?? "4000"}`;
+  `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost"}`;
 
 let socket: Socket | null = null;
 

@@ -18,7 +18,7 @@ const GroupDetailPage = () => {
         {/* Cover / Banner */}
         <div className="relative w-full h-32 bg-linear-to-r from-blue-600 to-indigo-700">
           <div className="absolute top-3 left-3">
-            <Link href="/groups">
+            <Link href="/organizations">
               <Card className="cursor-pointer p-1.5 rounded-full hover:bg-white/20 border-0 shadow-none bg-black/30">
                 <ChevronLeft className="size-5 text-white" />
               </Card>

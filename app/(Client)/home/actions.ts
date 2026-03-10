@@ -13,9 +13,47 @@ export type FeedState = {
   hasMore: boolean;
 };
 
-export async function fetchPostsAction(): Promise<FeedState> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value ?? null;
+/**
+ * Server action utilisée par useActionState (reçoit prevState + formData).
+ * Lit le cursor + token depuis les champs cachés du formulaire.
+ */
+export async function fetchPostsAction(
+  _prev: FeedState,
+  formData: FormData,
+): Promise<FeedState> {
+  const cursor = (formData.get("cursor") as string) || null;
+  const formToken = (formData.get("token") as string) || null;
+  return fetchPosts(cursor, formToken);
+}
+
+/**
+ * Appel direct (SSR) — utilisé dans le RSC pour le chargement initial.
+ */
+export async function fetchInitialPosts(): Promise<FeedState> {
+  return fetchPosts(null, null);
+}
+
+/**
+ * Appel direct depuis le client — pagination (cursor + token explicites).
+ */
+export async function fetchMorePosts(
+  cursor: string | null,
+  token: string | null,
+): Promise<FeedState> {
+  return fetchPosts(cursor, token);
+}
+
+async function fetchPosts(
+  cursor: string | null,
+  tokenOverride: string | null,
+): Promise<FeedState> {
+  // Prefer the token passed explicitly (fresh from Zustand store);
+  // fall back to the HTTP-only cookie (set at login).
+  let token = tokenOverride;
+  if (!token) {
+    const cookieStore = await cookies();
+    token = cookieStore.get("access_token")?.value ?? null;
+  }
 
   if (!token) {
     return {
@@ -28,13 +66,14 @@ export async function fetchPostsAction(): Promise<FeedState> {
 
   try {
     const url = new URL(`${API_BASE_URL}/posts`);
-    // if (cursor) url.searchParams.set("cursor", cursor);
+    if (cursor) url.searchParams.set("cursor", cursor);
 
     const res = await fetch(url.toString(), {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -118,6 +157,7 @@ export async function fetchPostsAction(): Promise<FeedState> {
         
       };
     });
+    
 
     return {
       posts,

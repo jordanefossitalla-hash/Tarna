@@ -1,5 +1,6 @@
 import { useUserStore } from "@/src/store/userStore";
 import { ReactionType } from "../components/personnal/ui/feedItem";
+import { updateUserType } from "../types/user";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost";
@@ -162,8 +163,49 @@ export async function DeleteToPost(postId: string, token: string | null) {
   return deleteReactionToPost(postId, token);
 }
 
-
 //  gestion utilisateur ────────────────────────────────────────
 export async function deleteUser(userId: string, token: string | null) {
   return apiFetch(`/users/${userId}`, token, { method: "DELETE" });
+}
+
+export async function updateUser(
+  userId: string,
+  token: string | null,
+  data: FormData,
+) {
+  let payload: updateUserType = {};
+  if (data.get("userName")?.toString().trim().length != 0) {
+    payload = { ...payload, username: data.get("userName")?.toString() };
+  }
+  if (data.get("fullName")?.toString().trim().length != 0) {
+    payload = { ...payload, displayName: data.get("fullName")?.toString() };
+  }
+  if (data.get("phone")?.toString().trim().length != 0) {
+    payload = { ...payload, phone: data.get("phone")?.toString() };
+  }
+
+  return apiFetch(`/users/${userId}`, token, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+export async function setUserRole(
+  userId: string,
+  role: string,
+  token: string | null,
+) {
+  return apiFetch(`/users/${userId}`, token, {
+    method: "PATCH",
+    body: JSON.stringify({ role: role }),
+  });
+}
+export async function setUserStatus(
+  userId: string,
+  status: string,
+  token: string | null,
+) {
+  return apiFetch(`/users/${userId}`, token, {
+    method: "PATCH",
+    body: JSON.stringify({ status: status }),
+  });
 }
