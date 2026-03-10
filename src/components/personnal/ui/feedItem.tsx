@@ -364,7 +364,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {post.author.username} · {post.timeAgo}
+                @{post.author.username} · {post.timeAgo}
               </p>
             </div>
 
@@ -522,8 +522,8 @@ const FeedItem = ({ post }: { post: Post }) => {
                     className="flex flex-row items-center gap-3 w-full py-2.5"
                     onClick={() => setPreviewDoc(media)}
                   >
-                    <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
-                      <FileText className="size-4 text-primary" />
+                    <div className={`flex items-center justify-center size-9 rounded-lg ${media.extension === "pdf" ? "bg-red-500/10" : "bg-primary/10"} shrink-0`}>
+                      <FileText className={`size-4 ${media.extension === "pdf" ? "text-red-500" : "text-primary"}`} />
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">

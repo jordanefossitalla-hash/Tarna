@@ -165,7 +165,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
 
   const mediaActions: MediaAction[] = [
     { id: 0, label: "Photo", icon: ImageIcon },
-    { id: 1, label: "Vidéo", icon: Camera },
+    // { id: 1, label: "Vidéo", icon: Camera },
     { id: 2, label: "Document", icon: FileText },
     // { id: 3, label: "Lien", icon: Link2 },
     // { id: 4, label: "Emoji", icon: Smile },
