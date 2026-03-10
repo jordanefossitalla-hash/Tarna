@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import {
   Avatar,
@@ -10,13 +10,10 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Card } from "@/src/components/ui/card";
 import {
-  CalendarDays,
-  Edit,
   FileText,
   Loader2,
   Lock,
   Settings,
-  Sparkles,
   Trash,
   UserCheck,
   UserPen,
@@ -44,12 +41,18 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/src/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
+import {
+  changePasswordAction,
+  deleteProfileAction,
+  updateProfileAction,
+} from "../action";
 
 interface UserProfile extends User {
   followers?: number;
@@ -65,11 +68,14 @@ const formatCount = (value?: number) => {
 
 const ProfilePage = () => {
   const params = useParams();
+  const router = useRouter();
   const username = params.username as string;
 
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((s) => s.user);
   const accessToken = useUserStore((s) => s.accessToken);
+  const updateCurrentUser = useUserStore((s) => s.updateUser);
+  const logout = useUserStore((s) => s.logout);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -77,6 +83,15 @@ const ProfilePage = () => {
   const [postsLoading, setPostsLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [confirmEdit, setConfirmEdit] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
   const [editForm, setEditForm] = useState({
     userName: "",
     fullName: "",
@@ -87,6 +102,52 @@ const ProfilePage = () => {
   //   const [followLoading, setFollowLoading] = useState(false);
 
   const BIO_MAX_LENGTH = 160;
+
+  const openPasswordDialog = useCallback(() => {
+    setPasswordForm({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
+    setConfirmPassword(true);
+  }, []);
+
+  const handlePasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordLoading) return;
+
+    if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      const result = await changePasswordAction({
+        token: accessToken,
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+
+      if (result.success) {
+        toast.success("Mot de passe modifié avec succès");
+        setConfirmPassword(false);
+      } else {
+        toast.error("Erreur lors du changement de mot de passe", {
+          description: result.error ?? "Impossible de changer le mot de passe.",
+        });
+      }
+    } catch {
+      toast.error("Erreur réseau", {
+        description: "Impossible de changer le mot de passe.",
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const openEditDialog = useCallback(() => {
     setEditForm({
@@ -106,28 +167,81 @@ const ProfilePage = () => {
     setEditForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleDelete = async () => {
+    if (!profile?.id || deleteLoading) return;
+
+    try {
+      setDeleteLoading(true);
+      const result = await deleteProfileAction({
+        userId: profile.id,
+        token: accessToken,
+      });
+      if (!result.success) {
+        toast.error("Erreur lors de la suppression du compte", {
+          description: result.error ?? "Impossible de supprimer le compte.",
+        });
+        return;
+      }
+
+      toast.success("Compte supprimé avec succès");
+      setConfirmDelete(false);
+
+      if (currentUser?.id === profile.id) {
+        logout();
+        router.replace("/login");
+      } else {
+        router.replace("/home");
+      }
+    } catch {
+      toast.error("Erreur réseau", {
+        description: "Impossible de supprimer le compte.",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.id) return;
     try {
       setEditLoading(true);
-      const res = await apiFetch(`/users/${profile.id}`, accessToken, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: editForm.userName || undefined,
-          displayName: editForm.fullName || undefined,
-          phone: editForm.phone || undefined,
-          bio: editForm.bio || undefined,
-        }),
+      const result = await updateProfileAction({
+        userId: profile.id,
+        token: accessToken,
+        form: editForm,
+        currentUser: currentUser
+          ? {
+              id: currentUser.id,
+              initials: currentUser.initials,
+              online: currentUser.online,
+            }
+          : null,
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setProfile((prev) => (prev ? { ...prev, ...updated } : prev));
+
+      if (result.success) {
+        const nextUsername = result.profilePatch?.username?.trim();
+
+        if (result.profilePatch) {
+          setProfile((prev) =>
+            prev ? { ...prev, ...result.profilePatch } : prev,
+          );
+        }
+
+        if (currentUser?.id === profile.id && result.userPatch) {
+          updateCurrentUser(result.userPatch);
+        }
+
         toast.success("Profil mis à jour avec succès");
         setConfirmEdit(false);
+
+        if (nextUsername && nextUsername !== username) {
+          router.replace(`/profil/${nextUsername}`);
+        }
       } else {
-        toast.error("Erreur lors de la modification du profil");
+        toast.error("Erreur lors de la modification du profil", {
+          description: result.error ?? "Impossible de modifier le profil.",
+        });
       }
     } catch {
       toast.error("Erreur réseau", {
@@ -383,12 +497,18 @@ const ProfilePage = () => {
                         <UserPen className="size-4" />
                         <span className="flex-1">Modifier le profil</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={openPasswordDialog}
+                      >
                         <Lock className="size-4" />
                         <span className="flex-1">Changer le mot de passe</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+                      <DropdownMenuItem
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                        onClick={() => setConfirmDelete(true)}
+                      >
                         <Trash className="size-4" />
                         Supprimer le compte
                       </DropdownMenuItem>
@@ -582,6 +702,119 @@ const ProfilePage = () => {
                     <Loader2 className="size-3.5 animate-spin mr-1.5" />
                   )}
                   Enregistrer
+                </Button>
+              </div>
+            </FieldGroup>
+          </form>
+        </DialogContent>
+      </Dialog>
+       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{"Supprimer le compte"}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {
+              "Etes-vous sur de vouloir supprimer ce compte ? Cette action est irreversible."
+            }
+          </p>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer"
+              onClick={() => setConfirmDelete(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="cursor-pointer"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading && (
+                <Loader2 className="size-3.5 animate-spin mr-1.5" />
+              )}
+              Supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmPassword} onOpenChange={setConfirmPassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Changer le mot de passe</DialogTitle>
+            <DialogDescription className="text-xs">
+              Saisissez votre mot de passe actuel puis choisissez-en un nouveau.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form noValidate onSubmit={handlePasswordSubmit} className="mt-2">
+            <FieldGroup className="gap-4">
+              <Field>
+                <FieldLabel htmlFor="currentPassword">
+                  Mot de passe actuel
+                </FieldLabel>
+                <Input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="newPassword">
+                  Nouveau mot de passe
+                </FieldLabel>
+                <Input
+                  id="newPassword"
+                  name="newPassword"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Min. 8 caractères"
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="confirmNewPassword">
+                  Confirmer le nouveau mot de passe
+                </FieldLabel>
+                <Input
+                  id="confirmNewPassword"
+                  name="confirmNewPassword"
+                  type="password"
+                  value={passwordForm.confirmNewPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••"
+                />
+              </Field>
+
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  className="cursor-pointer"
+                  onClick={() => setConfirmPassword(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  size="sm"
+                  className="cursor-pointer"
+                  type="submit"
+                  disabled={passwordLoading}
+                >
+                  {passwordLoading && (
+                    <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  )}
+                  Modifier
                 </Button>
               </div>
             </FieldGroup>
