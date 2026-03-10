@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import {
   closestCenter,
@@ -21,7 +20,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
@@ -30,10 +28,6 @@ import {
   IconCircleXFilled,
   IconDotsVertical,
   IconGripVertical,
-  IconLayoutColumns,
-  IconLoader,
-  IconPlus,
-  IconTrendingUp,
 } from "@tabler/icons-react";
 import {
   flexRender,
@@ -50,19 +44,12 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { useIsMobile } from "@/src/hooks/use-mobile";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/src/components/ui/chart";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   Drawer,
@@ -76,10 +63,13 @@ import {
 } from "@/src/components/ui/drawer";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
 import { Input } from "@/src/components/ui/input";
@@ -91,7 +81,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
-import { Separator } from "@/src/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -102,9 +91,18 @@ import {
 } from "@/src/components/ui/table";
 import { Tabs, TabsContent } from "@/src/components/ui/tabs";
 import { useUserStore } from "../store/userStore";
-import { deleteUser } from "../lib/api";
-import { Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { deleteUser, setUserRole, setUserStatus, updateUser } from "../lib/api";
+import { CircleAlert, CirclePercent, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "./ui/field";
+import { useSocketEvent } from "../hooks/useSocketEvent";
+import { FetchUser } from "../types/user";
 
 export const schema = z.object({
   id: z.string(),
@@ -114,6 +112,15 @@ export const schema = z.object({
   role: z.string(),
   status: z.string(),
 });
+
+type AdminUserNewEvent = {
+  id: string;
+  username: string;
+  displayName?: string | null;
+  email: string;
+  role: string;
+  status: string;
+};
 
 // Create a separate component for the drag handle
 function DragHandle({ id }: { id: string }) {
@@ -135,10 +142,33 @@ function DragHandle({ id }: { id: string }) {
   );
 }
 
-function RowActions({ userId }: { userId: string }) {
+function RowActions({
+  userId,
+  role,
+  status,
+}: {
+  userId: string;
+  role: string;
+  status: string;
+}) {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
+  const [editLoading, setEditLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [confirmEdit, setConfirmEdit] = React.useState(false);
   const accessToken = useUserStore((state) => state.accessToken);
+  const userRole: ("user" | "admin" | "moderator")[] = [
+    "admin",
+    "moderator",
+    "user",
+  ];
+  const userStatus: ("active" | "restricted" | "suspended" | "deleted")[] = [
+    "active",
+    "restricted",
+    "suspended",
+    "deleted",
+  ];
+
   const handleDelete = React.useCallback(async () => {
     if (deleteLoading) return;
     setDeleteLoading(true);
@@ -148,14 +178,62 @@ function RowActions({ userId }: { userId: string }) {
       else toast.error("Failed to delete user");
     } finally {
       setDeleteLoading(false);
+      setConfirmDelete(false);
     }
   }, [userId, deleteLoading, accessToken]);
+
+  const handleEdit = React.useCallback(
+    async (e: React.SyntheticEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (editLoading) return;
+      setEditLoading(true);
+      try {
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        const res = await updateUser(userId, accessToken, formData);
+        if (res.ok) toast.success("Utilisateur modifier");
+        else toast.error("Echec de la modification");
+      } finally {
+        setEditLoading(false);
+        setConfirmEdit(false);
+      }
+    },
+    [userId, editLoading, accessToken],
+  );
+  const handleSetRole = React.useCallback(
+    async (role: "user" | "admin" | "moderator") => {
+      if (loading) return;
+      setLoading(true);
+      try {
+        const res = await setUserRole(userId, role, accessToken);
+        if (res.ok) toast.success("Role modifier");
+        else toast.error("Echec de la modification");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, loading, accessToken],
+  );
+  const handleSetStatus = React.useCallback(
+    async (status: "active" | "restricted" | "suspended" | "deleted") => {
+      if (loading) return;
+      setLoading(true);
+      try {
+        const res = await setUserStatus(userId, status, accessToken);
+        if (res.ok) toast.success("Status modifier");
+        else toast.error("Echec de la modification");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, loading, accessToken],
+  );
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {deleteLoading ? (
+          {deleteLoading || loading ? (
             <div>
               <Loader2 className="size-4 animate-spin" />
             </div>
@@ -171,9 +249,56 @@ function RowActions({ userId }: { userId: string }) {
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setConfirmEdit(true)}>
+            Éditer
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Éditer rôle</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                {userRole.map((el, index) => {
+                  if (el === role) {
+                    return null;
+                  } else {
+                    return (
+                      <DropdownMenuItem
+                        key={index}
+                        onClick={() => handleSetRole(el)}
+                      >
+                        {el}
+                      </DropdownMenuItem>
+                    );
+                  }
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Éditer statut</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                {userStatus.map((el, index) => {
+                  if (el === status) {
+                    return null;
+                  } else {
+                    return (
+                      <DropdownMenuItem
+                        key={index}
+                        onClick={() => handleSetStatus(el)}
+                      >
+                        {el}
+                      </DropdownMenuItem>
+                    );
+                  }
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setConfirmDelete(true)} variant="destructive">
+          <DropdownMenuItem
+            onClick={() => setConfirmDelete(true)}
+            variant="destructive"
+          >
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -181,10 +306,12 @@ function RowActions({ userId }: { userId: string }) {
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Supprimer l&apos;utilisateur</DialogTitle>
+            <DialogTitle>{"Supprimer l'utilisateur"}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Etes-vous sur de vouloir supprimer cet utilisateur ? Cette action est irreversible.
+            {
+              "Etes-vous sur de vouloir supprimer cet utilisateur ? Cette action est irreversible."
+            }
           </p>
           <div className="flex justify-end gap-2 mt-4">
             <Button
@@ -208,6 +335,73 @@ function RowActions({ userId }: { userId: string }) {
               Supprimer
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmEdit} onOpenChange={setConfirmEdit}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>{"Modifier l'utilisateur"}</DialogTitle>
+          <DialogDescription>
+            {
+              "Entrer les nouvelles informations de l'utilisateur. Laissez les champs vides pour ne pas les modifier."
+            }
+          </DialogDescription>
+          <form noValidate onSubmit={handleEdit}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="userName">
+                  {"Nom d'utilisateur"}
+                </FieldLabel>
+                <Input
+                  id="userName"
+                  name="userName"
+                  type="text"
+                  placeholder="entrer le nom d'utilisateur"
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="fullName">Nom complet</FieldLabel>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="entrer le nom complet"
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="numero">Numéro de téléphone</FieldLabel>
+                <Input
+                  id="numero"
+                  name="phone"
+                  type="text"
+                  placeholder="+237xxxxxxxx"
+                  required
+                />
+              </Field>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => setConfirmEdit(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  size="sm"
+                  className="cursor-pointer"
+                  type="submit"
+                  disabled={editLoading}
+                >
+                  {editLoading && (
+                    <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  )}
+                  Modifier
+                </Button>
+              </div>
+            </FieldGroup>
+          </form>
         </DialogContent>
       </Dialog>
     </>
@@ -248,7 +442,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
   {
     accessorKey: "userName",
-    header: "Nom d&apos;utilisateur",
+    header: "Nom d'utilisateur",
     cell: ({ row }) => {
       return row.original.userName;
     },
@@ -285,6 +479,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       <Badge variant="outline" className="px-1.5 text-muted-foreground">
         {row.original.status === "active" ? (
           <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
+        ) : row.original.status === "restricted" ? (
+          <CircleAlert className="fill-orange-500 dark:fill-orange-500" />
+        ) : row.original.status === "suspended" ? (
+          <CirclePercent className="fill-blue-500 dark:fill-blue-500" />
         ) : (
           <IconCircleXFilled className="fill-red-500 dark:fill-red-500" />
         )}
@@ -294,7 +492,13 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <RowActions userId={row.original.id} />,
+    cell: ({ row }) => (
+      <RowActions
+        userId={row.original.id}
+        role={row.original.role}
+        status={row.original.status}
+      />
+    ),
   },
 ];
 
@@ -340,12 +544,41 @@ export function DataTable({
     pageIndex: 0,
     pageSize: 10,
   });
+  const currentUserRole = useUserStore((state) => state.user?.role);
   const sortableId = React.useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {}),
   );
+
+  const handleAdminUserNew = React.useCallback(
+    (newUser: AdminUserNewEvent) => {
+      if (currentUserRole !== "admin") return;
+
+      const mappedUser: FetchUser = {
+        id: newUser.id,
+        userName: newUser.username,
+        fullName: newUser.displayName ?? "",
+        email: newUser.email,
+        role: newUser.role,
+        status: newUser.status,
+      };
+
+      setData((prev) => {
+        if (prev.some((user) => user.id === mappedUser.id)) return prev;
+        return [mappedUser, ...prev];
+      });
+    },
+    [currentUserRole],
+  );
+
+  useSocketEvent<AdminUserNewEvent>("admin:userNew", handleAdminUserNew);
+  useSocketEvent<AdminUserNewEvent>("admin:userNew", () => {
+    console.log('nouveau user');
+    
+  });
+
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
@@ -572,12 +805,12 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
     <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
         <Button variant="link" className="w-fit px-0 text-left text-foreground">
-          Modifier l&apos;utilisateur
+          {"Modifier l'utilisateur"}
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-1">
-          <DrawerTitle>Modifier l&apos;utilisateur</DrawerTitle>
+          <DrawerTitle>{"Modifier l'utilisateur"}</DrawerTitle>
           <DrawerDescription>
             Showing total visitors for the last 6 months
           </DrawerDescription>
@@ -642,7 +875,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
           )} */}
           <form className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
-              <Label htmlFor="header">Nom d&apos;utilisateur</Label>
+              <Label htmlFor="header">{"Nom d'utilisateur"}</Label>
               <Input id="header" defaultValue={item.userName} />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -723,4 +956,3 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
     </Drawer>
   );
 }
-

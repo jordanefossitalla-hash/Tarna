@@ -48,6 +48,7 @@ import {
 } from "@/app/(Client)/home/actions";
 import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 type VisibilityOption = {
   value: string;
@@ -208,7 +209,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
         <div className="flex flex-row gap-3">
           <Avatar className="size-10 shrink-0 mt-0.5">
             <AvatarImage src={currentUser?.avatarUrl || ""} alt="profil" />
-            <AvatarFallback className="text-xs font-semibold">
+            <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
               {currentUser?.initials}
             </AvatarFallback>
           </Avatar>

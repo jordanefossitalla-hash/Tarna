@@ -35,33 +35,21 @@ import {
 import Image from "next/image";
 import { useUserStore } from "@/src/store/userStore";
 import { useTheme } from "next-themes";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
+import {
+  IconCirclePlusFilled,
+  IconHome,
+  IconHomeFilled,
+  type Icon,
+} from "@tabler/icons-react";
 
 type NavItem = {
   id: number;
   name: string;
-  icon: LucideIcon;
+  icon: LucideIcon | Icon;
   route: string;
   badge?: number;
 };
-
-const navItems: NavItem[] = [
-  { id: 0, name: "Accueil", icon: House, route: "/home" },
-  { id: 1, name: "Groupes", icon: Users, route: "/groups" },
-  {
-    id: 2,
-    name: "Messages",
-    icon: MessageCircle,
-    route: "/messages",
-    badge: 4,
-  },
-  {
-    id: 3,
-    name: "Notifications",
-    icon: Bell,
-    route: "/notifications",
-    badge: 3,
-  },
-];
 
 const TopBar = () => {
   const pathname = usePathname();
@@ -77,6 +65,30 @@ const TopBar = () => {
     setTheme(isDark ? "light" : "dark");
   };
 
+  const iconActive = isActive("/home") ? IconHomeFilled : IconHome;
+  const navItems: NavItem[] = [
+    { id: 0, name: "Accueil", icon: iconActive, route: "/home" },
+    { id: 1, name: "Organisations", icon: Users, route: "/organizations" },
+    {
+      id: 2,
+      name: "Discussions",
+      icon: MessageCircle,
+      route: "/messages",
+      badge: 4,
+    },
+    {
+      id: 3,
+      name: "Notifications",
+      icon: Bell,
+      route: "/notifications",
+      badge: 3,
+    },{
+      id: 4,
+      name: "Profile",
+      icon: User,
+      route: `/profil/${currentUser?.username}`,
+    },
+  ];
   // useEffect(()=> {
   //   if (!isAuthenticated) {
   //     redirect("/login");
@@ -117,13 +129,13 @@ const TopBar = () => {
                 href={item.route}
                 className={`relative flex flex-col items-center justify-center px-3.5 py-1.5 rounded-lg transition-colors ${
                   active
-                    ? "text-white bg-primary"
+                    ? "text-white bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 }`}
               >
                 <div className="relative">
                   <item.icon
-                    className="size-5"
+                    className={`size-5 ${active ? "fill-white dark:fill-white" : ""}`}
                     strokeWidth={active ? 2.5 : 2}
                   />
                   {/* {item.badge && item.badge > 0 && (
@@ -134,7 +146,7 @@ const TopBar = () => {
                 </div>
                 <span
                   className={`text-[10px] mt-0.5 leading-none ${
-                    active ? "font-semibold" : "font-medium"
+                    active ? "font-bold" : "font-medium"
                   }`}
                 >
                   {item.name}
@@ -179,7 +191,9 @@ const TopBar = () => {
                     src={currentUser?.avatarUrl || ""}
                     alt="profil"
                   />
-                  <AvatarFallback className="text-xs font-semibold">
+                  <AvatarFallback
+                    className={`text-xs font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}
+                  >
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>
@@ -198,7 +212,9 @@ const TopBar = () => {
                     src={currentUser?.avatarUrl || ""}
                     alt="profil"
                   />
-                  <AvatarFallback className="text-xs font-semibold">
+                  <AvatarFallback
+                    className={`text-xs font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}
+                  >
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>
@@ -290,4 +306,3 @@ const TopBar = () => {
 };
 
 export default TopBar;
-

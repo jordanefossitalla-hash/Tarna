@@ -70,8 +70,10 @@ import { Spinner } from "../../ui/spinner";
 import { toast } from "sonner";
 import { linkifyText } from "@/src/lib/LinklyText";
 import Link from "next/link";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 export type ReactionType = null | "like" | "illuminate" | "support";
+type ReactionKind = Exclude<ReactionType, null>;
 
 const FeedItem = ({ post }: { post: Post }) => {
   const [reaction, setReaction] = useState<ReactionType>(
@@ -96,6 +98,15 @@ const FeedItem = ({ post }: { post: Post }) => {
   const confirmedReactionRef = useRef<ReactionType>(post.myReaction ?? null);
   const queuedReactionRef = useRef<ReactionType | undefined>(undefined);
   const reactionInFlightRef = useRef(false);
+  const confirmedCountsRef = useRef<Record<ReactionKind, number>>({
+    like: Number.isFinite(post.stats.likes_count) ? Number(post.stats.likes_count) : 0,
+    illuminate: Number.isFinite(post.stats.illuminates_count)
+      ? Number(post.stats.illuminates_count)
+      : 0,
+    support: Number.isFinite(post.stats.supports_count)
+      ? Number(post.stats.supports_count)
+      : 0,
+  });
 
   // ── Comment store ──
   const EMPTY: Comment[] = useMemo(() => [], []);
@@ -221,6 +232,22 @@ const FeedItem = ({ post }: { post: Post }) => {
     reactionRef.current = reaction;
   }, [reaction]);
 
+  const applyConfirmedCountsTransition = useCallback(
+    (previousReaction: ReactionType, nextReaction: ReactionType) => {
+      if (previousReaction === nextReaction) return;
+
+      const counts = { ...confirmedCountsRef.current };
+      if (previousReaction) {
+        counts[previousReaction] = Math.max(0, counts[previousReaction] - 1);
+      }
+      if (nextReaction) {
+        counts[nextReaction] = counts[nextReaction] + 1;
+      }
+      confirmedCountsRef.current = counts;
+    },
+    [],
+  );
+
   const flushReactionQueue = useCallback(async () => {
     if (reactionInFlightRef.current || !accessToken) return;
 
@@ -243,8 +270,22 @@ const FeedItem = ({ post }: { post: Post }) => {
           : await reactToPost(post.id, next, accessToken);
 
       if (res.ok) {
+        const previousConfirmed = confirmedReactionRef.current;
         confirmedReactionRef.current = next;
-        updatePost(post.id, { myReaction: next });
+        applyConfirmedCountsTransition(previousConfirmed, next);
+        updatePost(post.id, {
+          myReaction: next,
+          stats: {
+            ...post.stats,
+            likes_count: confirmedCountsRef.current.like,
+            illuminates_count: confirmedCountsRef.current.illuminate,
+            supports_count: confirmedCountsRef.current.support,
+            reactions_count:
+              confirmedCountsRef.current.like +
+              confirmedCountsRef.current.illuminate +
+              confirmedCountsRef.current.support,
+          },
+        });
       } else if (queuedReactionRef.current === undefined) {
         setReaction(confirmedReactionRef.current);
       }
@@ -263,7 +304,7 @@ const FeedItem = ({ post }: { post: Post }) => {
         void flushReactionQueue();
       }
     }
-  }, [accessToken, post.id, updatePost]);
+  }, [accessToken, post.id, post.stats, updatePost, applyConfirmedCountsTransition]);
 
   const toggleReaction = useCallback(
     (type: Exclude<ReactionType, null>) => {
@@ -289,6 +330,17 @@ const FeedItem = ({ post }: { post: Post }) => {
     URL.revokeObjectURL(url);
   };
 
+  function computeReactionCount(
+    type: ReactionKind,
+    confirmedReaction: ReactionType,
+    optimisticReaction: ReactionType,
+  ) {
+    const safeCount = confirmedCountsRef.current[type];
+    const removeDelta = confirmedReaction === type ? -1 : 0;
+    const addDelta = optimisticReaction === type ? 1 : 0;
+    return Math.max(0, safeCount + removeDelta + addDelta);
+  }
+
   return (
     <Collapsible asChild open={commentsOpen} onOpenChange={setCommentsOpen}>
       <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -297,7 +349,7 @@ const FeedItem = ({ post }: { post: Post }) => {
           <div className="flex flex-row items-center gap-3">
             <Avatar className="size-10">
               <AvatarImage src={post.author.avatar} alt={post.author.name} />
-              <AvatarFallback className="text-xs font-semibold">
+              <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(post.author.initials)}`}>
                 {post.author.initials}
               </AvatarFallback>
             </Avatar>
@@ -317,7 +369,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             </div>
 
             {/* Bouton Follow — directement après les infos auteur */}
-            {isAuthenticated && !isOwnPost && post.authorId && (
+            {/* {isAuthenticated && !isOwnPost && post.authorId && (
               <Button
                 variant={isFollowing ? "outline" : "default"}
                 size="sm"
@@ -334,7 +386,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 )}
                 {isFollowing ? "Suivi" : "Suivre"}
               </Button>
-            )}
+            )} */}
           </div>
 
           <DropdownMenu>
@@ -438,7 +490,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                       src={media}
                       alt={"post image"}
                       fill
-                      className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                      className="object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
                     />
                     {/* Overlay pour +N images */}
                     {post.images.length > 4 && index === 3 && (
@@ -573,39 +625,43 @@ const FeedItem = ({ post }: { post: Post }) => {
                   ? "bg-red-100 text-red-500 dark:bg-red-900/30"
                   : "hover:bg-accent text-muted-foreground"
               }`}
-              onClick={() => toggleReaction("like")}
+              onClick={() => {
+                toggleReaction("like");
+              }}
             >
               <Heart
                 className="size-4"
                 fill={reaction === "like" ? "currentColor" : "none"}
               />
               <span className="font-medium">
-                {reaction === "like"
-                  ? post.stats.likes_count || 0
-                  : post.stats.likes_count <= 0
-                    ? 0
-                    : post.stats.likes_count - 1 || 0}
+                {computeReactionCount(
+                  "like",
+                  confirmedReactionRef.current,
+                  reaction,
+                )}
               </span>
             </button>
 
-            <button
+            {/* <button
               className={`flex flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer ${
                 reaction === "illuminate"
                   ? "bg-amber-100 text-amber-500 dark:bg-amber-900/30"
                   : "hover:bg-accent text-muted-foreground"
               }`}
-              onClick={() => toggleReaction("illuminate")}
+              onClick={() => {
+                toggleReaction("illuminate");
+              }}
             >
               <Lightbulb
                 className="size-4"
                 fill={reaction === "illuminate" ? "currentColor" : "none"}
               />
               <span className="font-medium">
-                {reaction === "illuminate"
-                  ? post.stats.illuminates_count || 0
-                  : post.stats.illuminates_count <= 0
-                    ? 0
-                    : post.stats.illuminates_count - 1 || 0}
+                {computeReactionCount(
+                  "illuminate",
+                  confirmedReactionRef.current,
+                  reaction,
+                )}
               </span>
             </button>
 
@@ -615,20 +671,22 @@ const FeedItem = ({ post }: { post: Post }) => {
                   ? "bg-blue-100 text-blue-500 dark:bg-blue-900/30"
                   : "hover:bg-accent text-muted-foreground"
               }`}
-              onClick={() => toggleReaction("support")}
+              onClick={() => {
+                toggleReaction("support");
+              }}
             >
               <Handshake
                 className="size-4"
                 fill={reaction === "support" ? "currentColor" : "none"}
               />
               <span className="font-medium">
-                {reaction === "support"
-                  ? post.stats.supports_count || 0
-                  : post.stats.supports_count <= 0
-                    ? 0
-                    : post.stats.supports_count - 1 || 0}
+                {computeReactionCount(
+                  "support",
+                  confirmedReactionRef.current,
+                  reaction,
+                )}
               </span>
-            </button>
+            </button> */}
           </div>
 
           {/* Commentaires + Partage + Enregistrer */}
@@ -676,7 +734,7 @@ const FeedItem = ({ post }: { post: Post }) => {
               <div className="flex flex-row items-center gap-2.5">
                 <Avatar className="size-8 shrink-0">
                   <AvatarImage src={currentUser?.avatarUrl || ""} alt="vous" />
-                  <AvatarFallback className="text-[10px] font-semibold">
+                  <AvatarFallback className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>

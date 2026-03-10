@@ -3,7 +3,6 @@ import { SocketProvider } from "@/src/components/providers/socketProvider";
 import { SidebarInset, SidebarProvider } from "@/src/components/ui/sidebar";
 import { AppSidebar } from "@/src/components/app-sidebar";
 import { SiteHeader } from "@/src/components/site-header";
-import AuthGuard from "@/src/components/providers/authGuard";
 import LogOutGuard from "@/src/components/providers/logOutGuard";
 
 export default function RootLayout({

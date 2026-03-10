@@ -10,8 +10,9 @@ import {
   EmptyTitle,
 } from "@/src/components/ui/empty";
 import { Image as ImageIcon, RefreshCcwIcon } from "lucide-react";
-import { fetchPostsAction } from "./actions";
-import PostsHydratation from "@/src/hydratation/postsHydratation";
+import { fetchInitialPosts } from "./actions";
+import { Suspense } from "react";
+import { Spinner } from "@/src/components/ui/spinner";
 
 export function EmptyMuted() {
   return (
@@ -34,16 +35,34 @@ export function EmptyMuted() {
     </Empty>
   );
 }
+async function PostsSection() {
+  const data = await fetchInitialPosts();
+
+  return (
+    <>
+      <NewFeed
+        firstPost={data.posts}
+        initialCursor={data.nextCursor}
+        initialHasMore={data.hasMore}
+      />
+    </>
+  );
+}
 
 const HomePage = async () => {
-  const posts = await fetchPostsAction();
-  // console.log(posts);
-  
   return (
     <div className="xl:max-w-2xl xl:w-2xl w-full pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
-      <PostsHydratation state={posts.posts} />
       <AddPostCard isgroup={false} />
-      <NewFeed firstPost={posts.posts} />
+
+      <Suspense
+        fallback={
+          <div className="xl:max-w-2xl xl:w-2xl w-full flex flex-row justify-center pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0 pt-2">
+            <Spinner className="size-5" />
+          </div>
+        }
+      >
+        <PostsSection />
+      </Suspense>
     </div>
   );
 };

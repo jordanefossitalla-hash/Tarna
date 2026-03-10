@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Settings,
   ShieldUser,
+  User,
   Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -16,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { groupsData } from "@/src/data/groups";
 import { useUserStore } from "@/src/store/userStore";
+import { IconHome, IconHomeFilled } from "@tabler/icons-react";
 
 type menuItemType = {
   id: number;
@@ -25,23 +27,52 @@ type menuItemType = {
   badge?: number;
 };
 
-
 const myGroups = groupsData.filter((g) => g.isMember).slice(0, 4);
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const user = useUserStore((s) => s.user)
-  
-  const initialMenu: menuItemType[] = [
-    { id: 0, name: "Accueil", icon: House, route: "/home" },
-    { id: 1, name: "Groupes", icon: Users, route: "/groups" },
-    { id: 2, name: "Messages", icon: MessageCircle, route: "/messages", badge: 4 },
-    { id: 3, name: "Notifications", icon: Bell, route: "/notifications", badge: 3 },
-  ];
-  const menuItems = user?.role === "admin" ? [...initialMenu, { id: 4, name: "Administration", icon: ShieldUser, route: "/dashboard/users" }] : initialMenu;
-  
+  const user = useUserStore((s) => s.user);
+
   const isActive = (prefix: string) =>
     pathname === prefix || pathname.startsWith(prefix + "/");
+  const iconActive = isActive("/home") ? IconHomeFilled : IconHome;
+
+  const initialMenu: menuItemType[] = [
+    { id: 0, name: "Accueil", icon: iconActive, route: "/home" },
+    { id: 1, name: "Organisations", icon: Users, route: "/organizations" },
+    {
+      id: 2,
+      name: "Discussions",
+      icon: MessageCircle,
+      route: "/messages",
+      badge: 4,
+    },
+    {
+      id: 3,
+      name: "Notifications",
+      icon: Bell,
+      route: "/notifications",
+      badge: 3,
+    },
+    {
+      id: 5,
+      name: "Profile",
+      icon: User,
+      route: `/profil/${user?.username}`,
+    },
+  ];
+  const menuItems =
+    user?.role === "admin"
+      ? [
+          ...initialMenu,
+          {
+            id: 4,
+            name: "Administration",
+            icon: ShieldUser,
+            route: "/dashboard/users",
+          },
+        ]
+      : initialMenu;
 
   return (
     <Card className="lg:w-72 xl:w-62.5 rounded h-fit hidden lg:block border-0 shadow-none gap-0 py-3">
@@ -56,16 +87,25 @@ const Sidebar = () => {
               variant="ghost"
               className={`justify-start py-5 px-3 cursor-pointer transition-colors ${
                 active
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                  ? "bg-primary/10 text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
                   : "text-foreground hover:bg-accent"
               }`}
             >
-              <Link href={item.route}>
+              <Link
+                href={item.route}
+                className={`px-3.5 py-1.5 rounded-lg transition-colors ${
+                  active
+                    ? "text-white bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                }`}
+              >
                 <item.icon
-                  className="size-4.5 mr-1"
+                  className={`size-4.5 mr-1 ${active ? "fill-white dark:fill-white" : ""}`}
                   strokeWidth={active ? 2.5 : 2}
                 />
-                <span className={`flex-1 text-left text-sm ${active ? "font-semibold" : "font-medium"}`}>
+                <span
+                  className={`flex-1 text-left text-sm ${active ? "font-bold" : "font-medium"}`}
+                >
                   {item.name}
                 </span>
                 {/* {item.badge && item.badge > 0 && (
