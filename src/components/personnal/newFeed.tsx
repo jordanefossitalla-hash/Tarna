@@ -117,7 +117,7 @@ const NewFeed = ({ firstPost, initialCursor, initialHasMore }: NewFeedProps) => 
         <Button
           variant={filter === "for-you" ? "default" : "outline"}
           size="sm"
-          className="cursor-pointer gap-1.5 rounded-full"
+          className="cursor-pointer gap-1.5 rounded-full bg-primary/20 hover:bg-primary/30"
           onClick={() => setFilter("for-you")}
         >
           <Sparkles className="size-3.5" />
@@ -126,7 +126,7 @@ const NewFeed = ({ firstPost, initialCursor, initialHasMore }: NewFeedProps) => 
         <Button
           variant={filter === "recent" ? "default" : "outline"}
           size="sm"
-          className="cursor-pointer gap-1.5 rounded-full"
+          className="cursor-pointer gap-1.5 rounded-full bg-primary/20 hover:bg-primary/30"
           onClick={() => { setFilter("recent"); setNow(Date.now()); }}
         >
           <Clock9 className="size-3.5" />
