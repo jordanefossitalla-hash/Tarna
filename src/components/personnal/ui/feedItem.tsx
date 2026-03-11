@@ -75,7 +75,7 @@ import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
 
-const FeedItem = ({ post }: { post: Post }) => {
+const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean, groupName?: string }) => {
   const [reaction, setReaction] = useState<ReactionType>(
     post.myReaction ?? null,
   );
@@ -355,7 +355,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             </Avatar>
             <div className="flex flex-col">
               <div className="flex flex-row items-center gap-1.5">
-                <p className="text-sm font-semibold">{post.author.name}</p>
+                <p className="text-sm font-semibold">{isgroup && groupName ? groupName : post.author.name}</p>
                 {post.author.isVerified && (
                   <BadgeCheck className="size-3.5 text-primary" />
                 )}

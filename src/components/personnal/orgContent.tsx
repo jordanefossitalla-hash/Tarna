@@ -12,7 +12,7 @@ import { Suspense } from "react";
 import { Spinner } from "../ui/spinner";
 import NewOrgFeed from "./orgFeed";
 
-async function PostsSection({ orgId }: { orgId: string }) {
+async function PostsSection({ orgId, orgName }: { orgId: string; orgName: string }) {
   const data = await fetchInitialPosts(orgId);
 
   return (
@@ -22,6 +22,7 @@ async function PostsSection({ orgId }: { orgId: string }) {
         initialCursor={data.nextCursor}
         initialHasMore={data.hasMore}
         orgId={orgId}
+        orgName={orgName}
       />
     </>
   );
@@ -80,7 +81,7 @@ const OrgContent = ({ org }: { org: DetailedOrganizationResponse | null }) => {
           </div>
           <div className="px-4 py-3">
             <p className="text-sm text-gray-400">
-              {org?.bio || "No description available for this organization."}
+              {org?.bio || ""}
             </p>
             <div className="flex flex-row gap-2 mt-2">
               <Badge variant="secondary">
@@ -102,7 +103,7 @@ const OrgContent = ({ org }: { org: DetailedOrganizationResponse | null }) => {
           </div>
         }
       >
-        <PostsSection orgId={org?.id ?? ""} />
+        <PostsSection orgId={org?.id ?? ""} orgName={org?.name ?? ""} />
       </Suspense>
     </div>
   );

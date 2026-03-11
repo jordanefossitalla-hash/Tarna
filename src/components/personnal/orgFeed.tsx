@@ -19,9 +19,10 @@ type NewFeedProps = {
   initialCursor: string | null;
   initialHasMore: boolean;
   orgId: string;
+  orgName: string;
 };
 
-const NewOrgFeed = ({ firstPost, initialCursor, initialHasMore, orgId }: NewFeedProps) => {
+const NewOrgFeed = ({ firstPost, initialCursor, initialHasMore, orgId, orgName }: NewFeedProps) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<FeedFilter>("for-you");
   const [now, setNow] = useState(() => Date.now());
@@ -43,6 +44,11 @@ const NewOrgFeed = ({ firstPost, initialCursor, initialHasMore, orgId }: NewFeed
   useEffect(() => {
     if (!hydrated.current && firstPost.length > 0) {
       setPosts(firstPost, initialCursor, initialHasMore);
+      hydrated.current = true;
+    }
+    if (!hydrated.current && firstPost.length === 0) {
+      // Même s'il n'y a pas de post, on doit quand même hydrater le store avec le cursor + hasMore
+      setPosts([], initialCursor, initialHasMore);
       hydrated.current = true;
     }
   }, [firstPost, initialCursor, initialHasMore, setPosts]);
@@ -159,7 +165,7 @@ const NewOrgFeed = ({ firstPost, initialCursor, initialHasMore, orgId }: NewFeed
       ) : (
         <div className="flex flex-col gap-3">
           {posts.map((post) => (
-            <FeedItem key={post.id} post={post} />
+            <FeedItem key={post.id} post={post} isgroup groupName={orgName} />
           ))}
 
           {/* Sentinelle infinite scroll + spinner + fallback bouton */}

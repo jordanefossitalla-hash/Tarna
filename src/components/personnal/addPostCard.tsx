@@ -88,7 +88,7 @@ const AddPostCard = ({
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
   const [postType, setPostType] = useState("post");
-  const [visibility, setVisibility] = useState("public");
+  const [visibility, setVisibility] = useState(isgroup ? "group_only" : "public");
   const [imagePreview, setImagePreview] = useState<string[] | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,6 +98,7 @@ const AddPostCard = ({
   const currentUser = useUserStore((state) => state.user);
   const accessToken = useUserStore((state) => state.accessToken);
   const addPost = useFeedStore((s) => s.addPost);
+  const [isOrg, setIsOrg] = useState(isgroup);
   const [state, formFetchAction, _] = useActionState(
     fetchPostsAction,
     initialStat,
@@ -115,15 +116,16 @@ const AddPostCard = ({
     { value: "friends", label: "Amis", icon: Users },
   ];
   const visibilityGroupOptions: VisibilityOption[] = [
-    { value: "public", label: orgName || "Public", icon: Globe },
-    { value: "group_only", label: "Privé", icon: GlobeLock },
+    { value: "public", label: "Public", icon: Globe },
+    { value: "group_only", label: isOrg && orgName ? orgName : "Privé", icon: GlobeLock },
   ];
+  
 
   const handleFormAction = async (
     prevState: CreatePostState,
     formData: FormData,
   ) => {
-    const result = await createPostAction(prevState, formData, isgroup, orgId);
+    const result = await createPostAction(prevState, formData, isOrg, orgId);
     if (result.success) {
       if (result.post) addPost(result.post);
       setContent("");
@@ -403,7 +405,7 @@ const AddPostCard = ({
               </Select> */}
             {/* Visibilité */}
             <Select
-              defaultValue={isgroup ? "group_only" : "public"}
+              defaultValue={isOrg ? "group_only" : "public"}
               value={visibility}
               onValueChange={setVisibility}
             >
@@ -413,7 +415,7 @@ const AddPostCard = ({
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Visibilité</SelectLabel>
-                  {!isgroup
+                  {!isOrg
                     ? visibilityOptions.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           <div className="flex flex-row items-center gap-1.5">
