@@ -153,7 +153,7 @@ const ProfilePage = () => {
     setEditForm({
       userName: profile?.username ?? "",
       fullName: profile?.displayName ?? "",
-      phone: (profile as any)?.phone ?? "",
+      phone: profile?.phone ?? "",
       bio: profile?.bio ?? "",
     });
     setConfirmEdit(true);

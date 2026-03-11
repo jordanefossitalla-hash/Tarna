@@ -2,10 +2,8 @@
 
 import { Post, ReceivePost } from "@/src/types/post";
 import { cookies } from "next/headers";
-import { string } from "zod";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
-const API_PORT = process.env.API_PORT ?? "4000";
 
 export type FeedState = {
   posts: Post[];
@@ -95,7 +93,6 @@ async function fetchPosts(
       ? json
       : (json.data ?? json.posts ?? []);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const posts: Post[] = rawPosts.map((p: ReceivePost) => {
         const displayName: string =
           p.author?.displayName ?? p.author?.username ?? "Unknown";

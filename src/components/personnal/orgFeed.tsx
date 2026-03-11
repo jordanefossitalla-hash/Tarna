@@ -4,7 +4,6 @@ import { Clock9, Sparkles } from "lucide-react";
 import { Spinner } from "../ui/spinner";
 import FeedItem from "./ui/feedItem";
 import { useUserStore } from "@/src/store/userStore";
-import { useFeedStore } from "@/src/store/feedStore";
 import { useSocketEvent } from "@/src/hooks/useSocketEvent";
 import { mapRawPost } from "@/src/lib/mapPost";
 import { fetchMorePosts } from "@/app/(Client)/home/actions";
