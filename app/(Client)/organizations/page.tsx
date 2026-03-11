@@ -43,8 +43,12 @@ import {
   fetchMyOrgs,
   fetchDiscoverOrgs,
   fetchPendingOrgs,
+  createOrganization,
+  requestJoinOrg,
+  cancelJoinRequest,
 } from "./action";
 import { useUserStore } from "@/src/store/userStore";
+import { useOrganizationStore } from "@/src/store/organizationStore";
 import { toast } from "sonner";
 import { InBuild } from "@/src/components/personnal/inBuild";
 
@@ -52,7 +56,7 @@ import { InBuild } from "@/src/components/personnal/inBuild";
 
 type Tab = "my-orgs" | "discover" | "pending";
 
-const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
+const tabDefs: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: "my-orgs", label: "Mes organisations", icon: Building2 },
   { key: "discover", label: "Découvrir", icon: Compass },
   { key: "pending", label: "En attente", icon: Clock },
@@ -93,53 +97,56 @@ const countries = [
 const OrganizationsPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>("my-orgs");
   const [search, setSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
 
-  // Per-tab state
-  const [myOrgs, setMyOrgs] = useState<OrganizationResponse[]>([]);
-  const [discoverOrgs, setDiscoverOrgs] = useState<OrganizationResponse[]>([]);
-  const [pendingOrgs, setPendingOrgs] = useState<OrganizationResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loaded, setLoaded] = useState<Record<Tab, boolean>>({
-    "my-orgs": false,
-    discover: false,
-    pending: false,
-  });
+  // Organisation store
+  const tabs = useOrganizationStore((s) => s.tabs);
+  const setTab = useOrganizationStore((s) => s.setTab);
+  const addOrg = useOrganizationStore((s) => s.addOrg);
+  const moveOrg = useOrganizationStore((s) => s.moveOrg);
+  const removeOrg = useOrganizationStore((s) => s.removeOrg);
+  const loading = useOrganizationStore((s) => s.loading);
+  const storeSetLoading = useOrganizationStore((s) => s.setLoading);
+
+  // Aliases pour lisibilité
+  const myOrgs = tabs["my-orgs"].data;
+  const discoverOrgs = tabs.discover.data;
+  const pendingOrgs = tabs.pending.data;
+  const loaded = { "my-orgs": tabs["my-orgs"].loaded, discover: tabs.discover.loaded, pending: tabs.pending.loaded };
+
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   // ── Data fetchers ──────────────────────────────────────────
 
   const loadTab = useCallback(
     async (tab: Tab) => {
       if (!isAuthenticated) return;
-      setLoading(true);
+      storeSetLoading(true);
       try {
+        let res: Awaited<ReturnType<typeof fetchMyOrgs>>;
         switch (tab) {
-          case "my-orgs": {
-            const res = await fetchMyOrgs();
-            setMyOrgs(res.data);
+          case "my-orgs":
+            res = await fetchMyOrgs();
             break;
-          }
-          case "discover": {
-            const res = await fetchDiscoverOrgs();
-            setDiscoverOrgs(res.data);
+          case "discover":
+            res = await fetchDiscoverOrgs();
             break;
-          }
-          case "pending": {
-            const res = await fetchPendingOrgs();
-            setPendingOrgs(res.data);
+          case "pending":
+            res = await fetchPendingOrgs();
             break;
-          }
         }
-        setLoaded((prev) => ({ ...prev, [tab]: true }));
+        setTab(tab, res);
       } catch {
         toast.error(
           "Une erreur est survenue lors de la récupération des organisations.",
         );
       } finally {
-        setLoading(false);
+        storeSetLoading(false);
       }
     },
-    [isAuthenticated],
+    [isAuthenticated, setTab, storeSetLoading],
   );
 
   // Load current tab if not yet loaded
@@ -177,6 +184,112 @@ const OrganizationsPage = () => {
     [myOrgs],
   );
 
+  // ── Handlers ──────────────────────────────────────────────
+
+  const handleCreateOrg = useCallback(
+    async (event: React.SyntheticEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const formData = new FormData(form);
+      const name = (formData.get("name") as string)?.trim();
+      const domain = (formData.get("domain") as string)?.trim();
+      const country = (formData.get("country") as string)?.trim();
+      const sector = (formData.get("sector") as string)?.trim();
+      const description = (formData.get("description") as string)?.trim();
+
+      // Validation
+      if (!name) {
+        toast.error("Le nom de l'organisation est requis.");
+        return;
+      }
+      if (!country) {
+        toast.error("Le pays de l'organisation est requis.");
+        return;
+      }
+      if (!sector) {
+        toast.error("Le secteur d'activité de l'organisation est requis.");
+        return;
+      }
+
+      setLoadingCreate(true);
+      try {
+        const result = await createOrganization({
+          name,
+          domain,
+          country,
+          sector,
+          bio: description,
+        });
+        if (!result.success || !result.org) {
+          toast.error(
+            result.error ??
+              "Une erreur est survenue lors de la création de l'organisation.",
+          );
+          return;
+        }
+
+        // Ajouter l'org au store « my-orgs » et fermer le dialog
+        addOrg("my-orgs", result.org);
+        form.reset();
+        setDialogOpen(false);
+        toast.success("Organisation créée avec succès !");
+      } catch {
+        toast.error(
+          "Une erreur est survenue lors de la création de l'organisation.",
+        );
+      } finally {
+        setLoadingCreate(false);
+      }
+    },
+    [addOrg],
+  );
+
+  // ── Rejoindre une organisation ───────────────────────────────
+
+  const handleJoin = useCallback(
+    async (orgId: string) => {
+      setActionLoadingId(orgId);
+      try {
+        const result = await requestJoinOrg(orgId);
+        if (!result.success) {
+          toast.error(result.error ?? "Impossible d'envoyer la demande.");
+          return;
+        }
+        // Déplacer l'org de discover → pending dans le store
+        moveOrg("discover", "pending", orgId);
+        toast.success("Demande envoyée !");
+      } catch {
+        toast.error("Une erreur est survenue.");
+      } finally {
+        setActionLoadingId(null);
+      }
+    },
+    [moveOrg],
+  );
+
+  // ── Annuler une demande ─────────────────────────────────────
+
+  const handleCancel = useCallback(
+    async (orgId: string) => {
+      setActionLoadingId(orgId);
+      try {
+        const result = await cancelJoinRequest(orgId);
+        if (!result.success) {
+          toast.error(result.error ?? "Impossible d'annuler la demande.");
+          return;
+        }
+        // Remettre l'org dans discover et la retirer de pending
+        moveOrg("pending", "discover", orgId);
+        toast.success("Demande annulée.");
+      } catch {
+        toast.error("Une erreur est survenue.");
+      } finally {
+        setActionLoadingId(null);
+      }
+    },
+    [moveOrg],
+  );
+
   return (
     <div className="xl:w-2xl xl:max-w-2xl w-full pb-20 flex flex-col gap-4 h-full overflow-scroll hide-scrollbar md:px-10 xl:px-0">
       {/* Header */}
@@ -192,7 +305,7 @@ const OrganizationsPage = () => {
           </p>
         </div>
         <div className="flex flex-col justify-end shrink-0">
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex flex-row items-center gap-2 cursor-pointer">
                 <Plus className="size-4" />
@@ -200,7 +313,7 @@ const OrganizationsPage = () => {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md md:max-w-lg">
-              <form>
+              <form onSubmit={handleCreateOrg}>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Building2 className="size-5" />
@@ -297,9 +410,13 @@ const OrganizationsPage = () => {
                       Annuler
                     </Button>
                   </DialogClose>
-                  <Button type="submit">
-                    <Building2 className="size-4 mr-1.5" />
-                    Créer l&apos;organisation
+                  <Button type="submit" disabled={loadingCreate}>
+                    {loadingCreate ? (
+                      <Loader2 className="size-4 mr-1.5 animate-spin" />
+                    ) : (
+                      <Building2 className="size-4 mr-1.5" />
+                    )}
+                    {"Créer l'organisation"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -353,7 +470,7 @@ const OrganizationsPage = () => {
 
       {/* Onglets */}
       <div className="flex flex-row gap-2">
-        {tabs.map((tab) => {
+        {tabDefs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
           return (
@@ -414,7 +531,20 @@ const OrganizationsPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {currentList.map((org) => (
-            <OrgCard key={org.id} org={org} variant={activeTab === "my-orgs" ? "mine" : activeTab === "discover" ? "discover" : "pending"} />
+            <OrgCard
+              key={org.id}
+              org={org}
+              variant={
+                activeTab === "my-orgs"
+                  ? "mine"
+                  : activeTab === "discover"
+                    ? "discover"
+                    : "pending"
+              }
+              actionLoading={actionLoadingId === org.id}
+              onJoin={handleJoin}
+              onCancel={handleCancel}
+            />
           ))}
         </div>
       )}

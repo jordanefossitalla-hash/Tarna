@@ -7,6 +7,19 @@ import { cookies } from "next/headers";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
 
+type CreateOrgInput = {
+  name: string;
+  domain: string;
+  country: string;
+  sector: string;
+  bio: string;
+};
+export type CreateOrgState = {
+  success: boolean;
+  error: string | null;
+  org: OrganizationResponse | null;
+};
+
 // ── Helpers ──────────────────────────────────────────────────
 
 async function getToken(): Promise<string | null> {
@@ -71,9 +84,112 @@ export async function fetchDiscoverOrgs(
   return fetchOrgs("/organizations/discover", cursor);
 }
 
-/** Invitations en attente. */
+/** Invitations / demandes en attente. */
 export async function fetchPendingOrgs(
   cursor?: string | null,
 ): Promise<PaginatedOrgResponse> {
   return fetchOrgs("/organizations/pending", cursor);
+}
+
+/** Crée une nouvelle organisation. */
+export async function createOrganization(
+  input: CreateOrgInput,
+): Promise<CreateOrgState> {
+  const token = await getToken();
+  if (!token) {
+    return { success: false, error: "Non authentifié.", org: null };
+  }
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        success: false,
+        error: data?.message ?? `Request failed (${res.status})`,
+        org: null,
+      };
+    }
+
+    // Le contrôleur backend retourne l'org directement (pas de wrapper { data })
+    const org = (await res.json()) as OrganizationResponse;
+
+    return { success: true, error: null, org };
+  } catch {
+    return { success: false, error: "Échec de la création de l'organisation.", org: null };
+  }
+}
+
+// ── Join / Cancel ────────────────────────────────────────────
+
+export type JoinRequestResult = {
+  success: boolean;
+  error: string | null;
+};
+
+/** Demander à rejoindre une organisation. */
+export async function requestJoinOrg(
+  orgId: string,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/join`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        success: false,
+        error: data?.message ?? `Erreur (${res.status})`,
+      };
+    }
+
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec de la demande." };
+  }
+}
+
+/** Annuler sa demande d'adhésion en attente. */
+export async function cancelJoinRequest(
+  orgId: string,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/join`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        success: false,
+        error: data?.message ?? `Erreur (${res.status})`,
+      };
+    }
+
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec de l'annulation." };
+  }
 }
