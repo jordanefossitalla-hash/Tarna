@@ -94,7 +94,7 @@ export type Visibility = "public" | "private" | "group";
 export type ReceivePost = {
   id: string;
   authorId: string;
-  groupId: string | null;
+  orgId: string | null;
   parentPostId: string | null;
   contentText: string;
   visibility: Visibility;

@@ -321,7 +321,7 @@ const ProfilePage = () => {
         return {
           id: p.id,
           authorId: p.authorId ?? p.author?.id,
-          groupId: p.groupId ?? null,
+          groupId: p.orgId ?? null,
           parentPostId: p.parentPostId ?? null,
           author: {
             id: p.author?.id,

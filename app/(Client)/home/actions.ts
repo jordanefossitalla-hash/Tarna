@@ -2,6 +2,7 @@
 
 import { Post, ReceivePost } from "@/src/types/post";
 import { cookies } from "next/headers";
+import { string } from "zod";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
 const API_PORT = process.env.API_PORT ?? "4000";
@@ -29,8 +30,8 @@ export async function fetchPostsAction(
 /**
  * Appel direct (SSR) — utilisé dans le RSC pour le chargement initial.
  */
-export async function fetchInitialPosts(): Promise<FeedState> {
-  return fetchPosts(null, null);
+export async function fetchInitialPosts(orgId?: string): Promise<FeedState> {
+  return fetchPosts(null, null, !!orgId, orgId);
 }
 
 /**
@@ -39,13 +40,16 @@ export async function fetchInitialPosts(): Promise<FeedState> {
 export async function fetchMorePosts(
   cursor: string | null,
   token: string | null,
+  orgId?: string,
 ): Promise<FeedState> {
-  return fetchPosts(cursor, token);
+  return fetchPosts(cursor, token, !!orgId, orgId);
 }
 
 async function fetchPosts(
   cursor: string | null,
   tokenOverride: string | null,
+  isgroup?: boolean,
+  groupId?: string,
 ): Promise<FeedState> {
   // Prefer the token passed explicitly (fresh from Zustand store);
   // fall back to the HTTP-only cookie (set at login).
@@ -67,7 +71,7 @@ async function fetchPosts(
   try {
     const url = new URL(`${API_BASE_URL}/posts`);
     if (cursor) url.searchParams.set("cursor", cursor);
-
+    if (groupId) url.searchParams.set("orgId", groupId);
     const res = await fetch(url.toString(), {
       headers: {
         "Content-Type": "application/json",
@@ -93,71 +97,69 @@ async function fetchPosts(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const posts: Post[] = rawPosts.map((p: ReceivePost) => {
-      const displayName: string =
-        p.author?.displayName ?? p.author?.username ?? "Unknown";
-      const initials = displayName
-        .split(" ")
-        .map((w: string) => w[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
+        const displayName: string =
+          p.author?.displayName ?? p.author?.username ?? "Unknown";
+        const initials = displayName
+          .split(" ")
+          .map((w: string) => w[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
 
-      const now = Date.now();
-      const created = new Date(p.createdAt).getTime();
-      const diffH = Math.floor((now - created) / (1000 * 60 * 60));
-      const timeAgo =
-        diffH < 1
-          ? "now"
-          : diffH < 24
-            ? `${diffH}h`
-            : `${Math.floor(diffH / 24)}d`;
+        const now = Date.now();
+        const created = new Date(p.createdAt).getTime();
+        const diffH = Math.floor((now - created) / (1000 * 60 * 60));
+        const timeAgo =
+          diffH < 1
+            ? "now"
+            : diffH < 24
+              ? `${diffH}h`
+              : `${Math.floor(diffH / 24)}d`;
 
-      return {
-        id: p.id,
-        authorId: p.authorId ?? p.author?.id,
-        groupId: p.groupId ?? null,
-        parentPostId: p.parentPostId ?? null,
-        author: {
-          id: p.author?.id,
-          name: displayName,
-          username: p.author?.username ?? "",
-          avatar: p.author?.avatarUrl ?? "",
-          initials,
-          isVerified: p.author?.isVerified ?? false,
-        },
-        content: p.contentText ?? p.content ?? "",
-        visibility: p.visibility ?? "public",
-        isPinned: p.isPinned ?? false,
-        isEdited: p.isEdited ?? false,
-        commentsEnabled: p.commentsEnabled ?? true,
-        sharesEnabled: p.sharesEnabled ?? true,
-        media: p.media ?? [],
-        reactions: p.reactions ?? {
-          heart: p.stats?.reactions_count ?? 0,
-          lightbulb: 0,
-          handshake: 0,
-        },
-        images: p.images ?? [],
-        files: p.files ?? [],
-        stats: p.stats ?? {
-          likes_count: 0,
-          views_count: 0,
-          shares_count: 0,
-          comments_count: 0,
-          supports_count: 0,
-          reactions_count: 1,
-          illuminates_count: 0,
-        },
-        comments: p._count?.comments ?? 0,
-        shares: p.stats?.shares_count ?? p.shares ?? 0,
-        createdAt: p.createdAt,
-        updatedAt: p.updatedAt,
-        timeAgo,
-        myReaction: p.myReaction ?? null,
-        
-      };
+        return {
+          id: p.id,
+          authorId: p.authorId ?? p.author?.id,
+          groupId: p.orgId ?? null,
+          parentPostId: p.parentPostId ?? null,
+          author: {
+            id: p.author?.id,
+            name: displayName,
+            username: p.author?.username ?? "",
+            avatar: p.author?.avatarUrl ?? "",
+            initials,
+            isVerified: p.author?.isVerified ?? false,
+          },
+          content: p.contentText ?? p.content ?? "",
+          visibility: p.visibility ?? "public",
+          isPinned: p.isPinned ?? false,
+          isEdited: p.isEdited ?? false,
+          commentsEnabled: p.commentsEnabled ?? true,
+          sharesEnabled: p.sharesEnabled ?? true,
+          media: p.media ?? [],
+          reactions: p.reactions ?? {
+            heart: p.stats?.reactions_count ?? 0,
+            lightbulb: 0,
+            handshake: 0,
+          },
+          images: p.images ?? [],
+          files: p.files ?? [],
+          stats: p.stats ?? {
+            likes_count: 0,
+            views_count: 0,
+            shares_count: 0,
+            comments_count: 0,
+            supports_count: 0,
+            reactions_count: 1,
+            illuminates_count: 0,
+          },
+          comments: p._count?.comments ?? 0,
+          shares: p.stats?.shares_count ?? p.shares ?? 0,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+          timeAgo,
+          myReaction: p.myReaction ?? null,
+        };
     });
-    
 
     return {
       posts,
@@ -185,6 +187,8 @@ export type CreatePostState = {
 export async function createPostAction(
   _prev: CreatePostState,
   formData: FormData,
+  isOrg: boolean,
+  orgId?: string,
 ): Promise<CreatePostState> {
   const token = formData.get("token") as string;
   const authorId = formData.get("authorId") as string;
@@ -211,6 +215,9 @@ export async function createPostAction(
   payload.append("authorId", authorId);
   payload.append("contentText", contentText);
   payload.append("visibility", visibility);
+  if (isOrg && orgId) {
+    payload.append("orgId", orgId);
+  }
 
   // multer.array("images")
   for (const image of images) {

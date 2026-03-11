@@ -1,5 +1,6 @@
 "use server";
 import type {
+  DetailedOrganizationResponse,
   OrganizationResponse,
   PaginatedOrgResponse,
 } from "@/src/types/organization";
@@ -191,5 +192,29 @@ export async function cancelJoinRequest(
     return { success: true, error: null };
   } catch {
     return { success: false, error: "Échec de l'annulation." };
+  }
+}
+
+export async function fetchDetailOrg(
+  orgId: string,
+): Promise<DetailedOrganizationResponse | null> {
+  const token = await getToken();
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const org = (await res.json()) as DetailedOrganizationResponse;
+    return org;
+  } catch {
+    return null;
   }
 }

@@ -27,6 +27,34 @@ export type OrganizationResponse = {
   currentUserRole?: OrgRole | null;
 };
 
+export type DetailedOrganizationResponse = {
+    id: string;
+    name: string;
+    domain: string | null;
+    country: string | null;
+    sector: string | null;
+    bio: string | null;
+    logoUrl: string | null;
+    bannerUrl: string | null;
+    emailContact: string | null;
+    siteWeb: string | null;
+    visibility: "public" | "internal";
+    status: "active" | "archived";
+    createdBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+    creator: {
+        id: string;
+        username: string;
+        displayName: string | null;
+        avatarUrl: string | null;
+    };
+    _count: {
+        memberships: number;
+        posts: number;
+    };
+};
+
 /** Réponse paginée commune */
 export type PaginatedOrgResponse = {
   data: OrganizationResponse[];
