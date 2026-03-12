@@ -8,6 +8,7 @@ import {
   Briefcase,
   UserCheck,
   Eye,
+  Loader2,
 } from "lucide-react";
 import {
   Card,
@@ -74,11 +75,13 @@ type OrgCardProps = {
   org: OrganizationResponse;
   /** "mine" | "discover" | "pending" — détermine le footer affiché */
   variant: "mine" | "discover" | "pending";
+  /** true pendant l'appel réseau (join ou cancel) */
+  actionLoading?: boolean;
   onJoin?: (id: string) => void;
   onCancel?: (id: string) => void;
 };
 
-const OrgCard = ({ org, variant, onJoin, onCancel }: OrgCardProps) => {
+const OrgCard = ({ org, variant, actionLoading, onJoin, onCancel }: OrgCardProps) => {
   const role =
     org.currentUserRole ? roleConfig[org.currentUserRole] : null;
   const RoleIcon = role?.icon;
@@ -162,10 +165,10 @@ const OrgCard = ({ org, variant, onJoin, onCancel }: OrgCardProps) => {
         <div className="flex flex-row items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="size-3" />
-            {org._count.memberships.toLocaleString()} membres
+            {org._count.memberships.toLocaleString() || 1} membres
           </span>
           <span>·</span>
-          <span>{org._count.posts} publications</span>
+          <span>{org._count.posts.toLocaleString() || 0} publications</span>
         </div>
       </CardContent>
 
@@ -188,17 +191,26 @@ const OrgCard = ({ org, variant, onJoin, onCancel }: OrgCardProps) => {
             variant="ghost"
             size="sm"
             className="w-full cursor-pointer text-amber-600 hover:text-amber-700"
+            disabled={actionLoading}
             onClick={() => onCancel?.(org.id)}
           >
-            <Clock className="size-3.5 mr-1.5" />
+            {actionLoading ? (
+              <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Clock className="size-3.5 mr-1.5" />
+            )}
             En attente — Annuler
           </Button>
         ) : (
           <Button
             size="sm"
             className="w-full cursor-pointer"
+            disabled={actionLoading}
             onClick={() => onJoin?.(org.id)}
           >
+            {actionLoading ? (
+              <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+            ) : null}
             Rejoindre
           </Button>
         )}

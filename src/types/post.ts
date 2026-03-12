@@ -58,6 +58,12 @@ export type Post = {
     initials: string;
     isVerified?: boolean;
   };
+  organization?: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    sector: string;
+  } | null;
   content: string;
   visibility?: string;
   isPinned: boolean;
@@ -94,7 +100,7 @@ export type Visibility = "public" | "private" | "group";
 export type ReceivePost = {
   id: string;
   authorId: string;
-  groupId: string | null;
+  orgId: string | null;
   parentPostId: string | null;
   contentText: string;
   visibility: Visibility;
@@ -122,6 +128,12 @@ export type ReceivePost = {
     avatarUrl: string | null;
     isVerified: boolean;
   };
+  organization?: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    sector: string;
+  } | null;
   content?: string;
   media: string[];
   reactions: {

@@ -106,7 +106,7 @@ export default function LoginForm({
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="********"
+                  placeholder="••••••••"
                   className={state.errors.password ? "border-red-500" : ""}
                 />
                 {state.errors.password && (

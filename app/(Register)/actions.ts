@@ -93,9 +93,8 @@ export async function signupAction(
     return { success: false, errors };
   }
 
-  const res = await fetch(
-    `${API_BASE_URL}/auth/register`,
-    {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -105,18 +104,23 @@ export async function signupAction(
         password: password,
         displayName: name,
       }),
-    },
-  );
+    });
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        success: false,
+        errors: { email: data?.message ?? "Signup failed. Please try again." },
+      };
+    }
+
+    return { success: true, errors: {} };
+  } catch (error) {
     return {
       success: false,
-      errors: { email: data?.message ?? "Signup failed. Please try again." },
+      errors: { email: "An error occurred. Please try again." },
     };
   }
-
-  return { success: true, errors: {} };
 }
 
 // ---------- Login action ----------
@@ -145,40 +149,44 @@ export async function loginAction(
     return { success: false, errors };
   }
 
-  const res = await fetch(
-    `${API_BASE_URL}/auth/login`,
-    {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier: email, password }),
-    },
-  );
+    });
 
-  if (!res.ok) {
-    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return {
+        success: false,
+        errors: { email: data?.message ?? "Invalid credentials." },
+      };
+    }
+
+    const data = await res.json();
+
+    // 🔥 Stockage du token en cookie HTTP-only
+    const cookieStore = await cookies();
+    cookieStore.set("access_token", data.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 jour
+    });
+
+    return {
+      success: true,
+      errors: {},
+      user: data.user,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+    };
+  } catch (error) {
     return {
       success: false,
-      errors: { email: data?.message ?? "Invalid credentials." },
+      errors: { email: "An error occurred. Please try again." },
     };
   }
-
-  const data = await res.json();
-
-  // 🔥 Stockage du token en cookie HTTP-only
-  const cookieStore = await cookies();
-  cookieStore.set("access_token", data.accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24, // 1 jour
-  });
-
-  return {
-    success: true,
-    errors: {},
-    user: data.user,
-    accessToken: data.accessToken,
-    refreshToken: data.refreshToken,
-  };
 }

@@ -49,6 +49,7 @@ import {
 import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
+import { getInitials } from "@/src/lib/getInitials";
 
 type VisibilityOption = {
   value: string;
@@ -67,17 +68,27 @@ const postOptions: VisibilityOption[] = [
   { value: "annonce", label: "Annonce", icon: Megaphone },
   { value: "note", label: "Note", icon: TriangleAlert },
 ];
-const visibilityOptions: VisibilityOption[] = [
-  { value: "public", label: "Public", icon: Globe },
-  { value: "private", label: "Privé", icon: GlobeLock },
-  { value: "friends", label: "Amis", icon: Users },
-];
-const initialStat: FeedState = { posts: [], error: null, nextCursor: null, hasMore: false };
-const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
+
+const initialStat: FeedState = {
+  posts: [],
+  error: null,
+  nextCursor: null,
+  hasMore: false,
+};
+
+const AddPostCard = ({
+  isgroup,
+  orgId,
+  orgName,
+}: {
+  isgroup: boolean;
+  orgId?: string;
+  orgName?: string;
+}) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
   const [postType, setPostType] = useState("post");
-  const [visibility, setVisibility] = useState("public");
+  const [visibility, setVisibility] = useState(isgroup ? "group_only" : "public");
   const [imagePreview, setImagePreview] = useState<string[] | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,7 +98,11 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
   const currentUser = useUserStore((state) => state.user);
   const accessToken = useUserStore((state) => state.accessToken);
   const addPost = useFeedStore((s) => s.addPost);
-   const [state, formFetchAction, _] = useActionState(fetchPostsAction, initialStat);
+  const [isOrg, setIsOrg] = useState(isgroup);
+  const [state, formFetchAction, _] = useActionState(
+    fetchPostsAction,
+    initialStat,
+  );
 
   const initialState: CreatePostState = {
     success: false,
@@ -95,11 +110,22 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
     post: null,
   };
 
+  const visibilityOptions: VisibilityOption[] = [
+    { value: "public", label: "Public", icon: Globe },
+    { value: "private", label: "Privé", icon: GlobeLock },
+    { value: "friends", label: "Amis", icon: Users },
+  ];
+  const visibilityGroupOptions: VisibilityOption[] = [
+    { value: "public", label: "Public", icon: Globe },
+    { value: "group_only", label: isOrg && orgName ? orgName : "Privé", icon: GlobeLock },
+  ];
+  
+
   const handleFormAction = async (
     prevState: CreatePostState,
     formData: FormData,
   ) => {
-    const result = await createPostAction(prevState, formData);
+    const result = await createPostAction(prevState, formData, isOrg, orgId);
     if (result.success) {
       if (result.post) addPost(result.post);
       setContent("");
@@ -165,7 +191,7 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
 
   const mediaActions: MediaAction[] = [
     { id: 0, label: "Photo", icon: ImageIcon },
-    { id: 1, label: "Vidéo", icon: Camera },
+    // { id: 1, label: "Vidéo", icon: Camera },
     { id: 2, label: "Document", icon: FileText },
     // { id: 3, label: "Lien", icon: Link2 },
     // { id: 4, label: "Emoji", icon: Smile },
@@ -209,8 +235,12 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
         <div className="flex flex-row gap-3">
           <Avatar className="size-10 shrink-0 mt-0.5">
             <AvatarImage src={currentUser?.avatarUrl || ""} alt="profil" />
-            <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
-              {currentUser?.initials}
+            <AvatarFallback
+              className={`text-xs font-semibold ${getAvatarFallbackColor(isgroup && orgName ? orgName : currentUser?.initials || "")}`}
+            >
+              {isgroup && orgName
+                ? getInitials(orgName)
+                : currentUser?.initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
@@ -374,30 +404,37 @@ const AddPostCard = ({ isgroup }: { isgroup: boolean }) => {
                 </SelectContent>
               </Select> */}
             {/* Visibilité */}
-            {!isgroup && (
-              <Select
-                defaultValue="public"
-                value={visibility}
-                onValueChange={setVisibility}
-              >
-                <SelectTrigger className="h-8 text-xs w-28 border-0 shadow-none">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Visibilité</SelectLabel>
-                    {visibilityOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        <div className="flex flex-row items-center gap-1.5">
-                          <opt.icon className="size-3.5" />
-                          {opt.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            )}
+            <Select
+              defaultValue={isOrg ? "group_only" : "public"}
+              value={visibility}
+              onValueChange={setVisibility}
+            >
+              <SelectTrigger className="h-8 text-xs w-28 border-0 shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Visibilité</SelectLabel>
+                  {!isOrg
+                    ? visibilityOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          <div className="flex flex-row items-center gap-1.5">
+                            <opt.icon className="size-3.5" />
+                            {opt.label}
+                          </div>
+                        </SelectItem>
+                      ))
+                    : visibilityGroupOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          <div className="flex flex-row items-center gap-1.5">
+                            <opt.icon className="size-3.5" />
+                            {opt.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
             {/* Publier */}
             <Button
