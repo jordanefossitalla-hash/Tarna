@@ -310,7 +310,7 @@ const OrganizationsPage = () => {
         setLoadingCreate(false);
       }
     },
-    [addOrg],
+    [addOrg, selectedMembers],
   );
 
   // ── Rejoindre une organisation ───────────────────────────────
