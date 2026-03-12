@@ -4,6 +4,7 @@ import type {
   OrganizationResponse,
   PaginatedOrgResponse,
 } from "@/src/types/organization";
+import type { UserSearchResult } from "@/src/types/user";
 import { cookies } from "next/headers";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
@@ -14,6 +15,7 @@ type CreateOrgInput = {
   country: string;
   sector: string;
   bio: string;
+  memberIds?: string[];
 };
 export type CreateOrgState = {
   success: boolean;
@@ -107,7 +109,10 @@ export async function createOrganization(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        ...input,
+        memberIds: input.memberIds?.length ? input.memberIds : undefined,
+      }),
     });
 
     if (!res.ok) {
@@ -216,5 +221,52 @@ export async function fetchDetailOrg(
     return org;
   } catch {
     return null;
+  }
+}
+
+// ── Recherche d'utilisateurs ─────────────────────────────────
+
+/** Recherche des utilisateurs par nom/username (pour l'ajout de membres). */
+export async function searchUsers(
+  query: string,
+): Promise<UserSearchResult[]> {
+  const token = await getToken();
+  if (!token) return [];
+
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+
+  try {
+    const url = new URL(`${API_BASE_URL}/users`);
+    url.searchParams.set("search", trimmed);
+    url.searchParams.set("limit", "10");
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return [];
+
+    const json = (await res.json()) as {
+      data?: Array<{
+        id: string;
+        username: string;
+        displayName: string | null;
+        avatarUrl: string | null;
+      }>;
+    };
+
+    return (json.data ?? []).map((u) => ({
+      id: u.id,
+      username: u.username,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl,
+    }));
+  } catch {
+    return [];
   }
 }

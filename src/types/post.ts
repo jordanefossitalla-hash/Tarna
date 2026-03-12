@@ -58,6 +58,12 @@ export type Post = {
     initials: string;
     isVerified?: boolean;
   };
+  organization?: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    sector: string;
+  } | null;
   content: string;
   visibility?: string;
   isPinned: boolean;
@@ -122,6 +128,12 @@ export type ReceivePost = {
     avatarUrl: string | null;
     isVerified: boolean;
   };
+  organization?: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    sector: string;
+  } | null;
   content?: string;
   media: string[];
   reactions: {

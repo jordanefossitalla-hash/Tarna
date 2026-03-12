@@ -27,7 +27,15 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { Textarea } from "@/src/components/ui/textarea";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
+import { Badge } from "@/src/components/ui/badge";
 import type { OrganizationResponse } from "@/src/types/organization";
+import type { UserSearchResult } from "@/src/types/user";
+import { getInitials } from "@/src/lib/getInitials";
 import {
   Building2,
   Plus,
@@ -37,8 +45,10 @@ import {
   Clock,
   Globe,
   Loader2,
+  X,
+  UserPlus,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchMyOrgs,
   fetchDiscoverOrgs,
@@ -46,6 +56,7 @@ import {
   createOrganization,
   requestJoinOrg,
   cancelJoinRequest,
+  searchUsers,
 } from "./action";
 import { useUserStore } from "@/src/store/userStore";
 import { useOrganizationStore } from "@/src/store/organizationStore";
@@ -118,6 +129,15 @@ const OrganizationsPage = () => {
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
+  // ── Member search state ────────────────────────────────────
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberResults, setMemberResults] = useState<UserSearchResult[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<UserSearchResult[]>(
+    [],
+  );
+  const [searchingMembers, setSearchingMembers] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // ── Data fetchers ──────────────────────────────────────────
 
   const loadTab = useCallback(
@@ -155,6 +175,51 @@ const OrganizationsPage = () => {
       void loadTab(activeTab);
     }
   }, [activeTab, loaded, loadTab]);
+
+  // ── Debounced member search ────────────────────────────────
+
+  const handleMemberSearch = useCallback(
+    (value: string) => {
+      setMemberSearch(value);
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      if (value.trim().length < 2) {
+        setMemberResults([]);
+        setSearchingMembers(false);
+        return;
+      }
+
+      setSearchingMembers(true);
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const results = await searchUsers(value);
+          // Exclure les membres déjà sélectionnés
+          const selectedIds = new Set(selectedMembers.map((m) => m.id));
+          setMemberResults(results.filter((u) => !selectedIds.has(u.id)));
+        } catch {
+          setMemberResults([]);
+        } finally {
+          setSearchingMembers(false);
+        }
+      }, 350);
+    },
+    [selectedMembers],
+  );
+
+  const addMember = useCallback(
+    (user: UserSearchResult) => {
+      if (selectedMembers.some((m) => m.id === user.id)) return;
+      setSelectedMembers((prev) => [...prev, user]);
+      setMemberSearch("");
+      setMemberResults([]);
+    },
+    [selectedMembers],
+  );
+
+  const removeMember = useCallback((userId: string) => {
+    setSelectedMembers((prev) => prev.filter((m) => m.id !== userId));
+  }, []);
 
   // ── Derived lists ──────────────────────────────────────────
 
@@ -219,6 +284,7 @@ const OrganizationsPage = () => {
           country,
           sector,
           bio: description,
+          memberIds: selectedMembers.map((m) => m.id),
         });
         if (!result.success || !result.org) {
           toast.error(
@@ -231,6 +297,9 @@ const OrganizationsPage = () => {
         // Ajouter l'org au store « my-orgs » et fermer le dialog
         addOrg("my-orgs", result.org);
         form.reset();
+        setSelectedMembers([]);
+        setMemberSearch("");
+        setMemberResults([]);
         setDialogOpen(false);
         toast.success("Organisation créée avec succès !");
       } catch {
@@ -401,6 +470,110 @@ const OrganizationsPage = () => {
                       placeholder="Décrivez brièvement votre organisation, ses objectifs et son activité..."
                       rows={3}
                     />
+                  </div>
+
+                  {/* Ajouter des membres */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="flex items-center gap-1.5">
+                      <UserPlus className="size-4" />
+                      Ajouter des membres
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Recherchez des utilisateurs à inviter directement comme
+                      membres.
+                    </p>
+
+                    {/* Chips des membres sélectionnés */}
+                    {selectedMembers.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedMembers.map((member) => (
+                          <Badge
+                            key={member.id}
+                            variant="secondary"
+                            className="flex items-center gap-1 pr-1"
+                          >
+                            <Avatar size="sm" className="size-4">
+                              {member.avatarUrl && (
+                                <AvatarImage
+                                  src={member.avatarUrl}
+                                  alt={member.username}
+                                />
+                              )}
+                              <AvatarFallback className="text-[8px]">
+                                {getInitials(
+                                  member.displayName ?? member.username,
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs">
+                              {member.displayName ?? member.username}
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-0.5 rounded-full p-0.5 hover:bg-muted cursor-pointer"
+                              onClick={() => removeMember(member.id)}
+                            >
+                              <X className="size-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Search input */}
+                    <div className="relative">
+                      <div className="flex items-center gap-2">
+                        <Search className="size-4 text-muted-foreground shrink-0" />
+                        <Input
+                          placeholder="Rechercher par nom ou username..."
+                          value={memberSearch}
+                          onChange={(e) => handleMemberSearch(e.target.value)}
+                          autoComplete="off"
+                        />
+                      </div>
+
+                      {/* Search results dropdown */}
+                      {(memberResults.length > 0 || searchingMembers) && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-md">
+                          {searchingMembers && memberResults.length === 0 ? (
+                            <div className="flex items-center justify-center py-3">
+                              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : (
+                            memberResults.map((user) => (
+                              <button
+                                key={user.id}
+                                type="button"
+                                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                                onClick={() => addMember(user)}
+                              >
+                                <Avatar size="sm">
+                                  {user.avatarUrl && (
+                                    <AvatarImage
+                                      src={user.avatarUrl}
+                                      alt={user.username}
+                                    />
+                                  )}
+                                  <AvatarFallback className="text-[9px]">
+                                    {getInitials(
+                                      user.displayName ?? user.username,
+                                    )}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium leading-tight">
+                                    {user.displayName ?? user.username}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    @{user.username}
+                                  </span>
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

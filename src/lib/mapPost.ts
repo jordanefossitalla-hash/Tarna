@@ -34,6 +34,7 @@ export function mapRawPost(p: any): Post {
       initials,
       isVerified: p.author?.isVerified ?? false,
     },
+    organization: p.organization ?? null,
     content: p.contentText ?? p.content ?? "",
     visibility: p.visibility ?? "public",
     isPinned: p.isPinned ?? false,
