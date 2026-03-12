@@ -71,11 +71,20 @@ import { toast } from "sonner";
 import { linkifyText } from "@/src/lib/LinklyText";
 import Link from "next/link";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
+import { getInitials } from "@/src/lib/getInitials";
 
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
 
-const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean, groupName?: string }) => {
+const FeedItem = ({
+  post,
+  isgroup,
+  groupName,
+}: {
+  post: Post;
+  isgroup?: boolean;
+  groupName?: string;
+}) => {
   const [reaction, setReaction] = useState<ReactionType>(
     post.myReaction ?? null,
   );
@@ -99,7 +108,9 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
   const queuedReactionRef = useRef<ReactionType | undefined>(undefined);
   const reactionInFlightRef = useRef(false);
   const confirmedCountsRef = useRef<Record<ReactionKind, number>>({
-    like: Number.isFinite(post.stats.likes_count) ? Number(post.stats.likes_count) : 0,
+    like: Number.isFinite(post.stats.likes_count)
+      ? Number(post.stats.likes_count)
+      : 0,
     illuminate: Number.isFinite(post.stats.illuminates_count)
       ? Number(post.stats.illuminates_count)
       : 0,
@@ -304,7 +315,13 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
         void flushReactionQueue();
       }
     }
-  }, [accessToken, post.id, post.stats, updatePost, applyConfirmedCountsTransition]);
+  }, [
+    accessToken,
+    post.id,
+    post.stats,
+    updatePost,
+    applyConfirmedCountsTransition,
+  ]);
 
   const toggleReaction = useCallback(
     (type: Exclude<ReactionType, null>) => {
@@ -349,13 +366,31 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
           <div className="flex flex-row items-center gap-3">
             <Avatar className="size-10">
               <AvatarImage src={post.author.avatar} alt={post.author.name} />
-              <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(post.author.initials)}`}>
-                {post.author.initials}
+              <AvatarFallback
+                className={`text-xs font-semibold ${getAvatarFallbackColor(
+                  isgroup && groupName
+                    ? getInitials(groupName)
+                    : post.groupId
+                      ? getInitials(post.organization?.name || "Org")
+                      : getInitials(post.author.name),
+                )}`}
+              >
+                {isgroup && groupName
+                  ? getInitials(groupName)
+                  : post.groupId
+                    ? getInitials(post.organization?.name || "Org")
+                    : getInitials(post.author.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <div className="flex flex-row items-center gap-1.5">
-                <p className="text-sm font-semibold">{isgroup && groupName ? groupName : post.author.name}</p>
+                <p className="text-sm font-semibold">
+                  {isgroup && groupName
+                    ? groupName
+                    : post.groupId
+                      ? post.organization?.name
+                      : post.author.name}
+                </p>
                 {post.author.isVerified && (
                   <BadgeCheck className="size-3.5 text-primary" />
                 )}
@@ -364,7 +399,13 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                @{post.author.username} · {post.timeAgo}
+                @
+                {isgroup
+                  ? post.author.username
+                  : post.groupId
+                    ? post.organization?.name
+                    : post.author.username}{" "}
+                · {post.timeAgo}
               </p>
             </div>
 
@@ -522,8 +563,12 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
                     className="flex flex-row items-center gap-3 w-full py-2.5"
                     onClick={() => setPreviewDoc(media)}
                   >
-                    <div className={`flex items-center justify-center size-9 rounded-lg ${media.extension === "pdf" ? "bg-red-500/10" : "bg-primary/10"} shrink-0`}>
-                      <FileText className={`size-4 ${media.extension === "pdf" ? "text-red-500" : "text-primary"}`} />
+                    <div
+                      className={`flex items-center justify-center size-9 rounded-lg ${media.extension === "pdf" ? "bg-red-500/10" : "bg-primary/10"} shrink-0`}
+                    >
+                      <FileText
+                        className={`size-4 ${media.extension === "pdf" ? "text-red-500" : "text-primary"}`}
+                      />
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -734,7 +779,9 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
               <div className="flex flex-row items-center gap-2.5">
                 <Avatar className="size-8 shrink-0">
                   <AvatarImage src={currentUser?.avatarUrl || ""} alt="vous" />
-                  <AvatarFallback className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
+                  <AvatarFallback
+                    className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}
+                  >
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>

@@ -13,7 +13,8 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { id: 0, name: "Home", icon: House, route: "/home" },
-  { id: 1, name: "Groups", icon: Users, route: "/groups" },
+  { id: 1, name: "Organisations", icon: Users, route: "/organizations" },
+  // { id: 2, name: "Groups", icon: Users, route: "/groups" },
   { id: 2, name: "Messages", icon: MessageCircle, route: "/messages" },
   { id: 3, name: "Notifications", icon: Bell, route: "/notifications" },
 ];

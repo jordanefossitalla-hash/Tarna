@@ -94,68 +94,74 @@ async function fetchPosts(
       : (json.data ?? json.posts ?? []);
 
     const posts: Post[] = rawPosts.map((p: ReceivePost) => {
-        const displayName: string =
-          p.author?.displayName ?? p.author?.username ?? "Unknown";
-        const initials = displayName
-          .split(" ")
-          .map((w: string) => w[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2);
+      const displayName: string =
+        p.author?.displayName ?? p.author?.username ?? "Unknown";
+      const initials = displayName
+        .split(" ")
+        .map((w: string) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
 
-        const now = Date.now();
-        const created = new Date(p.createdAt).getTime();
-        const diffH = Math.floor((now - created) / (1000 * 60 * 60));
-        const timeAgo =
-          diffH < 1
-            ? "now"
-            : diffH < 24
-              ? `${diffH}h`
-              : `${Math.floor(diffH / 24)}d`;
+      const now = Date.now();
+      const created = new Date(p.createdAt).getTime();
+      const diffH = Math.floor((now - created) / (1000 * 60 * 60));
+      const timeAgo =
+        diffH < 1
+          ? "now"
+          : diffH < 24
+            ? `${diffH}h`
+            : `${Math.floor(diffH / 24)}d`;
 
-        return {
-          id: p.id,
-          authorId: p.authorId ?? p.author?.id,
-          groupId: p.orgId ?? null,
-          parentPostId: p.parentPostId ?? null,
-          author: {
-            id: p.author?.id,
-            name: displayName,
-            username: p.author?.username ?? "",
-            avatar: p.author?.avatarUrl ?? "",
-            initials,
-            isVerified: p.author?.isVerified ?? false,
-          },
-          content: p.contentText ?? p.content ?? "",
-          visibility: p.visibility ?? "public",
-          isPinned: p.isPinned ?? false,
-          isEdited: p.isEdited ?? false,
-          commentsEnabled: p.commentsEnabled ?? true,
-          sharesEnabled: p.sharesEnabled ?? true,
-          media: p.media ?? [],
-          reactions: p.reactions ?? {
-            heart: p.stats?.reactions_count ?? 0,
-            lightbulb: 0,
-            handshake: 0,
-          },
-          images: p.images ?? [],
-          files: p.files ?? [],
-          stats: p.stats ?? {
-            likes_count: 0,
-            views_count: 0,
-            shares_count: 0,
-            comments_count: 0,
-            supports_count: 0,
-            reactions_count: 1,
-            illuminates_count: 0,
-          },
-          comments: p._count?.comments ?? 0,
-          shares: p.stats?.shares_count ?? p.shares ?? 0,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt,
-          timeAgo,
-          myReaction: p.myReaction ?? null,
-        };
+      return {
+        id: p.id,
+        authorId: p.authorId ?? p.author?.id,
+        groupId: p.orgId ?? null,
+        parentPostId: p.parentPostId ?? null,
+        author: {
+          id: p.author?.id,
+          name: displayName,
+          username: p.author?.username ?? "",
+          avatar: p.author?.avatarUrl ?? "",
+          initials,
+          isVerified: p.author?.isVerified ?? false,
+        },
+        organization: {
+          id: p.organization?.id,
+          name: p.organization?.name,
+          logoUrl: p.organization?.logoUrl ?? null,
+          sector: p.organization?.sector,
+        },
+        content: p.contentText ?? p.content ?? "",
+        visibility: p.visibility ?? "public",
+        isPinned: p.isPinned ?? false,
+        isEdited: p.isEdited ?? false,
+        commentsEnabled: p.commentsEnabled ?? true,
+        sharesEnabled: p.sharesEnabled ?? true,
+        media: p.media ?? [],
+        reactions: p.reactions ?? {
+          heart: p.stats?.reactions_count ?? 0,
+          lightbulb: 0,
+          handshake: 0,
+        },
+        images: p.images ?? [],
+        files: p.files ?? [],
+        stats: p.stats ?? {
+          likes_count: 0,
+          views_count: 0,
+          shares_count: 0,
+          comments_count: 0,
+          supports_count: 0,
+          reactions_count: 1,
+          illuminates_count: 0,
+        },
+        comments: p._count?.comments ?? 0,
+        shares: p.stats?.shares_count ?? p.shares ?? 0,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        timeAgo,
+        myReaction: p.myReaction ?? null,
+      };
     });
 
     return {
