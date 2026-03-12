@@ -62,6 +62,7 @@ import { useUserStore } from "@/src/store/userStore";
 import { useOrganizationStore } from "@/src/store/organizationStore";
 import { toast } from "sonner";
 import { InBuild } from "@/src/components/personnal/inBuild";
+import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 // ── Types & constants ────────────────────────────────────────
 
@@ -124,7 +125,11 @@ const OrganizationsPage = () => {
   const myOrgs = tabs["my-orgs"].data;
   const discoverOrgs = tabs.discover.data;
   const pendingOrgs = tabs.pending.data;
-  const loaded = { "my-orgs": tabs["my-orgs"].loaded, discover: tabs.discover.loaded, pending: tabs.pending.loaded };
+  const loaded = {
+    "my-orgs": tabs["my-orgs"].loaded,
+    discover: tabs.discover.loaded,
+    pending: tabs.pending.loaded,
+  };
 
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -499,7 +504,13 @@ const OrganizationsPage = () => {
                                   alt={member.username}
                                 />
                               )}
-                              <AvatarFallback className="text-[8px]">
+                              <AvatarFallback
+                                className={`text-[8px] ${getAvatarFallbackColor(
+                                  getInitials(
+                                    member.displayName ?? member.username,
+                                  ),
+                                )}`}
+                              >
                                 {getInitials(
                                   member.displayName ?? member.username,
                                 )}
@@ -554,7 +565,13 @@ const OrganizationsPage = () => {
                                       alt={user.username}
                                     />
                                   )}
-                                  <AvatarFallback className="text-[9px]">
+                                  <AvatarFallback
+                                    className={`text-[9px] ${getAvatarFallbackColor(
+                                      getInitials(
+                                        user.displayName ?? user.username,
+                                      ),
+                                    )}`}
+                                  >
                                     {getInitials(
                                       user.displayName ?? user.username,
                                     )}
