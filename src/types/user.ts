@@ -30,3 +30,11 @@ export type updateUserType = {
   username?: string;
   phone?: string;
 }
+
+/** Résultat léger retourné par la recherche d'utilisateurs */
+export type UserSearchResult = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+};

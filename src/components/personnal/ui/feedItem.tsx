@@ -75,7 +75,7 @@ import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
 
-const FeedItem = ({ post }: { post: Post }) => {
+const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean, groupName?: string }) => {
   const [reaction, setReaction] = useState<ReactionType>(
     post.myReaction ?? null,
   );
@@ -355,7 +355,7 @@ const FeedItem = ({ post }: { post: Post }) => {
             </Avatar>
             <div className="flex flex-col">
               <div className="flex flex-row items-center gap-1.5">
-                <p className="text-sm font-semibold">{post.author.name}</p>
+                <p className="text-sm font-semibold">{isgroup && groupName ? groupName : post.author.name}</p>
                 {post.author.isVerified && (
                   <BadgeCheck className="size-3.5 text-primary" />
                 )}
@@ -364,7 +364,7 @@ const FeedItem = ({ post }: { post: Post }) => {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                {post.author.username} · {post.timeAgo}
+                @{post.author.username} · {post.timeAgo}
               </p>
             </div>
 
@@ -522,8 +522,8 @@ const FeedItem = ({ post }: { post: Post }) => {
                     className="flex flex-row items-center gap-3 w-full py-2.5"
                     onClick={() => setPreviewDoc(media)}
                   >
-                    <div className="flex items-center justify-center size-9 rounded-lg bg-primary/10 shrink-0">
-                      <FileText className="size-4 text-primary" />
+                    <div className={`flex items-center justify-center size-9 rounded-lg ${media.extension === "pdf" ? "bg-red-500/10" : "bg-primary/10"} shrink-0`}>
+                      <FileText className={`size-4 ${media.extension === "pdf" ? "text-red-500" : "text-primary"}`} />
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">

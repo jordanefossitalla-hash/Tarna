@@ -121,7 +121,7 @@ export default function SignupForm({
                       id="password"
                       name="password"
                       type="password"
-                      placeholder="********"
+                      placeholder="••••••••"
                       className={state.errors.password ? "border-red-500" : ""}
                     />
                     {state.errors.password && (
@@ -136,7 +136,7 @@ export default function SignupForm({
                       id="confirm-password"
                       name="confirm-password"
                       type="password"
-                      placeholder="********"
+                      placeholder="••••••••"
                       className={state.errors.confirmPassword ? "border-red-500" : ""}
                     />
                     {state.errors.confirmPassword && (
