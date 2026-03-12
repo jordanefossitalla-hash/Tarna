@@ -72,6 +72,7 @@ import { linkifyText } from "@/src/lib/LinklyText";
 import Link from "next/link";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 import { getInitials } from "@/src/lib/getInitials";
+import { Badge } from "../../ui/badge";
 
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
@@ -397,6 +398,11 @@ const FeedItem = ({
                 {post.isPinned && (
                   <Pin className="size-3 text-muted-foreground" />
                 )}
+                {!isgroup
+                  ? post.groupId && (
+                      <Badge variant={"outline"} className="text-[9px] bg-primary/10">{"Organisation"}</Badge>
+                    )
+                  : null}
               </div>
               <p className="text-xs text-muted-foreground">
                 @

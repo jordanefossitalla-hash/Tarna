@@ -2,7 +2,7 @@ import AddPostCard from "./addPostCard";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import Link from "next/link";
-import { ChevronLeft, Globe, Users } from "lucide-react";
+import { ChevronLeft, Globe, Settings, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DetailedOrganizationResponse } from "@/src/types/organization";
 import { getInitials } from "@/src/lib/getInitials";
@@ -11,8 +11,23 @@ import { fetchInitialPosts } from "@/app/(Client)/home/actions";
 import { Suspense } from "react";
 import { Spinner } from "../ui/spinner";
 import NewOrgFeed from "./orgFeed";
+import OrgJoinRequestListener from "./orgJoinRequestListener";
+import OrgSettingsDrawer from "./orgSettingsDrawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "../ui/drawer";
+import { Button } from "../ui/button";
 
-async function PostsSection({ orgId, orgName }: { orgId: string; orgName: string }) {
+async function PostsSection({
+  orgId,
+  orgName,
+}: {
+  orgId: string;
+  orgName: string;
+}) {
   const data = await fetchInitialPosts(orgId);
 
   return (
@@ -50,39 +65,56 @@ const OrgContent = ({ org }: { org: DetailedOrganizationResponse | null }) => {
         </div>
         {/* Group Info */}
         <div>
-          <div className="flex flex-row items-end gap-3 px-4">
-            <Avatar className={`size-16 border-3 border-background`}>
-              <AvatarImage
-                src={org?.logoUrl || ""}
-                alt={org?.name || "Organization Logo"}
-              />
-              <AvatarFallback
-                className={`text-2xl font-bold  ${getAvatarFallbackColor(org?.name || "Organization")}`}
-              >
-                {getInitials(org?.name || "Organization")}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-0.5 pb-1">
-              <p className="text-lg font-bold leading-tight">
-                {org?.name || "Organization Name"}
-              </p>
-              <div className="flex flex-row items-center gap-2 text-xs text-gray-400">
-                <div className="flex flex-row items-center gap-1">
-                  <Globe className="size-3" />
-                  <span>{org?.visibility || "Public"}</span>
-                </div>
-                <span>·</span>
-                <div className="flex flex-row items-center gap-1">
-                  <Users className="size-3" />
-                  <span>{org?._count.memberships || 0} members</span>
+          <div className="flex flex-row justify-between items-center">
+            <div className="flex flex-row items-end gap-3 px-4">
+              <Avatar className={`size-16 border-3 border-background`}>
+                <AvatarImage
+                  src={org?.logoUrl || ""}
+                  alt={org?.name || "Organization Logo"}
+                />
+                <AvatarFallback
+                  className={`text-2xl font-bold  ${getAvatarFallbackColor(org?.name || "Organization")}`}
+                >
+                  {getInitials(org?.name || "Organization")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col gap-0.5 pb-1">
+                <p className="text-lg font-bold leading-tight">
+                  {org?.name || "Organization Name"}
+                </p>
+                <div className="flex flex-row items-center gap-2 text-xs text-gray-400">
+                  <div className="flex flex-row items-center gap-1">
+                    <Globe className="size-3" />
+                    <span>{org?.visibility || "Public"}</span>
+                  </div>
+                  <span>·</span>
+                  <div className="flex flex-row items-center gap-1">
+                    <Users className="size-3" />
+                    <span>{org?._count.memberships || 0} members</span>
+                  </div>
                 </div>
               </div>
             </div>
+            <div className="pr-5">
+              <Drawer direction="right">
+                <DrawerTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 cursor-pointer rounded-full"
+                  >
+                    <Settings className="size-3.5" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerTitle className="sr-only">{"Paramètres de l'organisation"}</DrawerTitle>
+                  {org && <OrgSettingsDrawer org={org} />}
+                </DrawerContent>
+              </Drawer>
+            </div>
           </div>
           <div className="px-4 py-3">
-            <p className="text-sm text-gray-400">
-              {org?.bio || ""}
-            </p>
+            <p className="text-sm text-gray-400">{org?.bio || ""}</p>
             <div className="flex flex-row gap-2 mt-2">
               <Badge variant="secondary">
                 {org?.sector || "Unknown Sector"}
@@ -94,6 +126,9 @@ const OrgContent = ({ org }: { org: DetailedOrganizationResponse | null }) => {
 
       {/* Add Post */}
       <AddPostCard isgroup={true} orgId={org?.id} orgName={org?.name} />
+
+      {/* Socket listener pour les demandes d'adhésion (admins) */}
+      {org?.id && <OrgJoinRequestListener orgId={org.id} />}
 
       {/* Group Feed */}
       <Suspense

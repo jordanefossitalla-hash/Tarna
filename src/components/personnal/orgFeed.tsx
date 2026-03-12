@@ -7,9 +7,11 @@ import { useUserStore } from "@/src/store/userStore";
 import { useSocketEvent } from "@/src/hooks/useSocketEvent";
 import { mapRawPost } from "@/src/lib/mapPost";
 import { fetchMorePosts } from "@/app/(Client)/home/actions";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Post } from "@/src/types/post";
 import { useOrgPostStore } from "@/src/store/orgPostStore";
+import { useSocket } from "@/src/components/providers/socketProvider";
+import { toast } from "sonner";
 
 type FeedFilter = "for-you" | "recent";
 
@@ -27,6 +29,16 @@ const NewOrgFeed = ({ firstPost, initialCursor, initialHasMore, orgId, orgName }
   const [now, setNow] = useState(() => Date.now());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  // ── Buffer de nouveaux posts reçus via WS ──
+  const [pendingPosts, setPendingPosts] = useState<Post[]>([]);
+  const socket = useSocket();
+
+  // ── Rejoindre la room org:<orgId> au montage ──
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit("org:subscribe", [orgId]);
+  }, [socket, orgId]);
+
   // ── Feed store ──
   const feedPosts = useOrgPostStore((s) => s.posts);
   const setPosts = useOrgPostStore((s) => s.setPosts);
@@ -34,9 +46,35 @@ const NewOrgFeed = ({ firstPost, initialCursor, initialHasMore, orgId, orgName }
   const appendPosts = useOrgPostStore((s) => s.appendPosts);
   const hasMore = useOrgPostStore((s) => s.hasMore);
 
-  useSocketEvent("post:new", (post) => {
-    addpost(mapRawPost(post));
-  });
+  // ── Écouter org:post:new — accumuler les posts reçus ──
+  const handleNewOrgPost = useCallback((raw: unknown) => {
+    const post = mapRawPost(raw);
+    setPendingPosts((prev) => {
+      if (prev.some((p) => p.id === post.id)) return prev;
+      return [post, ...prev];
+    });
+  }, []);
+
+  useSocketEvent("org:post:new", handleNewOrgPost);
+
+  // ── Toast quand de nouveaux posts arrivent ──
+  useEffect(() => {
+    if (pendingPosts.length === 0) return;
+    const count = pendingPosts.length;
+    toast(`${count} nouveau${count > 1 ? "x" : ""} post${count > 1 ? "s" : ""}`, {
+      id: "org-new-posts",
+      action: {
+        label: "Actualiser",
+        onClick: () => {
+          for (const p of pendingPosts) {
+            addpost(p);
+          }
+          setPendingPosts([]);
+        },
+      },
+      duration: Infinity,
+    });
+  }, [pendingPosts, addpost]);
 
   // ── Hydratation initiale — posts SSR + cursor/hasMore du serveur ──
   const hydrated = useRef(false);

@@ -1,7 +1,10 @@
 "use server";
 import type {
   DetailedOrganizationResponse,
+  OrgRole,
   OrganizationResponse,
+  PaginatedJoinRequestsResponse,
+  PaginatedMembersResponse,
   PaginatedOrgResponse,
 } from "@/src/types/organization";
 import type { UserSearchResult } from "@/src/types/user";
@@ -268,5 +271,243 @@ export async function searchUsers(
     }));
   } catch {
     return [];
+  }
+}
+
+// ── Members ──────────────────────────────────────────────────
+
+/** Liste paginée des membres d'une organisation. */
+export async function fetchMembers(
+  orgId: string,
+  cursor?: string | null,
+): Promise<PaginatedMembersResponse> {
+  const token = await getToken();
+  const empty: PaginatedMembersResponse = {
+    data: [],
+    meta: { limit: 20, nextCursor: null, hasMore: false },
+  };
+  if (!token) return empty;
+
+  try {
+    const url = new URL(`${API_BASE_URL}/organizations/${orgId}/members`);
+    if (cursor) url.searchParams.set("cursor", cursor);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return empty;
+    return (await res.json()) as PaginatedMembersResponse;
+  } catch {
+    return empty;
+  }
+}
+
+/** Ajouter un membre directement. */
+export async function addMember(
+  orgId: string,
+  userId: string,
+  role?: OrgRole,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/members`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId, role }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: data?.message ?? `Erreur (${res.status})` };
+    }
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec de l'ajout." };
+  }
+}
+
+/** Retirer un membre (ou quitter soi-même). */
+export async function removeMember(
+  orgId: string,
+  userId: string,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/organizations/${orgId}/members/${userId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: data?.message ?? `Erreur (${res.status})` };
+    }
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec du retrait." };
+  }
+}
+
+/** Modifier le rôle d'un membre. */
+export async function updateMemberRole(
+  orgId: string,
+  userId: string,
+  role: OrgRole,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/organizations/${orgId}/members/${userId}/role`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role }),
+      },
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: data?.message ?? `Erreur (${res.status})` };
+    }
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec de la mise à jour." };
+  }
+}
+
+// ── Join Requests ────────────────────────────────────────────
+
+/** Liste paginée des demandes d'adhésion en attente. */
+export async function fetchJoinRequests(
+  orgId: string,
+  cursor?: string | null,
+): Promise<PaginatedJoinRequestsResponse> {
+  const token = await getToken();
+  const empty: PaginatedJoinRequestsResponse = {
+    data: [],
+    meta: { limit: 20, nextCursor: null, hasMore: false },
+  };
+  if (!token) return empty;
+
+  try {
+    const url = new URL(
+      `${API_BASE_URL}/organizations/${orgId}/join-requests`,
+    );
+    if (cursor) url.searchParams.set("cursor", cursor);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return empty;
+    return (await res.json()) as PaginatedJoinRequestsResponse;
+  } catch {
+    return empty;
+  }
+}
+
+/** Accepter ou rejeter une demande d'adhésion. */
+export async function handleJoinRequest(
+  orgId: string,
+  requestId: string,
+  decision: "accepted" | "rejected",
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/organizations/${orgId}/join-requests/${requestId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ decision }),
+      },
+    );
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: data?.message ?? `Erreur (${res.status})` };
+    }
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec du traitement." };
+  }
+}
+
+// ── Organization Update / Archive ────────────────────────────
+
+export type UpdateOrgInput = {
+  name?: string;
+  domain?: string;
+  country?: string;
+  sector?: string;
+  bio?: string;
+  emailContact?: string;
+  siteWeb?: string;
+  visibility?: "public" | "internal";
+};
+
+/** Mettre à jour les infos d'une organisation. */
+export async function updateOrganization(
+  orgId: string,
+  input: UpdateOrgInput,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: data?.message ?? `Erreur (${res.status})` };
+    }
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec de la mise à jour." };
+  }
+}
+
+/** Archiver une organisation (owner uniquement). */
+export async function archiveOrganization(
+  orgId: string,
+): Promise<JoinRequestResult> {
+  const token = await getToken();
+  if (!token) return { success: false, error: "Non authentifié." };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/archive`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: data?.message ?? `Erreur (${res.status})` };
+    }
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Échec de l'archivage." };
   }
 }
