@@ -19,6 +19,7 @@ import {
   Trash,
   ArrowDownToLine,
   Download,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -73,6 +74,13 @@ import Link from "next/link";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 import { getInitials } from "@/src/lib/getInitials";
 import { Badge } from "../../ui/badge";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "../../ui/carousel";
 
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
@@ -91,6 +99,8 @@ const FeedItem = ({
   );
   const [saved, setSaved] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<FileDocument | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -518,29 +528,112 @@ const FeedItem = ({
 
           {/* Images */}
           {post.images?.length > 0 && (
-            <div className="grid gap-1.5 mt-3 rounded-xl overflow-hidden grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
-              {post.images.slice(0, 4).map((media, index) => (
-                <div
-                  key={index}
-                  className="relative overflow-hidden bg-muted aspect-square"
-                >
-                  <Image
-                    src={media}
-                    alt="post image"
-                    fill
-                    className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  />
+            <>
+              <div
+                className={`mt-3 rounded-xl overflow-hidden border border-border/40 ${
+                  post.images.length === 1
+                    ? ""
+                    : post.images.length === 2
+                      ? "grid grid-cols-2 gap-0.5"
+                      : post.images.length === 3
+                        ? "grid grid-cols-3 grid-rows-2 gap-0.5"
+                        : "grid grid-cols-2 grid-rows-2 gap-0.5"
+                }`}
+              >
+                {post.images.slice(0, 4).map((media, index) => (
+                  <div
+                    key={index}
+                    className={`relative overflow-hidden bg-muted cursor-pointer group ${
+                      post.images.length === 1
+                        ? "h-64 sm:h-72"
+                        : post.images.length === 2
+                          ? "h-44 sm:h-56"
+                          : post.images.length === 3 && index === 0
+                            ? "row-span-2 col-span-2 h-44 sm:h-56"
+                            : post.images.length === 3
+                              ? "h-[calc(11rem-1px)] sm:h-[calc(14rem-1px)]"
+                              : "h-36 sm:h-44"
+                    }`}
+                    onClick={() => {
+                      setLightboxIndex(index);
+                      setLightboxOpen(true);
+                    }}
+                  >
+                    <Image
+                      src={media}
+                      alt={`post image ${index + 1}`}
+                      fill
+                      sizes={
+                        post.images.length === 1
+                          ? "(max-width: 640px) 100vw, 500px"
+                          : "(max-width: 640px) 50vw, 250px"
+                      }
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-200"
+                    />
 
-                  {post.images.length > 4 && index === 3 && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
-                      <span className="text-white text-xl font-bold">
-                        +{post.images.length - 4}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    {post.images.length > 4 && index === 3 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
+                        <span className="text-white text-xl font-semibold">
+                          +{post.images.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Image Lightbox Carousel */}
+              <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+                <DialogContent className="max-w-[95vw] sm:max-w-3xl h-[85vh] flex flex-col p-0 gap-0 bg-black/95 border-none [&>button]:hidden">
+                  <DialogHeader className="absolute top-0 right-0 z-20 p-2">
+                    <DialogTitle className="sr-only">Aperçu des images</DialogTitle>
+                    <button
+                      className="rounded-full bg-black/60 hover:bg-black/80 text-white p-1.5 transition-colors cursor-pointer"
+                      onClick={() => setLightboxOpen(false)}
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </DialogHeader>
+                  <div className="flex-1 flex items-center justify-center min-h-0 px-2 sm:px-10">
+                    <Carousel
+                      opts={{ startIndex: lightboxIndex, loop: true }}
+                      className="w-full h-full"
+                    >
+                      <CarouselContent className="h-full items-center ml-0">
+                        {post.images.map((media, i) => (
+                          <CarouselItem
+                            key={i}
+                            className="flex items-center justify-center h-full pl-0"
+                          >
+                            <div className="relative w-full h-[75vh]">
+                              <Image
+                                src={media}
+                                alt={`image ${i + 1}`}
+                                fill
+                                sizes="95vw"
+                                className="object-contain"
+                                priority={i === lightboxIndex}
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      {post.images.length > 1 && (
+                        <>
+                          <CarouselPrevious className="left-1 sm:left-2 bg-black/60 hover:bg-black/80 text-white border-none" />
+                          <CarouselNext className="right-1 sm:right-2 bg-black/60 hover:bg-black/80 text-white border-none" />
+                        </>
+                      )}
+                    </Carousel>
+                  </div>
+                  <div className="flex justify-center gap-1.5 py-3">
+                    <span className="text-xs text-white/60">
+                      {post.images.length} image{post.images.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
 
           {/* Documents */}
