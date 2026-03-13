@@ -258,7 +258,6 @@ export async function createPostAction(
       .join("")
       .toUpperCase()
       .slice(0, 2);
-    console.log(p);
 
     const post: Post = {
       id: p.id,
