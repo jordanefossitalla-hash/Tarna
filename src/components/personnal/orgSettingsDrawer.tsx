@@ -11,6 +11,7 @@ import {
   Search,
   Shield,
   ShieldCheck,
+  Trash,
   Trash2,
   UserPlus,
   Users,
@@ -63,6 +64,8 @@ import {
   searchUsers,
   type UpdateOrgInput,
 } from "@/app/(Client)/organizations/action";
+import { on } from "events";
+import { set } from "zod";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -138,6 +141,11 @@ export default function OrgSettingsDrawer({ org }: Props) {
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [addingUserId, setAddingUserId] = useState<string | null>(null);
+
+  // Action on members
+  const [loadingDeleteUser, setLoadingDeleteUser] = useState<boolean>(false);
+  const [loadingUpdateRole, setLoadingUpdateRole] = useState<boolean>(false);
+  const [loadingAddUser, setLoadingAddUser] = useState<boolean>(false);
 
   // ── Load members ────────────────────────────────────────────
 
@@ -271,32 +279,36 @@ export default function OrgSettingsDrawer({ org }: Props) {
 
   const handleRemoveMember = useCallback(
     async (userId: string) => {
+      setLoadingDeleteUser(true);
       const res = await removeMember(org.id, userId);
       if (res.success) {
         toast.success("Membre retiré");
+        setLoadingDeleteUser(false);
         setMembers((prev) => prev.filter((m) => m.user.id !== userId));
       } else {
         toast.error(res.error ?? "Erreur");
+        setLoadingDeleteUser(false);
       }
     },
-    [org.id],
+    [org.id, setLoadingDeleteUser, loadingDeleteUser],
   );
 
   const handleUpdateRole = useCallback(
     async (userId: string, role: OrgRole) => {
+      setLoadingUpdateRole(true);
       const res = await updateMemberRole(org.id, userId, role);
       if (res.success) {
         toast.success("Rôle mis à jour");
         setMembers((prev) =>
-          prev.map((m) =>
-            m.user.id === userId ? { ...m, role } : m,
-          ),
+          prev.map((m) => (m.user.id === userId ? { ...m, role } : m)),
         );
+        setLoadingUpdateRole(false);
       } else {
         toast.error(res.error ?? "Erreur");
+        setLoadingUpdateRole(false);
       }
     },
-    [org.id],
+    [org.id, setLoadingUpdateRole, loadingUpdateRole],
   );
 
   const handleJoinDecision = useCallback(
@@ -429,9 +441,7 @@ export default function OrgSettingsDrawer({ org }: Props) {
                 className="flex items-center gap-3 px-4 py-3 hover:bg-muted text-left cursor-pointer"
               >
                 <UserPlus className="size-4 text-muted-foreground" />
-                <span className="text-sm flex-1">
-                  Demandes d&apos;adhésion
-                </span>
+                <span className="text-sm flex-1">Demandes d&apos;adhésion</span>
                 <ChevronRight className="size-4 text-muted-foreground" />
               </button>
             )}
@@ -642,6 +652,8 @@ export default function OrgSettingsDrawer({ org }: Props) {
                 currentUserId={currentUser?.id ?? ""}
                 onRemove={handleRemoveMember}
                 onUpdateRole={handleUpdateRole}
+                loadingDelete={loadingDeleteUser}
+                loadingUpdateRole={loadingUpdateRole}
               />
             ))}
 
@@ -690,11 +702,13 @@ export default function OrgSettingsDrawer({ org }: Props) {
               </div>
             )}
 
-            {!searching && searchResults.length === 0 && searchQuery.length >= 2 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Aucun utilisateur trouvé
-              </p>
-            )}
+            {!searching &&
+              searchResults.length === 0 &&
+              searchQuery.length >= 2 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Aucun utilisateur trouvé
+                </p>
+              )}
 
             {searchResults.map((user) => (
               <div
@@ -877,8 +891,8 @@ export default function OrgSettingsDrawer({ org }: Props) {
                   <DialogHeader>
                     <DialogTitle>Archiver {org.name} ?</DialogTitle>
                     <DialogDescription>
-                      L&apos;organisation sera archivée et ne sera plus accessible.
-                      Cette action est irréversible.
+                      L&apos;organisation sera archivée et ne sera plus
+                      accessible. Cette action est irréversible.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -946,18 +960,20 @@ function MemberRow({
   currentUserId,
   onRemove,
   onUpdateRole,
+  loadingDelete,
+  loadingUpdateRole,
 }: {
   member: OrgMember;
   myRole: OrgRole | null;
   currentUserId: string;
   onRemove: (userId: string) => void;
   onUpdateRole: (userId: string, role: OrgRole) => void;
+  loadingDelete: boolean;
+  loadingUpdateRole: boolean;
 }) {
   const isMe = member.user.id === currentUserId;
   const canManage =
-    !isMe &&
-    myRole &&
-    ROLE_HIERARCHY[myRole] > ROLE_HIERARCHY[member.role];
+    !isMe && myRole && ROLE_HIERARCHY[myRole] > ROLE_HIERARCHY[member.role];
 
   const assignableRoles: OrgRole[] = myRole
     ? (["admin", "manager", "member", "guest"] as OrgRole[]).filter(
@@ -981,9 +997,7 @@ function MemberRow({
           <p className="text-sm font-medium truncate">
             {member.user.displayName ?? member.user.username}
             {isMe && (
-              <span className="text-xs text-muted-foreground ml-1">
-                (vous)
-              </span>
+              <span className="text-xs text-muted-foreground ml-1">(vous)</span>
             )}
           </p>
         </div>
@@ -997,26 +1011,32 @@ function MemberRow({
 
       {/* Actions: change role / remove */}
       {canManage && (
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {assignableRoles.length > 0 && (
-            <Select
-              value={member.role}
-              onValueChange={(v) => onUpdateRole(member.user.id, v as OrgRole)}
-            >
-              <SelectTrigger className="h-7 text-xs w-auto gap-1 px-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {assignableRoles.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    <div className="flex items-center gap-1.5">
-                      {ROLE_ICONS[r]}
-                      {ROLE_LABELS[r]}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="flex flex-row items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {loadingUpdateRole ? (
+            <Spinner className="size-3" />
+          ) : (
+            assignableRoles.length > 0 && (
+              <Select
+                value={member.role}
+                onValueChange={(v) =>
+                  onUpdateRole(member.user.id, v as OrgRole)
+                }
+              >
+                <SelectTrigger className="h-7 text-xs w-auto gap-1 px-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {assignableRoles.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      <div className="flex items-center gap-1.5">
+                        {ROLE_ICONS[r]}
+                        {ROLE_LABELS[r]}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )
           )}
 
           <Dialog>
@@ -1025,8 +1045,13 @@ function MemberRow({
                 size="sm"
                 variant="ghost"
                 className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                disabled={loadingDelete}
               >
-                <X className="size-3.5" />
+                {loadingDelete ? (
+                  <Spinner className="size-3" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -1034,7 +1059,8 @@ function MemberRow({
                 <DialogTitle>Retirer ce membre ?</DialogTitle>
                 <DialogDescription>
                   {member.user.displayName ?? member.user.username} sera retiré
-                  de l&apos;organisation.
+                  définitivement de l&apos;organisation. cette action est
+                  irréversible.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -1048,7 +1074,8 @@ function MemberRow({
                   onClick={() => onRemove(member.user.id)}
                   className="cursor-pointer"
                 >
-                  Retirer
+                  {loadingDelete ? <Spinner className="size-3" /> : null}
+                  {"Retirer"}
                 </Button>
               </DialogFooter>
             </DialogContent>

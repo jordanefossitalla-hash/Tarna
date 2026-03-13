@@ -28,7 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import NextImage from "next/image";
 import {
   DropdownMenu,
@@ -50,6 +56,8 @@ import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 import { getInitials } from "@/src/lib/getInitials";
+import { fetchMembers } from "@/app/(Client)/organizations/action";
+import { OrgRole } from "@/src/types/organization";
 
 type VisibilityOption = {
   value: string;
@@ -87,8 +95,10 @@ const AddPostCard = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
-  const [postType, setPostType] = useState("post");
-  const [visibility, setVisibility] = useState(isgroup ? "group_only" : "public");
+  // const [postType, setPostType] = useState("post");
+  const [visibility, setVisibility] = useState(
+    isgroup ? "group_only" : "public",
+  );
   const [imagePreview, setImagePreview] = useState<string[] | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,10 +109,35 @@ const AddPostCard = ({
   const accessToken = useUserStore((state) => state.accessToken);
   const addPost = useFeedStore((s) => s.addPost);
   const [isOrg, setIsOrg] = useState(isgroup);
-  const [state, formFetchAction, _] = useActionState(
-    fetchPostsAction,
-    initialStat,
+  // const [state, formFetchAction, _] = useActionState(
+  //   fetchPostsAction,
+  //   initialStat,
+  // );
+  const [myRole, setMyRole] = useState<OrgRole | null>(null);
+
+  const loadMembers = useCallback(
+    async (cursor?: string | null) => {
+      if (!orgId) return;
+      if (!isgroup) return;
+      try {
+        const res = await fetchMembers(orgId, cursor);
+        // Find current user role
+        if (!cursor && currentUser) {
+          const me = res.data.find((m) => m.user.id === currentUser.id);
+          if (me) setMyRole(me.role);
+        }
+      } catch {
+        return null;
+      }
+    },
+    [orgId, currentUser, isgroup],
   );
+  useEffect(() => {
+    if (isgroup && orgId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadMembers();
+    }
+  }, [isgroup, orgId]);
 
   const initialState: CreatePostState = {
     success: false,
@@ -116,10 +151,16 @@ const AddPostCard = ({
     { value: "friends", label: "Amis", icon: Users },
   ];
   const visibilityGroupOptions: VisibilityOption[] = [
-    { value: "public", label: "Public", icon: Globe },
-    { value: "group_only", label: isOrg && orgName ? orgName : "Privé", icon: GlobeLock },
+    ...(myRole === "owner" || myRole === "admin" || myRole === "manager"
+      ? [{ value: "public", label: "Public", icon: Globe }]
+      : []),
+
+    {
+      value: "group_only",
+      label: isOrg && orgName ? orgName : "Privé",
+      icon: GlobeLock,
+    },
   ];
-  
 
   const handleFormAction = async (
     prevState: CreatePostState,

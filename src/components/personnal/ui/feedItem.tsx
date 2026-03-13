@@ -400,7 +400,12 @@ const FeedItem = ({
                 )}
                 {!isgroup
                   ? post.groupId && (
-                      <Badge variant={"outline"} className="text-[9px] bg-primary/10">{"Organisation"}</Badge>
+                      <Badge
+                        variant={"outline"}
+                        className="text-[9px] bg-primary/10"
+                      >
+                        {"Organisation"}
+                      </Badge>
                     )
                   : null}
               </div>
@@ -513,43 +518,28 @@ const FeedItem = ({
 
           {/* Images */}
           {post.images?.length > 0 && (
-            <div
-              className={`grid gap-1.5 mt-3 rounded-xl overflow-hidden ${
-                post.images.length === 1
-                  ? "grid-cols-1"
-                  : post.images.length === 3
-                    ? "grid-cols-2"
-                    : "grid-cols-2"
-              }`}
-            >
-              {post.images.map((media, index) => {
-                const isFullWidth =
-                  post.images.length === 1 ||
-                  (post.images.length === 3 && index === 0);
-                return (
-                  <div
-                    key={index}
-                    className={`relative overflow-hidden bg-muted ${
-                      isFullWidth ? "col-span-2 h-52 lg:h-80" : "h-36 lg:h-52"
-                    } ${post.images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
-                  >
-                    <Image
-                      src={media}
-                      alt={"post image"}
-                      fill
-                      className="object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
-                    />
-                    {/* Overlay pour +N images */}
-                    {post.images.length > 4 && index === 3 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
-                        <span className="text-white text-xl font-bold">
-                          +{post.images.length - 4}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="grid gap-1.5 mt-3 rounded-xl overflow-hidden grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+              {post.images.slice(0, 4).map((media, index) => (
+                <div
+                  key={index}
+                  className="relative overflow-hidden bg-muted aspect-square"
+                >
+                  <Image
+                    src={media}
+                    alt="post image"
+                    fill
+                    className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  />
+
+                  {post.images.length > 4 && index === 3 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
+                      <span className="text-white text-xl font-bold">
+                        +{post.images.length - 4}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 
