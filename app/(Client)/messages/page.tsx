@@ -1,36 +1,36 @@
 "use client";
 
-import MessageDisplay from "@/src/components/personnal/ui/messageDisplay";
-import MessageItem from "@/src/components/personnal/ui/messageItem";
-import { conversationsData } from "@/src/data/conversations";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/src/components/ui/avatar";
-import { Button } from "@/src/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/src/components/ui/input-group";
-import {
-  ChevronLeft,
-  EllipsisVertical,
-  ImageIcon,
-  Paperclip,
-  Search,
-  Send,
-  Smile,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+// import MessageDisplay from "@/src/components/personnal/ui/messageDisplay";
+// import MessageItem from "@/src/components/personnal/ui/messageItem";
+// import { conversationsData } from "@/src/data/conversations";
+// import {
+//   Avatar,
+//   AvatarFallback,
+//   AvatarImage,
+// } from "@/src/components/ui/avatar";
+// import { Button } from "@/src/components/ui/button";
+// import {
+//   Card,
+//   CardContent,
+//   CardFooter,
+//   CardHeader,
+// } from "@/src/components/ui/card";
+// import { Input } from "@/src/components/ui/input";
+// import {
+//   InputGroup,
+//   InputGroupAddon,
+//   InputGroupInput,
+// } from "@/src/components/ui/input-group";
+// import {
+//   ChevronLeft,
+//   EllipsisVertical,
+//   ImageIcon,
+//   Paperclip,
+//   Search,
+//   Send,
+//   Smile,
+// } from "lucide-react";
+// import { useEffect, useRef, useState } from "react";
 
 // const MessagesPage = () => {
 //   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -161,8 +161,6 @@ import { useEffect, useRef, useState } from "react";
 //     </div>
 //   );
 // };
-
-import React from "react";
 import { InBuild } from "@/src/components/personnal/inBuild";
 
 const MessagesPage = () => {

@@ -368,6 +368,8 @@ const FeedItem = ({
     const addDelta = optimisticReaction === type ? 1 : 0;
     return Math.max(0, safeCount + removeDelta + addDelta);
   }
+  const existsInGroup = Boolean(post.groupId);
+  
 
   return (
     <Collapsible asChild open={commentsOpen} onOpenChange={setCommentsOpen}>
@@ -379,28 +381,22 @@ const FeedItem = ({
               <AvatarImage src={post.author.avatar} alt={post.author.name} />
               <AvatarFallback
                 className={`text-xs font-semibold ${getAvatarFallbackColor(
-                  isgroup && groupName
-                    ? getInitials(groupName)
-                    : post.groupId
-                      ? getInitials(post.organization?.name || "Org")
-                      : getInitials(post.author.name),
+                  existsInGroup
+                    ? getInitials(post.organization?.name || "Org")
+                    : getInitials(post.author.name),
                 )}`}
               >
-                {isgroup && groupName
-                  ? getInitials(groupName)
-                  : post.groupId
-                    ? getInitials(post.organization?.name || "Org")
-                    : getInitials(post.author.name)}
+                {existsInGroup
+                  ? getInitials(post.organization?.name || "Org")
+                  : getInitials(post.author.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <div className="flex flex-row items-center gap-1.5">
                 <p className="text-sm font-semibold">
-                  {isgroup && groupName
-                    ? groupName
-                    : post.groupId
-                      ? post.organization?.name
-                      : post.author.name}
+                  {existsInGroup
+                    ? post.organization?.name
+                    : post.author.name}
                 </p>
                 {post.author.isVerified && (
                   <BadgeCheck className="size-3.5 text-primary" />
@@ -409,7 +405,7 @@ const FeedItem = ({
                   <Pin className="size-3 text-muted-foreground" />
                 )}
                 {!isgroup
-                  ? post.groupId && (
+                  ? existsInGroup && (
                       <Badge
                         variant={"outline"}
                         className="text-[9px] bg-primary/10"
@@ -423,7 +419,7 @@ const FeedItem = ({
                 @
                 {isgroup
                   ? post.author.username
-                  : post.groupId
+                  : existsInGroup
                     ? post.organization?.name
                     : post.author.username}{" "}
                 · {post.timeAgo}
@@ -586,7 +582,9 @@ const FeedItem = ({
               <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
                 <DialogContent className="max-w-[95vw] sm:max-w-3xl h-[85vh] flex flex-col p-0 gap-0 bg-black/95 border-none [&>button]:hidden">
                   <DialogHeader className="absolute top-0 right-0 z-20 p-2">
-                    <DialogTitle className="sr-only">Aperçu des images</DialogTitle>
+                    <DialogTitle className="sr-only">
+                      Aperçu des images
+                    </DialogTitle>
                     <button
                       className="rounded-full bg-black/60 hover:bg-black/80 text-white p-1.5 transition-colors cursor-pointer"
                       onClick={() => setLightboxOpen(false)}
@@ -628,7 +626,8 @@ const FeedItem = ({
                   </div>
                   <div className="flex justify-center gap-1.5 py-3">
                     <span className="text-xs text-white/60">
-                      {post.images.length} image{post.images.length > 1 ? "s" : ""}
+                      {post.images.length} image
+                      {post.images.length > 1 ? "s" : ""}
                     </span>
                   </div>
                 </DialogContent>

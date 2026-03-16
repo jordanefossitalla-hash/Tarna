@@ -61,7 +61,6 @@ import {
 import { useUserStore } from "@/src/store/userStore";
 import { useOrganizationStore } from "@/src/store/organizationStore";
 import { toast } from "sonner";
-import { InBuild } from "@/src/components/personnal/inBuild";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 // ── Types & constants ────────────────────────────────────────
@@ -117,7 +116,7 @@ const OrganizationsPage = () => {
   const setTab = useOrganizationStore((s) => s.setTab);
   const addOrg = useOrganizationStore((s) => s.addOrg);
   const moveOrg = useOrganizationStore((s) => s.moveOrg);
-  const removeOrg = useOrganizationStore((s) => s.removeOrg);
+  // const removeOrg = useOrganizationStore((s) => s.removeOrg);
   const loading = useOrganizationStore((s) => s.loading);
   const storeSetLoading = useOrganizationStore((s) => s.setLoading);
 

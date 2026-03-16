@@ -262,7 +262,7 @@ export async function createPostAction(
     const post: Post = {
       id: p.id,
       authorId: p.authorId ?? p.author?.id,
-      groupId: p.groupId ?? null,
+      groupId: p.orgId ?? p.groupId ?? null,
       parentPostId: p.parentPostId ?? null,
       author: {
         id: p.author?.id,
@@ -290,6 +290,12 @@ export async function createPostAction(
         supports_count: 0,
         reactions_count: 1,
         illuminates_count: 0,
+      },
+      organization: {
+        id: p.organization?.id,
+        name: p.organization?.name ?? "",
+        logoUrl: p.organization?.logoUrl ?? "",
+        sector: p.organization?.sector ?? "",
       },
       comments: 0,
       shares: 0,
