@@ -110,6 +110,7 @@ const OrganizationsPage = () => {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
+  const userId = useUserStore((s) => s.user?.id);
 
   // Organisation store
   const tabs = useOrganizationStore((s) => s.tabs);
@@ -170,7 +171,7 @@ const OrganizationsPage = () => {
         storeSetLoading(false);
       }
     },
-    [isAuthenticated, setTab, storeSetLoading],
+    [isAuthenticated, setTab, storeSetLoading, userId],
   );
 
   // Load current tab if not yet loaded

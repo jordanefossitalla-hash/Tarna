@@ -459,7 +459,7 @@ export type UpdateOrgInput = {
   sector?: string;
   bio?: string;
   emailContact?: string;
-  siteWeb?: string;
+  // siteWeb?: string;
   visibility?: "public" | "internal";
 };
 
