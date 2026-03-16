@@ -216,7 +216,6 @@ export default function OrgSettingsDrawer({ org }: Props) {
         sector: org.sector ?? "",
         bio: org.bio ?? "",
         emailContact: org.emailContact ?? "",
-        siteWeb: org.siteWeb ?? "",
         visibility: org.visibility,
       });
     }
@@ -513,7 +512,7 @@ export default function OrgSettingsDrawer({ org }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">
-                  Domaine
+                  Site web
                 </label>
                 <Input
                   value={editForm.domain ?? ""}
@@ -569,7 +568,7 @@ export default function OrgSettingsDrawer({ org }: Props) {
               />
             </div>
 
-            <div className="space-y-1.5">
+            {/* <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">
                 Site web
               </label>
@@ -583,7 +582,7 @@ export default function OrgSettingsDrawer({ org }: Props) {
                   }))
                 }
               />
-            </div>
+            </div> */}
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">

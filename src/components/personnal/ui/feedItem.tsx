@@ -383,6 +383,7 @@ const FeedItem = ({
       <Card className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         {/* ─── Header ─── */}
         <CardHeader className="flex flex-row items-start justify-between pb-2">
+         <Link href={isOrgPost ? `/organizations/${post.organization?.id}` : `/profil/${post.author.username}`}>
           <div className="flex flex-row items-center gap-3">
             <Avatar className="size-10">
               <AvatarImage
@@ -442,6 +443,7 @@ const FeedItem = ({
               </Button>
             )} */}
           </div>
+         </Link>
 
           <DropdownMenu>
             {isOwnPost && (

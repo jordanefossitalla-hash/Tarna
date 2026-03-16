@@ -44,6 +44,8 @@ async function PostsSection({
 }
 
 const OrgContent = ({ org }: { org: DetailedOrganizationResponse | null }) => {
+  const isMember = !!org?.currentUserRole;
+
   return (
     <div className="xl:max-w-2xl xl:w-2xl pb-20 h-full overflow-scroll hide-scrollbar md:px-10 xl:p-0">
       {/* Group Header */}
@@ -96,36 +98,44 @@ const OrgContent = ({ org }: { org: DetailedOrganizationResponse | null }) => {
               </div>
             </div>
             <div className="pr-5">
-              <Drawer direction="right">
-                <DrawerTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 cursor-pointer rounded-full"
-                  >
-                    <Settings className="size-3.5" />
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <DrawerTitle className="sr-only">{"Paramètres de l'organisation"}</DrawerTitle>
-                  {org && <OrgSettingsDrawer org={org} />}
-                </DrawerContent>
-              </Drawer>
+              {isMember && (
+                <Drawer direction="right">
+                  <DrawerTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 cursor-pointer rounded-full"
+                    >
+                      <Settings className="size-3.5" />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent>
+                    <DrawerTitle className="sr-only">
+                      {"Paramètres de l'organisation"}
+                    </DrawerTitle>
+                    {org && <OrgSettingsDrawer org={org} />}
+                  </DrawerContent>
+                </Drawer>
+              )}
             </div>
           </div>
           <div className="px-4 py-3">
             <p className="text-sm text-gray-400">{org?.bio || ""}</p>
             <div className="flex flex-row gap-2 mt-2">
-              <Badge variant="secondary">
-                {org?.sector || "Unknown Sector"}
-              </Badge>
+              {org?.sector && <Badge variant="secondary">{org.sector}</Badge>}
+              {org?.domain && <Badge variant="secondary">{org.domain}</Badge>}
+            </div>
+            <div className="flex flex-row gap-2 mt-2">
+              {org?.emailContact && <Badge variant="secondary">{org.emailContact}</Badge>}
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Add Post */}
-      <AddPostCard isgroup={true} orgId={org?.id} orgName={org?.name} />
+      {/* Add Post — only for members */}
+      {isMember && (
+        <AddPostCard isgroup={true} orgId={org?.id} orgName={org?.name} />
+      )}
 
       {/* Socket listener pour les demandes d'adhésion (admins) */}
       {org?.id && <OrgJoinRequestListener orgId={org.id} />}
