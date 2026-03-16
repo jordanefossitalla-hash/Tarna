@@ -667,7 +667,7 @@ const OrganizationsPage = () => {
               key={tab.key}
               variant={isActive ? "default" : "outline"}
               size="sm"
-              className="cursor-pointer gap-1.5 rounded-full bg-primary/20 hover:bg-primary/30"
+              className={`cursor-pointer gap-1.5 rounded-full text-black dark:text-white ${isActive ? "bg-primary/20 hover:bg-primary/30" : "bg-transparent hover:bg-primary/10" }`}
               onClick={() => setActiveTab(tab.key)}
             >
               <Icon className="size-3.5" />

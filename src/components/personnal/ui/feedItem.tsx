@@ -61,6 +61,7 @@ import {
   deleteReactionToPost,
 } from "@/src/lib/api";
 import { useFeedStore } from "@/src/store/feedStore";
+import { useOrgPostStore } from "@/src/store/orgPostStore";
 import { useCommentStore } from "@/src/store/commentStore";
 import {
   mapRawComment,
@@ -112,8 +113,12 @@ const FeedItem = ({
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const accessToken = useUserStore((state) => state.accessToken);
-  const removePost = useFeedStore((s) => s.removePost);
-  const updatePost = useFeedStore((s) => s.updatePost);
+  const removePostMain = useFeedStore((s) => s.removePost);
+  const updatePostMain = useFeedStore((s) => s.updatePost);
+  const removePostOrg = useOrgPostStore((s) => s.removePost);
+  const updatePostOrg = useOrgPostStore((s) => s.updatePost);
+  const removePost = isgroup ? removePostOrg : removePostMain;
+  const updatePost = isgroup ? updatePostOrg : updatePostMain;
   const reactionRef = useRef<ReactionType>(post.myReaction ?? null);
   const confirmedReactionRef = useRef<ReactionType>(post.myReaction ?? null);
   const queuedReactionRef = useRef<ReactionType | undefined>(undefined);
@@ -368,7 +373,9 @@ const FeedItem = ({
     const addDelta = optimisticReaction === type ? 1 : 0;
     return Math.max(0, safeCount + removeDelta + addDelta);
   }
-  const existsInGroup = Boolean(post.groupId);
+  const isOrgPost = Boolean(post.groupId || post.organization?.id);
+  const orgDisplayName = post.organization?.name || "Organisation";
+  const orgInitials = getInitials(orgDisplayName);
   
 
   return (
@@ -378,25 +385,22 @@ const FeedItem = ({
         <CardHeader className="flex flex-row items-start justify-between pb-2">
           <div className="flex flex-row items-center gap-3">
             <Avatar className="size-10">
-              <AvatarImage src={post.author.avatar} alt={post.author.name} />
+              <AvatarImage
+                src={isOrgPost ? post.organization?.logoUrl ?? "" : post.author.avatar}
+                alt={isOrgPost ? orgDisplayName : post.author.name}
+              />
               <AvatarFallback
                 className={`text-xs font-semibold ${getAvatarFallbackColor(
-                  existsInGroup
-                    ? getInitials(post.organization?.name || "Org")
-                    : getInitials(post.author.name),
+                  isOrgPost ? orgInitials : getInitials(post.author.name),
                 )}`}
               >
-                {existsInGroup
-                  ? getInitials(post.organization?.name || "Org")
-                  : getInitials(post.author.name)}
+                {isOrgPost ? orgInitials : getInitials(post.author.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <div className="flex flex-row items-center gap-1.5">
                 <p className="text-sm font-semibold">
-                  {existsInGroup
-                    ? post.organization?.name
-                    : post.author.name}
+                  {isOrgPost ? orgDisplayName : post.author.name}
                 </p>
                 {post.author.isVerified && (
                   <BadgeCheck className="size-3.5 text-primary" />
@@ -404,25 +408,17 @@ const FeedItem = ({
                 {post.isPinned && (
                   <Pin className="size-3 text-muted-foreground" />
                 )}
-                {!isgroup
-                  ? existsInGroup && (
-                      <Badge
-                        variant={"outline"}
-                        className="text-[9px] bg-primary/10"
-                      >
-                        {"Organisation"}
-                      </Badge>
-                    )
-                  : null}
+                {!isgroup && isOrgPost && (
+                  <Badge
+                    variant={"outline"}
+                    className="text-[9px] bg-primary/10"
+                  >
+                    {"Organisation"}
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
-                @
-                {isgroup
-                  ? post.author.username
-                  : existsInGroup
-                    ? post.organization?.name
-                    : post.author.username}{" "}
-                · {post.timeAgo}
+                @{isOrgPost ? orgDisplayName : post.author.username} · {post.timeAgo}
               </p>
             </div>
 
@@ -923,3 +919,5 @@ const FeedItem = ({
 };
 
 export default FeedItem;
+
+
