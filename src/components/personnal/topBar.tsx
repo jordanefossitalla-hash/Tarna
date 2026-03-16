@@ -129,13 +129,13 @@ const TopBar = () => {
                 href={item.route}
                 className={`relative flex flex-col items-center justify-center px-3.5 py-1.5 rounded-lg transition-colors ${
                   active
-                    ? "text-white bg-primary/10"
+                    ? "dark:text-white bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 }`}
               >
                 <div className="relative">
                   <item.icon
-                    className={`size-5 ${active ? "fill-white dark:fill-white" : ""}`}
+                    className={`size-5 ${active ? "fill-black dark:fill-white" : ""}`}
                     strokeWidth={active ? 2.5 : 2}
                   />
                   {/* {item.badge && item.badge > 0 && (

@@ -15,19 +15,12 @@ import {
   Send,
   Megaphone,
   TriangleAlert,
+  Building2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+// import {\n//   Select, SelectContent, SelectGroup, SelectItem,\n//   SelectLabel, SelectTrigger, SelectValue,\n// } from \"../ui/select\";", "oldString": "import {\n  Select,\n  SelectContent,\n  SelectGroup,\n  SelectItem,\n  SelectLabel,\n  SelectTrigger,\n  SelectValue,\n} from \"../ui/select\";
 import { useActionState, useEffect, useRef, useState } from "react";
 import NextImage from "next/image";
 import {
@@ -37,6 +30,11 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuSeparator,
 } from "../ui/dropdown-menu";
 import { useUserStore } from "@/src/store/userStore";
 import { useFeedStore } from "@/src/store/feedStore";
@@ -50,6 +48,8 @@ import { Spinner } from "../ui/spinner";
 import { toast } from "sonner";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 import { getInitials } from "@/src/lib/getInitials";
+import { fetchMembers, fetchMyOrgs } from "@/app/(Client)/organizations/action";
+import { OrgRole, OrganizationResponse } from "@/src/types/organization";
 
 type VisibilityOption = {
   value: string;
@@ -87,8 +87,10 @@ const AddPostCard = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [content, setContent] = useState("");
-  const [postType, setPostType] = useState("post");
-  const [visibility, setVisibility] = useState(isgroup ? "group_only" : "public");
+  // const [postType, setPostType] = useState("post");
+  const [visibility, setVisibility] = useState(
+    isgroup ? "group_only" : "public",
+  );
   const [imagePreview, setImagePreview] = useState<string[] | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,10 +101,32 @@ const AddPostCard = ({
   const accessToken = useUserStore((state) => state.accessToken);
   const addPost = useFeedStore((s) => s.addPost);
   const [isOrg, setIsOrg] = useState(isgroup);
-  const [state, formFetchAction, _] = useActionState(
-    fetchPostsAction,
-    initialStat,
-  );
+  const [myRole, setMyRole] = useState<OrgRole | null>(null);
+  const [myOrgs, setMyOrgs] = useState<OrganizationResponse[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(isgroup ? orgId || "" : null);
+
+  useEffect(() => {
+    if (!isgroup || !orgId) return;
+    let isActive = true;
+    fetchMembers(orgId)
+      .then((res) => {
+        if (!isActive || !currentUser) return;
+        const me = res.data.find((m) => m.user.id === currentUser.id);
+        if (me) setMyRole(me.role);
+      })
+      .catch(() => {});
+    return () => {
+      isActive = false;
+    };
+  }, [isgroup, orgId, currentUser]);
+
+  // Fetch user's orgs on main feed
+  useEffect(() => {
+    if (isgroup) return;
+    fetchMyOrgs()
+      .then((res) => setMyOrgs(res.data))
+      .catch(() => {});
+  }, [isgroup]);
 
   const initialState: CreatePostState = {
     success: false,
@@ -116,16 +140,56 @@ const AddPostCard = ({
     { value: "friends", label: "Amis", icon: Users },
   ];
   const visibilityGroupOptions: VisibilityOption[] = [
-    { value: "public", label: "Public", icon: Globe },
-    { value: "group_only", label: isOrg && orgName ? orgName : "Privé", icon: GlobeLock },
+    ...(myRole === "owner" || myRole === "admin" || myRole === "manager"
+      ? [{ value: "public", label: "Public", icon: Globe }]
+      : []),
+
+    {
+      value: "group_only",
+      label: isOrg && orgName ? orgName : "Privé",
+      icon: GlobeLock,
+    },
   ];
+
+  const handleVisibilityChange = (value: string) => {
+    setVisibility(value);
+    setIsOrg(isgroup);
+    setSelectedOrgId(null);
+  };
+
+  const handleSelectOrg = (org: OrganizationResponse) => {
+    setVisibility("group_only");
+    setIsOrg(true);
+    setSelectedOrgId(org.id);
+  };
+
+  const selectedOrgName = myOrgs.find((o) => o.id === selectedOrgId)?.name;
+
   
+  const currentVisibilityOption =
+    visibility === "group_only"
+      ? {
+          label: selectedOrgName || orgName || "Organisation",
+          icon: Building2,
+        }
+      : (() => {
+          const allOpts = isgroup ? visibilityGroupOptions : visibilityOptions;
+          return allOpts.find((o) => o.value === visibility) ?? allOpts[0];
+        })();
+  
+  const effectiveOrgId = isgroup ? orgId : selectedOrgId ?? undefined;
 
   const handleFormAction = async (
     prevState: CreatePostState,
     formData: FormData,
   ) => {
-    const result = await createPostAction(prevState, formData, isOrg, orgId);
+    const result = await createPostAction(
+      prevState,
+      formData,
+      visibility === "group_only" || isOrg,
+      effectiveOrgId,
+    );
+    console.log(result)
     if (result.success) {
       if (result.post) addPost(result.post);
       setContent("");
@@ -404,44 +468,74 @@ const AddPostCard = ({
                 </SelectContent>
               </Select> */}
             {/* Visibilité */}
-            <Select
-              defaultValue={isOrg ? "group_only" : "public"}
-              value={visibility}
-              onValueChange={setVisibility}
-            >
-              <SelectTrigger className="h-8 text-xs w-28 border-0 shadow-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Visibilité</SelectLabel>
-                  {!isOrg
-                    ? visibilityOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          <div className="flex flex-row items-center gap-1.5">
-                            <opt.icon className="size-3.5" />
-                            {opt.label}
-                          </div>
-                        </SelectItem>
-                      ))
-                    : visibilityGroupOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          <div className="flex flex-row items-center gap-1.5">
-                            <opt.icon className="size-3.5" />
-                            {opt.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs gap-1.5 px-2.5"
+                >
+                  <currentVisibilityOption.icon className="size-3.5" />
+                  <span className="truncate max-w-20 sm:max-w-28">
+                    {currentVisibilityOption.label}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48" align="end">
+                <DropdownMenuLabel>Visibilité</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  {(isgroup ? visibilityGroupOptions : visibilityOptions).map(
+                    (opt) => (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        className="cursor-pointer gap-2"
+                        onClick={() => handleVisibilityChange(opt.value)}
+                      >
+                        <opt.icon className="size-4" />
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ),
+                  )}
+                  {!isgroup && myOrgs.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+                          <Building2 className="size-4" />
+                          Organisation
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            {myOrgs.map((org) => (
+                              <DropdownMenuItem
+                                key={org.id}
+                                className="cursor-pointer gap-2"
+                                onClick={() => handleSelectOrg(org)}
+                              >
+                                <Building2 className="size-3.5" />
+                                <span className="truncate">{org.name}</span>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                    </>
+                  )}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Publier */}
             <Button
               type="submit"
               size="sm"
               className="cursor-pointer gap-1.5 rounded-full px-4"
-              disabled={!hasContent || isPending}
+              disabled={
+                !hasContent ||
+                isPending ||
+                (visibility === "group_only" && !selectedOrgId)
+              }
             >
               {isPending ? (
                 <Spinner className="size-3.5" />

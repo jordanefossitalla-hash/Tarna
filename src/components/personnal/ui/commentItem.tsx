@@ -96,7 +96,7 @@ const CommentItem = ({
             <p className="text-sm">{comment.content}</p>
           </Card>
           <div className="flex flex-row items-center gap-3 px-1">
-            <button
+            {/* <button
               type="button"
               onClick={() => setLiked(!liked)}
               className="flex flex-row items-center gap-1 text-xs text-muted-foreground hover:text-red-500 cursor-pointer"
@@ -111,7 +111,7 @@ const CommentItem = ({
                   ? comment.stats.reactions_count + 1
                   : comment.stats.reactions_count}
               </span>
-            </button>
+            </button> */}
             {depth < MAX_DEPTH && (
               <button
                 type="button"

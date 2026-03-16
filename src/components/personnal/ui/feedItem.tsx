@@ -19,6 +19,7 @@ import {
   Trash,
   ArrowDownToLine,
   Download,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -60,6 +61,7 @@ import {
   deleteReactionToPost,
 } from "@/src/lib/api";
 import { useFeedStore } from "@/src/store/feedStore";
+import { useOrgPostStore } from "@/src/store/orgPostStore";
 import { useCommentStore } from "@/src/store/commentStore";
 import {
   mapRawComment,
@@ -71,16 +73,35 @@ import { toast } from "sonner";
 import { linkifyText } from "@/src/lib/LinklyText";
 import Link from "next/link";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
+import { getInitials } from "@/src/lib/getInitials";
+import { Badge } from "../../ui/badge";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "../../ui/carousel";
 
 export type ReactionType = null | "like" | "illuminate" | "support";
 type ReactionKind = Exclude<ReactionType, null>;
 
-const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean, groupName?: string }) => {
+const FeedItem = ({
+  post,
+  isgroup,
+  groupName,
+}: {
+  post: Post;
+  isgroup?: boolean;
+  groupName?: string;
+}) => {
   const [reaction, setReaction] = useState<ReactionType>(
     post.myReaction ?? null,
   );
   const [saved, setSaved] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<FileDocument | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -92,14 +113,20 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const currentUser = useUserStore((state) => state.user);
   const accessToken = useUserStore((state) => state.accessToken);
-  const removePost = useFeedStore((s) => s.removePost);
-  const updatePost = useFeedStore((s) => s.updatePost);
+  const removePostMain = useFeedStore((s) => s.removePost);
+  const updatePostMain = useFeedStore((s) => s.updatePost);
+  const removePostOrg = useOrgPostStore((s) => s.removePost);
+  const updatePostOrg = useOrgPostStore((s) => s.updatePost);
+  const removePost = isgroup ? removePostOrg : removePostMain;
+  const updatePost = isgroup ? updatePostOrg : updatePostMain;
   const reactionRef = useRef<ReactionType>(post.myReaction ?? null);
   const confirmedReactionRef = useRef<ReactionType>(post.myReaction ?? null);
   const queuedReactionRef = useRef<ReactionType | undefined>(undefined);
   const reactionInFlightRef = useRef(false);
   const confirmedCountsRef = useRef<Record<ReactionKind, number>>({
-    like: Number.isFinite(post.stats.likes_count) ? Number(post.stats.likes_count) : 0,
+    like: Number.isFinite(post.stats.likes_count)
+      ? Number(post.stats.likes_count)
+      : 0,
     illuminate: Number.isFinite(post.stats.illuminates_count)
       ? Number(post.stats.illuminates_count)
       : 0,
@@ -304,7 +331,13 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
         void flushReactionQueue();
       }
     }
-  }, [accessToken, post.id, post.stats, updatePost, applyConfirmedCountsTransition]);
+  }, [
+    accessToken,
+    post.id,
+    post.stats,
+    updatePost,
+    applyConfirmedCountsTransition,
+  ]);
 
   const toggleReaction = useCallback(
     (type: Exclude<ReactionType, null>) => {
@@ -340,6 +373,10 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
     const addDelta = optimisticReaction === type ? 1 : 0;
     return Math.max(0, safeCount + removeDelta + addDelta);
   }
+  const isOrgPost = Boolean(post.groupId || post.organization?.id);
+  const orgDisplayName = post.organization?.name || "Organisation";
+  const orgInitials = getInitials(orgDisplayName);
+  
 
   return (
     <Collapsible asChild open={commentsOpen} onOpenChange={setCommentsOpen}>
@@ -348,23 +385,40 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
         <CardHeader className="flex flex-row items-start justify-between pb-2">
           <div className="flex flex-row items-center gap-3">
             <Avatar className="size-10">
-              <AvatarImage src={post.author.avatar} alt={post.author.name} />
-              <AvatarFallback className={`text-xs font-semibold ${getAvatarFallbackColor(post.author.initials)}`}>
-                {post.author.initials}
+              <AvatarImage
+                src={isOrgPost ? post.organization?.logoUrl ?? "" : post.author.avatar}
+                alt={isOrgPost ? orgDisplayName : post.author.name}
+              />
+              <AvatarFallback
+                className={`text-xs font-semibold ${getAvatarFallbackColor(
+                  isOrgPost ? orgInitials : getInitials(post.author.name),
+                )}`}
+              >
+                {isOrgPost ? orgInitials : getInitials(post.author.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <div className="flex flex-row items-center gap-1.5">
-                <p className="text-sm font-semibold">{isgroup && groupName ? groupName : post.author.name}</p>
+                <p className="text-sm font-semibold">
+                  {isOrgPost ? orgDisplayName : post.author.name}
+                </p>
                 {post.author.isVerified && (
                   <BadgeCheck className="size-3.5 text-primary" />
                 )}
                 {post.isPinned && (
                   <Pin className="size-3 text-muted-foreground" />
                 )}
+                {!isgroup && isOrgPost && (
+                  <Badge
+                    variant={"outline"}
+                    className="text-[9px] bg-primary/10"
+                  >
+                    {"Organisation"}
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
-                @{post.author.username} · {post.timeAgo}
+                @{isOrgPost ? orgDisplayName : post.author.username} · {post.timeAgo}
               </p>
             </div>
 
@@ -466,44 +520,115 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
 
           {/* Images */}
           {post.images?.length > 0 && (
-            <div
-              className={`grid gap-1.5 mt-3 rounded-xl overflow-hidden ${
-                post.images.length === 1
-                  ? "grid-cols-1"
-                  : post.images.length === 3
-                    ? "grid-cols-2"
-                    : "grid-cols-2"
-              }`}
-            >
-              {post.images.map((media, index) => {
-                const isFullWidth =
-                  post.images.length === 1 ||
-                  (post.images.length === 3 && index === 0);
-                return (
+            <>
+              <div
+                className={`mt-3 rounded-xl overflow-hidden border border-border/40 ${
+                  post.images.length === 1
+                    ? ""
+                    : post.images.length === 2
+                      ? "grid grid-cols-2 gap-0.5"
+                      : post.images.length === 3
+                        ? "grid grid-cols-3 grid-rows-2 gap-0.5"
+                        : "grid grid-cols-2 grid-rows-2 gap-0.5"
+                }`}
+              >
+                {post.images.slice(0, 4).map((media, index) => (
                   <div
                     key={index}
-                    className={`relative overflow-hidden bg-muted ${
-                      isFullWidth ? "col-span-2 h-52 lg:h-80" : "h-36 lg:h-52"
-                    } ${post.images.length === 1 ? "col-span-1 rounded-xl" : ""}`}
+                    className={`relative overflow-hidden bg-muted cursor-pointer group ${
+                      post.images.length === 1
+                        ? "h-64 sm:h-72"
+                        : post.images.length === 2
+                          ? "h-44 sm:h-56"
+                          : post.images.length === 3 && index === 0
+                            ? "row-span-2 col-span-2 h-44 sm:h-56"
+                            : post.images.length === 3
+                              ? "h-[calc(11rem-1px)] sm:h-[calc(14rem-1px)]"
+                              : "h-36 sm:h-44"
+                    }`}
+                    onClick={() => {
+                      setLightboxIndex(index);
+                      setLightboxOpen(true);
+                    }}
                   >
                     <Image
                       src={media}
-                      alt={"post image"}
+                      alt={`post image ${index + 1}`}
                       fill
-                      className="object-contain hover:scale-105 transition-transform duration-300 cursor-pointer"
+                      sizes={
+                        post.images.length === 1
+                          ? "(max-width: 640px) 100vw, 500px"
+                          : "(max-width: 640px) 50vw, 250px"
+                      }
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-200"
                     />
-                    {/* Overlay pour +N images */}
+
                     {post.images.length > 4 && index === 3 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer">
-                        <span className="text-white text-xl font-bold">
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
+                        <span className="text-white text-xl font-semibold">
                           +{post.images.length - 4}
                         </span>
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+
+              {/* Image Lightbox Carousel */}
+              <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+                <DialogContent className="max-w-[95vw] sm:max-w-3xl h-[85vh] flex flex-col p-0 gap-0 bg-black/95 border-none [&>button]:hidden">
+                  <DialogHeader className="absolute top-0 right-0 z-20 p-2">
+                    <DialogTitle className="sr-only">
+                      Aperçu des images
+                    </DialogTitle>
+                    <button
+                      className="rounded-full bg-black/60 hover:bg-black/80 text-white p-1.5 transition-colors cursor-pointer"
+                      onClick={() => setLightboxOpen(false)}
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </DialogHeader>
+                  <div className="flex-1 flex items-center justify-center min-h-0 px-2 sm:px-10">
+                    <Carousel
+                      opts={{ startIndex: lightboxIndex, loop: true }}
+                      className="w-full h-full"
+                    >
+                      <CarouselContent className="h-full items-center ml-0">
+                        {post.images.map((media, i) => (
+                          <CarouselItem
+                            key={i}
+                            className="flex items-center justify-center h-full pl-0"
+                          >
+                            <div className="relative w-full h-[75vh]">
+                              <Image
+                                src={media}
+                                alt={`image ${i + 1}`}
+                                fill
+                                sizes="95vw"
+                                className="object-contain"
+                                priority={i === lightboxIndex}
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      {post.images.length > 1 && (
+                        <>
+                          <CarouselPrevious className="left-1 sm:left-2 bg-black/60 hover:bg-black/80 text-white border-none" />
+                          <CarouselNext className="right-1 sm:right-2 bg-black/60 hover:bg-black/80 text-white border-none" />
+                        </>
+                      )}
+                    </Carousel>
+                  </div>
+                  <div className="flex justify-center gap-1.5 py-3">
+                    <span className="text-xs text-white/60">
+                      {post.images.length} image
+                      {post.images.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
 
           {/* Documents */}
@@ -522,8 +647,12 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
                     className="flex flex-row items-center gap-3 w-full py-2.5"
                     onClick={() => setPreviewDoc(media)}
                   >
-                    <div className={`flex items-center justify-center size-9 rounded-lg ${media.extension === "pdf" ? "bg-red-500/10" : "bg-primary/10"} shrink-0`}>
-                      <FileText className={`size-4 ${media.extension === "pdf" ? "text-red-500" : "text-primary"}`} />
+                    <div
+                      className={`flex items-center justify-center size-9 rounded-lg ${media.extension === "pdf" ? "bg-red-500/10" : "bg-primary/10"} shrink-0`}
+                    >
+                      <FileText
+                        className={`size-4 ${media.extension === "pdf" ? "text-red-500" : "text-primary"}`}
+                      />
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -734,7 +863,9 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
               <div className="flex flex-row items-center gap-2.5">
                 <Avatar className="size-8 shrink-0">
                   <AvatarImage src={currentUser?.avatarUrl || ""} alt="vous" />
-                  <AvatarFallback className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}>
+                  <AvatarFallback
+                    className={`text-[10px] font-semibold ${getAvatarFallbackColor(currentUser?.initials)}`}
+                  >
                     {currentUser?.initials}
                   </AvatarFallback>
                 </Avatar>
@@ -788,3 +919,5 @@ const FeedItem = ({ post, isgroup, groupName }: { post: Post; isgroup?: boolean,
 };
 
 export default FeedItem;
+
+

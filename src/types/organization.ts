@@ -64,3 +64,51 @@ export type PaginatedOrgResponse = {
     hasMore: boolean;
   };
 };
+
+/** Shape d'un membre retourné par GET /organizations/:orgId/members */
+export type OrgMember = {
+  id: string;
+  role: OrgRole;
+  status: string;
+  joinedAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    bio: string | null;
+  };
+};
+
+export type PaginatedMembersResponse = {
+  data: OrgMember[];
+  meta: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+};
+
+/** Shape d'une demande d'adhésion */
+export type OrgJoinRequest = {
+  id: string;
+  status: string;
+  joinedAt: string;
+  user: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    bio: string | null;
+  };
+};
+
+export type PaginatedJoinRequestsResponse = {
+  data: OrgJoinRequest[];
+  meta: {
+    limit: number;
+    nextCursor: string | null;
+    hasMore: boolean;
+  };
+};
