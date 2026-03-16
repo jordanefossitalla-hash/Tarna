@@ -87,7 +87,7 @@ const Sidebar = () => {
               variant="ghost"
               className={`justify-start py-5 px-3 cursor-pointer transition-colors ${
                 active
-                  ? "bg-primary/10 text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                  ? "bg-primary/10 dark:text-primary-foreground hover:bg-primary/30"
                   : "text-foreground hover:bg-accent"
               }`}
             >
@@ -95,12 +95,12 @@ const Sidebar = () => {
                 href={item.route}
                 className={`px-3.5 py-1.5 rounded-lg transition-colors ${
                   active
-                    ? "text-white bg-primary/10"
+                    ? "dark:text-white bg-primary/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 }`}
               >
                 <item.icon
-                  className={`size-4.5 mr-1 ${active ? "fill-white dark:fill-white" : ""}`}
+                  className={`size-4.5 mr-1 ${active ? "fill-black dark:fill-white" : ""}`}
                   strokeWidth={active ? 2.5 : 2}
                 />
                 <span

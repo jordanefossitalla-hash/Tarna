@@ -61,7 +61,6 @@ import {
 import { useUserStore } from "@/src/store/userStore";
 import { useOrganizationStore } from "@/src/store/organizationStore";
 import { toast } from "sonner";
-import { InBuild } from "@/src/components/personnal/inBuild";
 import { getAvatarFallbackColor } from "@/src/lib/avatarColor";
 
 // ── Types & constants ────────────────────────────────────────
@@ -117,7 +116,7 @@ const OrganizationsPage = () => {
   const setTab = useOrganizationStore((s) => s.setTab);
   const addOrg = useOrganizationStore((s) => s.addOrg);
   const moveOrg = useOrganizationStore((s) => s.moveOrg);
-  const removeOrg = useOrganizationStore((s) => s.removeOrg);
+  // const removeOrg = useOrganizationStore((s) => s.removeOrg);
   const loading = useOrganizationStore((s) => s.loading);
   const storeSetLoading = useOrganizationStore((s) => s.setLoading);
 
@@ -668,7 +667,7 @@ const OrganizationsPage = () => {
               key={tab.key}
               variant={isActive ? "default" : "outline"}
               size="sm"
-              className="cursor-pointer gap-1.5 rounded-full bg-primary/20 hover:bg-primary/30"
+              className={`cursor-pointer gap-1.5 rounded-full text-black dark:text-white ${isActive ? "bg-primary/20 hover:bg-primary/30" : "bg-transparent hover:bg-primary/10" }`}
               onClick={() => setActiveTab(tab.key)}
             >
               <Icon className="size-3.5" />

@@ -1,7 +1,6 @@
 import "../globals.css";
 import TopBar from "@/src/components/personnal/topBar";
 import Sidebar from "@/src/components/personnal/sidebar";
-import RightBar from "@/src/components/personnal/rightBar";
 import BottomBar from "@/src/components/personnal/bottomBar";
 import { SocketProvider } from "@/src/components/providers/socketProvider";
 import AuthGuard from "@/src/components/providers/authGuard";
