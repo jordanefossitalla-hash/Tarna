@@ -53,6 +53,8 @@ export type DetailedOrganizationResponse = {
         memberships: number;
         posts: number;
     };
+    /** Role of the current user in the organization, null if not a member */
+    currentUserRole?: OrgRole | null;
 };
 
 /** Réponse paginée commune */

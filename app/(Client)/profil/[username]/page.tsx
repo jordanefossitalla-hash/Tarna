@@ -104,13 +104,15 @@ const ProfilePage = () => {
   const BIO_MAX_LENGTH = 160;
 
   const openPasswordDialog = useCallback(() => {
-    setPasswordForm({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    });
     setConfirmPassword(true);
   }, []);
 
-  const handlePasswordChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -291,7 +293,7 @@ const ProfilePage = () => {
     if (!profile?.id) return;
     try {
       setPostsLoading(true);
-      const res = await apiFetch(`/posts/feed`, accessToken);
+      const res = await apiFetch(`/posts?authorId=${profile.id}`, accessToken);
       if (!res.ok) return;
       const json = await res.json();
       const rawPosts = Array.isArray(json)
@@ -331,6 +333,14 @@ const ProfilePage = () => {
             initials,
             isVerified: p.author?.isVerified ?? false,
           },
+          organization: p.organization
+            ? {
+                id: p.organization.id,
+                name: p.organization.name,
+                logoUrl: p.organization.logoUrl ?? null,
+                sector: p.organization.sector,
+              }
+            : undefined,
           content: p.contentText ?? p.content ?? "",
           visibility: p.visibility ?? "public",
           isPinned: p.isPinned ?? false,
@@ -472,49 +482,53 @@ const ProfilePage = () => {
               </div>
 
               <div className="shrink-0">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 cursor-pointer rounded-full"
-                    >
-                      <Settings className="size-3.5" />
-                      Paramètres
-                    </Button>
-                  </DropdownMenuTrigger>
+                {currentUser?.username === username && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 cursor-pointer rounded-full"
+                      >
+                        <Settings className="size-3.5" />
+                        Paramètres
+                      </Button>
+                    </DropdownMenuTrigger>
 
-                  <DropdownMenuContent
-                    className="w-52"
-                    align="end"
-                    sideOffset={8}
-                  >
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem
-                        className="cursor-pointer"
-                        onClick={openEditDialog}
-                      >
-                        <UserPen className="size-4" />
-                        <span className="flex-1">Modifier le profil</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="cursor-pointer"
-                        onClick={openPasswordDialog}
-                      >
-                        <Lock className="size-4" />
-                        <span className="flex-1">Changer le mot de passe</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="cursor-pointer text-destructive focus:text-destructive"
-                        onClick={() => setConfirmDelete(true)}
-                      >
-                        <Trash className="size-4" />
-                        Supprimer le compte
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <DropdownMenuContent
+                      className="w-52"
+                      align="end"
+                      sideOffset={8}
+                    >
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={openEditDialog}
+                        >
+                          <UserPen className="size-4" />
+                          <span className="flex-1">Modifier le profil</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={openPasswordDialog}
+                        >
+                          <Lock className="size-4" />
+                          <span className="flex-1">
+                            Changer le mot de passe
+                          </span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="cursor-pointer text-destructive focus:text-destructive"
+                          onClick={() => setConfirmDelete(true)}
+                        >
+                          <Trash className="size-4" />
+                          Supprimer le compte
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
 
@@ -708,7 +722,7 @@ const ProfilePage = () => {
           </form>
         </DialogContent>
       </Dialog>
-       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{"Supprimer le compte"}</DialogTitle>

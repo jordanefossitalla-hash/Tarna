@@ -137,7 +137,7 @@ const AddPostCard = ({
   const visibilityOptions: VisibilityOption[] = [
     { value: "public", label: "Public", icon: Globe },
     { value: "private", label: "Privé", icon: GlobeLock },
-    { value: "friends", label: "Amis", icon: Users },
+    // { value: "friends", label: "Amis", icon: Users },
   ];
   const visibilityGroupOptions: VisibilityOption[] = [
     ...(myRole === "owner" || myRole === "admin" || myRole === "manager"
