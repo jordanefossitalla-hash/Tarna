@@ -1,9 +1,9 @@
 "use server";
 import { FetchUser, User } from "@/src/types/user";
 import { cookies } from "next/headers";
+import { buildUrl, getServerApiOrigin } from "@/src/lib/runtime-config";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
-const API_PORT = process.env.API_PORT ?? "4000";
+const API_BASE_URL = getServerApiOrigin();
 
 export type UserState = {
   users: FetchUser[];
@@ -27,7 +27,7 @@ export async function fetchUsersAction(): Promise<UserState> {
   }
 
   try {
-    const url = new URL(`${API_BASE_URL}/users`);
+    const url = new URL(buildUrl(API_BASE_URL, "/users"));
     // if (cursor) url.searchParams.set("cursor", cursor);
     const res = await fetch(url.toString(), {
       headers: {

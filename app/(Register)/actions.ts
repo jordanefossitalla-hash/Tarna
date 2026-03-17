@@ -1,10 +1,11 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { buildUrl, getServerApiOrigin } from "@/src/lib/runtime-config";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
+const API_BASE_URL = getServerApiOrigin();
 
-// ---------- Types partagés ----------
+// ---------- Shared types ----------
 export type SignupState = {
   success: boolean;
   errors: {
@@ -94,7 +95,7 @@ export async function signupAction(
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+    const res = await fetch(buildUrl(API_BASE_URL, "/auth/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -150,7 +151,7 @@ export async function loginAction(
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await fetch(buildUrl(API_BASE_URL, "/auth/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier: email, password }),
@@ -166,11 +167,13 @@ export async function loginAction(
 
     const data = await res.json();
 
-    // 🔥 Stockage du token en cookie HTTP-only
+    const secureCookies = process.env.COOKIE_SECURE === "true";
+
+    // Store the token in an HTTP-only cookie
     const cookieStore = await cookies();
     cookieStore.set("access_token", data.accessToken, {
       httpOnly: true,
-      secure: true,
+      secure: secureCookies,
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24, // 1 jour

@@ -1,16 +1,15 @@
 import { useUserStore } from "@/src/store/userStore";
 import { ReactionType } from "../components/personnal/ui/feedItem";
 import { updateUserType } from "../types/user";
+import { buildUrl, getPublicApiOrigin } from "./runtime-config";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost";
-const API_PORT = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
+const API_BASE_URL = getPublicApiOrigin();
 
 /**
  * Construit l'URL de base de l'API backend.
  */
 export function getApiUrl(path: string): string {
-  return `${API_BASE_URL}${path}`;
+  return buildUrl(API_BASE_URL, path);
 }
 
 // ── Refresh token logic ─────────────────────────────────────

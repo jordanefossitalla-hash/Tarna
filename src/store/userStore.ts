@@ -1,7 +1,13 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { User } from "../types/user";
 import { disconnectSocket } from "../lib/socket";
+
+const noopStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+};
 
 type UserState = {
   user: User | null;
@@ -45,6 +51,9 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "tarna-user",
+      storage: createJSONStorage(() =>
+        typeof window === "undefined" ? noopStorage : localStorage,
+      ),
     }
   )
 );

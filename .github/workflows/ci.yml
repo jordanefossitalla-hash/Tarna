@@ -47,8 +47,11 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          NEXT_PUBLIC_API_BASE_URL: http://localhost
-          NEXT_PUBLIC_API_PORT: '4000'
+          API_BASE_URL: http://tarna-api:4000
+          API_PORT: '4000'
+          NEXT_PUBLIC_API_BASE_URL: /backend
+          COOKIE_SECURE: 'false'
+          NEXT_SERVER_ACTIONS_ALLOWED_ORIGINS: localhost:3000,127.0.0.1:3000
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -56,3 +59,25 @@ jobs:
           name: next-build-${{ github.sha }}
           path: .next/
           retention-days: 7
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy frontend over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd "${{ secrets.FRONTEND_DEPLOY_PATH }}"
+            git fetch --all --prune
+            git checkout main
+            git pull --ff-only origin main
+            docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+            docker compose -f docker-compose.prod.yml --env-file .env.production ps
+            curl -fsSI http://127.0.0.1:3005 > /dev/null

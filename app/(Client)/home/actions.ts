@@ -2,8 +2,9 @@
 
 import { Post, ReceivePost } from "@/src/types/post";
 import { cookies } from "next/headers";
+import { buildUrl, getServerApiOrigin } from "@/src/lib/runtime-config";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
+const API_BASE_URL = getServerApiOrigin();
 
 export type FeedState = {
   posts: Post[];
@@ -67,7 +68,7 @@ async function fetchPosts(
   }
 
   try {
-    const url = new URL(`${API_BASE_URL}/posts`);
+    const url = new URL(buildUrl(API_BASE_URL, "/posts"));
     if (cursor) url.searchParams.set("cursor", cursor);
     if (groupId) url.searchParams.set("orgId", groupId);
     const res = await fetch(url.toString(), {
@@ -232,7 +233,7 @@ export async function createPostAction(
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/posts`, {
+    const res = await fetch(buildUrl(API_BASE_URL, "/posts"), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

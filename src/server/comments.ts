@@ -1,7 +1,8 @@
 "use server";
 import { cookies } from "next/headers";
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://api.tarna.com";
-const API_PORT = process.env.API_PORT ?? "4000";
+import { buildUrl, getServerApiOrigin } from "@/src/lib/runtime-config";
+
+const API_BASE_URL = getServerApiOrigin();
 
 type createType = {
   postId: string;
@@ -23,7 +24,7 @@ export async function createComments(content: createType) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}:${API_PORT}/comments`, {
+    const res = await fetch(buildUrl(API_BASE_URL, "/comments"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

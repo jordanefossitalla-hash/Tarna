@@ -9,8 +9,9 @@ import type {
 } from "@/src/types/organization";
 import type { UserSearchResult } from "@/src/types/user";
 import { cookies } from "next/headers";
+import { buildUrl, getServerApiOrigin } from "@/src/lib/runtime-config";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
+const API_BASE_URL = getServerApiOrigin();
 
 type CreateOrgInput = {
   name: string;
@@ -50,7 +51,7 @@ async function fetchOrgs(
   const token = await getToken();
   if (!token) return emptyPage();
 
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const url = new URL(buildUrl(API_BASE_URL, path));
   if (cursor) url.searchParams.set("cursor", cursor);
 
   const res = await fetch(url.toString(), {
@@ -106,7 +107,7 @@ export async function createOrganization(
     return { success: false, error: "Non authentifié.", org: null };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations`, {
+    const res = await fetch(buildUrl(API_BASE_URL, "/organizations"), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -151,7 +152,7 @@ export async function requestJoinOrg(
   if (!token) return { success: false, error: "Non authentifié." };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/join`, {
+    const res = await fetch(buildUrl(API_BASE_URL, `/organizations/${orgId}/join`), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -181,7 +182,7 @@ export async function cancelJoinRequest(
   if (!token) return { success: false, error: "Non authentifié." };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/join`, {
+    const res = await fetch(buildUrl(API_BASE_URL, `/organizations/${orgId}/join`), {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -210,7 +211,7 @@ export async function fetchDetailOrg(
   if (!token) return null;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}`, {
+    const res = await fetch(buildUrl(API_BASE_URL, `/organizations/${orgId}`), {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -240,7 +241,7 @@ export async function searchUsers(
   if (trimmed.length < 2) return [];
 
   try {
-    const url = new URL(`${API_BASE_URL}/users`);
+    const url = new URL(buildUrl(API_BASE_URL, "/users"));
     url.searchParams.set("search", trimmed);
     url.searchParams.set("limit", "10");
 
@@ -289,7 +290,7 @@ export async function fetchMembers(
   if (!token) return empty;
 
   try {
-    const url = new URL(`${API_BASE_URL}/organizations/${orgId}/members`);
+    const url = new URL(buildUrl(API_BASE_URL, `/organizations/${orgId}/members`));
     if (cursor) url.searchParams.set("cursor", cursor);
 
     const res = await fetch(url.toString(), {
@@ -313,7 +314,7 @@ export async function addMember(
   if (!token) return { success: false, error: "Non authentifié." };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/members`, {
+    const res = await fetch(buildUrl(API_BASE_URL, `/organizations/${orgId}/members`), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -341,7 +342,7 @@ export async function removeMember(
 
   try {
     const res = await fetch(
-      `${API_BASE_URL}/organizations/${orgId}/members/${userId}`,
+      buildUrl(API_BASE_URL, `/organizations/${orgId}/members/${userId}`),
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -368,7 +369,7 @@ export async function updateMemberRole(
 
   try {
     const res = await fetch(
-      `${API_BASE_URL}/organizations/${orgId}/members/${userId}/role`,
+      buildUrl(API_BASE_URL, `/organizations/${orgId}/members/${userId}/role`),
       {
         method: "PATCH",
         headers: {
@@ -404,7 +405,7 @@ export async function fetchJoinRequests(
 
   try {
     const url = new URL(
-      `${API_BASE_URL}/organizations/${orgId}/join-requests`,
+      buildUrl(API_BASE_URL, `/organizations/${orgId}/join-requests`),
     );
     if (cursor) url.searchParams.set("cursor", cursor);
 
@@ -430,7 +431,7 @@ export async function handleJoinRequest(
 
   try {
     const res = await fetch(
-      `${API_BASE_URL}/organizations/${orgId}/join-requests/${requestId}`,
+      buildUrl(API_BASE_URL, `/organizations/${orgId}/join-requests/${requestId}`),
       {
         method: "PATCH",
         headers: {
@@ -472,7 +473,7 @@ export async function updateOrganization(
   if (!token) return { success: false, error: "Non authentifié." };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}`, {
+    const res = await fetch(buildUrl(API_BASE_URL, `/organizations/${orgId}`), {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -498,7 +499,7 @@ export async function archiveOrganization(
   if (!token) return { success: false, error: "Non authentifié." };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}/archive`, {
+    const res = await fetch(buildUrl(API_BASE_URL, `/organizations/${orgId}/archive`), {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     });

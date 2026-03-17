@@ -3,8 +3,9 @@
 import { cookies } from "next/headers";
 import { getInitials } from "@/src/lib/getInitials";
 import { User } from "@/src/types/user";
+import { buildUrl, getServerApiOrigin } from "@/src/lib/runtime-config";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "https://localhost";
+const API_BASE_URL = getServerApiOrigin();
 
 type ProfileEditForm = {
 	userName?: string;
@@ -120,7 +121,7 @@ export async function updateProfileAction(
 	}
 
 	try {
-		const res = await fetch(`${API_BASE_URL}/users/${input.userId}`, {
+		const res = await fetch(buildUrl(API_BASE_URL, `/users/${input.userId}`), {
 			method: "PATCH",
 			headers: {
 				"Content-Type": "application/json",
@@ -217,7 +218,7 @@ export async function deleteProfileAction(
 	}
 
 	try {
-		const res = await fetch(`${API_BASE_URL}/users/${input.userId}`, {
+		const res = await fetch(buildUrl(API_BASE_URL, `/users/${input.userId}`), {
 			method: "DELETE",
 			headers: {
 				"Content-Type": "application/json",
@@ -276,7 +277,7 @@ export async function changePasswordAction(
 	}
 
 	try {
-		const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+		const res = await fetch(buildUrl(API_BASE_URL, "/auth/change-password"), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",

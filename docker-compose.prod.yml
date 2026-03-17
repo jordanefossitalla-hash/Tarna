@@ -1,0 +1,17 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    ports:
+      - "127.0.0.1:${HOST_PORT:-3005}:3000"
+    networks:
+      - tarna_net
+
+networks:
+  tarna_net:
+    external: true
+    name: tarna_net

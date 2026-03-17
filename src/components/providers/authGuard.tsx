@@ -3,6 +3,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/src/store/userStore";
 import type { TokenValidationResponse } from "@/app/api/validate-token/route";
+import { buildUrl, getPublicApiOrigin } from "@/src/lib/runtime-config";
+
+const API_BASE_URL = getPublicApiOrigin();
 
 /**
  * Protège les routes authentifiées.
@@ -39,14 +42,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const tryRefresh = useCallback(async (): Promise<boolean> => {
     if (!refreshToken) return false;
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://localhost"}/auth/refresh`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken }),
-        },
-      );
+      const res = await fetch(buildUrl(API_BASE_URL, "/auth/refresh"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
       if (!res.ok) return false;
       const data = await res.json();
       setTokens(data.accessToken, data.refreshToken);
