@@ -8,7 +8,7 @@ const API_BASE_URL = getServerApiOrigin();
 export type UserState = {
   users: FetchUser[];
   error: string | null;
-  nextCursor: string | null;
+  nextCursor: string | null; 
   hasMore: boolean;
 };
 
