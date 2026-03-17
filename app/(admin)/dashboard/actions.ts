@@ -9,7 +9,7 @@ export type UserState = {
   users: FetchUser[];
   error: string | null;
   nextCursor: string | null; 
-  hasMore: boolean;
+  hasMore: boolean;  
 };
 
 // export async function fetchPostsAction(): Promise<FeedState> {
